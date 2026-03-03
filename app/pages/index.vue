@@ -2,7 +2,7 @@
   <div>
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-2xl font-bold text-primary">Dashboard</h1>
-      <UButton v-if="panel === 'list'" @click="startCreate">+ Nouveau POI</UButton>
+      <UButton v-if="panel === 'list' && can('pois.manage')" @click="startCreate">+ Nouveau POI</UButton>
     </div>
 
     <div v-if="loading" class="text-muted">Chargement...</div>
@@ -29,6 +29,7 @@
         <template v-if="panel === 'list'">
           <PoiList
             :pois="pois"
+            :readonly="!can('pois.manage')"
             @select="onListSelect"
             @edit="startEdit"
             @delete="onDeleteRequest"
@@ -79,6 +80,7 @@
 <script setup lang="ts">
 import type { PoiDefinition, CreatePoiInput } from "~~/types/poi";
 
+const { can } = useAuth();
 const { listPois, createPoi, updatePoi, deletePoi } = useApi();
 
 const pois = ref<PoiDefinition[]>([]);

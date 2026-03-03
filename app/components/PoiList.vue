@@ -15,7 +15,7 @@
             <th class="py-2 px-3">Nom</th>
             <th class="py-2 px-3">Type</th>
             <th class="py-2 px-3">Difficulte</th>
-            <th class="py-2 px-3">Actions</th>
+            <th v-if="!readonly" class="py-2 px-3">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -34,7 +34,7 @@
                 {{ difficultyLabel(poi.difficulty) }}
               </UBadge>
             </td>
-            <td class="py-2 px-3 flex gap-1" @click.stop>
+            <td v-if="!readonly" class="py-2 px-3 flex gap-1" @click.stop>
               <UButton size="xs" @click="emit('edit', poi)">Modifier</UButton>
               <UButton size="xs" color="error" variant="solid" @click="emit('delete', poi)">Supprimer</UButton>
             </td>
@@ -55,6 +55,7 @@ import { typeLabel, difficultyLabel } from "~/utils/i18n";
 
 const props = defineProps<{
   pois: PoiDefinition[];
+  readonly?: boolean;
 }>();
 
 const emit = defineEmits<{
