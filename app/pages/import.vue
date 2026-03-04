@@ -5,7 +5,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Left: Map -->
       <div>
-        <div class="h-[calc(100vh-14rem)] min-h-[400px] rounded-lg overflow-hidden">
+        <div class="h-[calc(100vh-8rem)] min-h-[400px] rounded-lg overflow-hidden">
           <ClientOnly>
             <ImportMap
               :zones="zones"
@@ -21,7 +21,7 @@
       </div>
 
       <!-- Right: Controls + Staged list -->
-      <div class="h-[calc(100vh-14rem)] min-h-[400px] overflow-y-auto space-y-4">
+      <div class="h-[calc(100vh-8rem)] min-h-[400px] overflow-y-auto space-y-4">
         <!-- Import controls -->
         <div class="bg-elevated border border-default rounded-lg p-4">
           <div class="flex flex-wrap gap-3 items-end">
@@ -101,14 +101,14 @@
 </template>
 
 <script setup lang="ts">
-import type { StagedPoi, ImportZone } from "~~/types/poi";
-import { POI_TYPES, POI_DIFFICULTIES } from "~~/types/poi";
+import type { StagedPoi, ImportZone, PoiTypeRecord, PoiDifficultyRecord } from "~~/types/poi";
 import { typeLabel, difficultyLabel } from "~/utils/i18n";
 
 const {
   importOverpass, listStaging, updateStaging,
   approveStaged, rejectStaged, approveAllStaged,
   listImportZones,
+  listPoiTypes, listPoiDifficulties,
 } = useApi();
 
 const zones = ref<ImportZone[]>([]);
@@ -124,15 +124,26 @@ const importing = ref(false);
 const importMessage = ref("");
 const importError = ref(false);
 
-const typeOptions = POI_TYPES.map((t) => ({ label: typeLabel(t), value: t }));
-const difficultyOptions = POI_DIFFICULTIES.map((d) => ({ label: difficultyLabel(d), value: d }));
+const poiTypesData = ref<PoiTypeRecord[]>([]);
+const poiDifficultiesData = ref<PoiDifficultyRecord[]>([]);
+
+const typeOptions = computed(() =>
+  poiTypesData.value.map((t) => ({ label: typeLabel(t.slug), value: t.slug }))
+);
+const difficultyOptions = computed(() =>
+  poiDifficultiesData.value.map((d) => ({ label: difficultyLabel(d.slug), value: d.slug }))
+);
 
 async function fetchAll() {
   loadingStaged.value = true;
   try {
-    const [z, s] = await Promise.all([listImportZones(), listStaging()]);
+    const [z, s, t, d] = await Promise.all([
+      listImportZones(), listStaging(), listPoiTypes(), listPoiDifficulties(),
+    ]);
     zones.value = z;
     staged.value = s;
+    poiTypesData.value = t;
+    poiDifficultiesData.value = d;
   } catch (e: any) {
     importMessage.value = e.message;
     importError.value = true;

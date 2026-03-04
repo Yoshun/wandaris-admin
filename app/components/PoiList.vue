@@ -49,12 +49,13 @@
 </template>
 
 <script setup lang="ts">
-import type { PoiDefinition, PoiDifficulty } from "~~/types/poi";
-import { POI_TYPES, POI_DIFFICULTIES } from "~~/types/poi";
+import type { PoiDefinition, PoiTypeRecord, PoiDifficultyRecord } from "~~/types/poi";
 import { typeLabel, difficultyLabel } from "~/utils/i18n";
 
 const props = defineProps<{
   pois: PoiDefinition[];
+  poiTypes: PoiTypeRecord[];
+  poiDifficulties: PoiDifficultyRecord[];
   readonly?: boolean;
 }>();
 
@@ -69,11 +70,11 @@ const filterType = ref<string | undefined>(undefined);
 const filterDifficulty = ref<string | undefined>(undefined);
 
 const typeOptions = computed(() =>
-  POI_TYPES.map((t) => ({ label: typeLabel(t), value: t }))
+  props.poiTypes.map((t) => ({ label: typeLabel(t.slug), value: t.slug }))
 );
 
 const difficultyOptions = computed(() =>
-  POI_DIFFICULTIES.map((d) => ({ label: difficultyLabel(d), value: d }))
+  props.poiDifficulties.map((d) => ({ label: difficultyLabel(d.slug), value: d.slug }))
 );
 
 const filtered = computed(() => {
@@ -85,13 +86,13 @@ const filtered = computed(() => {
   });
 });
 
-function difficultyColor(difficulty: PoiDifficulty): string {
+function difficultyColor(difficulty: string) {
   switch (difficulty) {
-    case "easy": return "success";
-    case "medium": return "warning";
-    case "hard": return "error";
-    case "very_hard": return "error";
-    default: return "neutral";
+    case "easy": return "success" as const;
+    case "medium": return "warning" as const;
+    case "hard": return "error" as const;
+    case "very_hard": return "error" as const;
+    default: return "neutral" as const;
   }
 }
 </script>

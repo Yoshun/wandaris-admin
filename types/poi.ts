@@ -1,72 +1,17 @@
-export type PoiType =
-  | "castle"
-  | "church"
-  | "ruin"
-  | "fort"
-  | "manor"
-  | "archaeological_site"
-  | "tower"
-  | "city_gate"
-  | "summit"
-  | "viewpoint"
-  | "waterfall"
-  | "cave"
-  | "cliff"
-  | "arch"
-  | "hot_spring"
-  | "volcano"
-  | "glacier"
-  | "lake"
-  | "bridge"
-  | "garden"
-  | "square"
-  | "megalith"
-  | "rock"
-  | "windmill"
-  | "lighthouse"
-  | "water_mill"
-  | "aqueduct"
-  | "geological";
+export type PoiType = string;
+export type PoiDifficulty = string;
 
-export const POI_TYPES: PoiType[] = [
-  "castle",
-  "church",
-  "ruin",
-  "fort",
-  "manor",
-  "archaeological_site",
-  "tower",
-  "city_gate",
-  "summit",
-  "viewpoint",
-  "waterfall",
-  "cave",
-  "cliff",
-  "arch",
-  "hot_spring",
-  "volcano",
-  "glacier",
-  "lake",
-  "bridge",
-  "garden",
-  "square",
-  "megalith",
-  "rock",
-  "windmill",
-  "lighthouse",
-  "water_mill",
-  "aqueduct",
-  "geological",
-];
+export interface PoiTypeRecord {
+  id: number;
+  slug: string;
+  position: number;
+}
 
-export type PoiDifficulty = "easy" | "medium" | "hard" | "very_hard";
-
-export const POI_DIFFICULTIES: PoiDifficulty[] = [
-  "easy",
-  "medium",
-  "hard",
-  "very_hard",
-];
+export interface PoiDifficultyRecord {
+  id: number;
+  slug: string;
+  position: number;
+}
 
 export interface PoiDefinition {
   id: number;

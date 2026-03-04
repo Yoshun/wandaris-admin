@@ -57,18 +57,19 @@
 </template>
 
 <script setup lang="ts">
-import type { PoiType, PoiDifficulty, CreatePoiInput } from "~~/types/poi";
-import { POI_TYPES, POI_DIFFICULTIES } from "~~/types/poi";
+import type { CreatePoiInput, PoiTypeRecord, PoiDifficultyRecord } from "~~/types/poi";
 import { typeLabel, difficultyLabel, parseGoogleMapsUrl } from "~/utils/i18n";
 
 const props = defineProps<{
   initialData?: {
     name: string;
-    type: PoiType;
-    difficulty: PoiDifficulty;
+    type: string;
+    difficulty: string;
     lat: number;
     lon: number;
   };
+  poiTypes: PoiTypeRecord[];
+  poiDifficulties: PoiDifficultyRecord[];
   title: string;
   submitLabel: string;
   loading?: boolean;
@@ -86,14 +87,18 @@ const coordsError = ref("");
 
 const form = reactive({
   name: props.initialData?.name ?? "",
-  type: (props.initialData?.type ?? "viewpoint") as PoiType,
-  difficulty: (props.initialData?.difficulty ?? "easy") as PoiDifficulty,
+  type: props.initialData?.type ?? props.poiTypes[0]?.slug ?? "",
+  difficulty: props.initialData?.difficulty ?? props.poiDifficulties[0]?.slug ?? "",
   lat: props.initialData?.lat ?? null as number | null,
   lon: props.initialData?.lon ?? null as number | null,
 });
 
-const typeOptions = POI_TYPES.map((t) => ({ label: typeLabel(t), value: t }));
-const difficultyOptions = POI_DIFFICULTIES.map((d) => ({ label: difficultyLabel(d), value: d }));
+const typeOptions = computed(() =>
+  props.poiTypes.map((t) => ({ label: typeLabel(t.slug), value: t.slug }))
+);
+const difficultyOptions = computed(() =>
+  props.poiDifficulties.map((d) => ({ label: difficultyLabel(d.slug), value: d.slug }))
+);
 
 const isValid = computed(
   () => form.name.trim() !== "" && form.lat !== null && form.lon !== null

@@ -7,10 +7,9 @@
       </div>
 
       <form class="space-y-4" @submit.prevent="handleLogin">
-        <UFormField label="Email">
+        <UFormField label="Pseudo ou email">
           <UInput
             v-model="email"
-            type="email"
             placeholder="admin@wandaris.com"
             autofocus
             class="w-full"

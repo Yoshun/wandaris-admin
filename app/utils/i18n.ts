@@ -1,6 +1,4 @@
-import type { PoiType, PoiDifficulty } from "~~/types/poi";
-
-export const POI_TYPE_LABELS: Record<PoiType, string> = {
+export const POI_TYPE_LABELS: Record<string, string> = {
   castle: "Chateau",
   church: "Eglise",
   ruin: "Ruine",
@@ -31,18 +29,18 @@ export const POI_TYPE_LABELS: Record<PoiType, string> = {
   geological: "Curiosite geologique",
 };
 
-export const POI_DIFFICULTY_LABELS: Record<PoiDifficulty, string> = {
+export const POI_DIFFICULTY_LABELS: Record<string, string> = {
   easy: "Facile",
   medium: "Moyen",
   hard: "Difficile",
   very_hard: "Tres difficile",
 };
 
-export function typeLabel(type: PoiType): string {
+export function typeLabel(type: string): string {
   return POI_TYPE_LABELS[type] ?? type;
 }
 
-export function difficultyLabel(difficulty: PoiDifficulty): string {
+export function difficultyLabel(difficulty: string): string {
   return POI_DIFFICULTY_LABELS[difficulty] ?? difficulty;
 }
 

@@ -10,7 +10,7 @@
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Map -->
-      <div class="h-[calc(100vh-12rem)] min-h-[400px] rounded-lg overflow-hidden">
+      <div class="h-[calc(100vh-8rem)] min-h-[400px] rounded-lg overflow-hidden">
         <ClientOnly>
           <PoiMap
             ref="mapRef"
@@ -24,11 +24,13 @@
       </div>
 
       <!-- Right panel: list OR form -->
-      <div class="h-[calc(100vh-12rem)] min-h-[400px] overflow-y-auto">
+      <div class="h-[calc(100vh-8rem)] min-h-[400px] overflow-y-auto">
         <!-- List mode -->
         <template v-if="panel === 'list'">
           <PoiList
             :pois="pois"
+            :poi-types="poiTypesData"
+            :poi-difficulties="poiDifficultiesData"
             :readonly="!can('pois.manage')"
             @select="onListSelect"
             @edit="startEdit"
@@ -42,6 +44,8 @@
             ref="formRef"
             title="Nouveau POI"
             submit-label="Creer"
+            :poi-types="poiTypesData"
+            :poi-difficulties="poiDifficultiesData"
             :loading="saving"
             :error="saveError"
             @submit="handleCreate"
@@ -58,6 +62,8 @@
             title="Modifier le POI"
             submit-label="Enregistrer"
             :initial-data="editData!"
+            :poi-types="poiTypesData"
+            :poi-difficulties="poiDifficultiesData"
             :loading="saving"
             :error="saveError"
             @submit="handleUpdate"
@@ -78,12 +84,14 @@
 </template>
 
 <script setup lang="ts">
-import type { PoiDefinition, CreatePoiInput } from "~~/types/poi";
+import type { PoiDefinition, CreatePoiInput, PoiTypeRecord, PoiDifficultyRecord } from "~~/types/poi";
 
 const { can } = useAuth();
-const { listPois, createPoi, updatePoi, deletePoi } = useApi();
+const { listPois, createPoi, updatePoi, deletePoi, listPoiTypes, listPoiDifficulties } = useApi();
 
 const pois = ref<PoiDefinition[]>([]);
+const poiTypesData = ref<PoiTypeRecord[]>([]);
+const poiDifficultiesData = ref<PoiDifficultyRecord[]>([]);
 const loading = ref(true);
 const fetchError = ref("");
 const saving = ref(false);
@@ -110,7 +118,10 @@ async function fetchPois() {
   loading.value = true;
   fetchError.value = "";
   try {
-    pois.value = await listPois();
+    const [p, t, d] = await Promise.all([listPois(), listPoiTypes(), listPoiDifficulties()]);
+    pois.value = p;
+    poiTypesData.value = t;
+    poiDifficultiesData.value = d;
   } catch (e: any) {
     fetchError.value = e.message;
   } finally {

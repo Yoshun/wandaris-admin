@@ -1,4 +1,4 @@
-import type { PoiDefinition, CreatePoiInput, UpdatePoiInput, StagedPoi, ImportResult, ImportZone } from "~~/types/poi";
+import type { PoiDefinition, CreatePoiInput, UpdatePoiInput, StagedPoi, ImportResult, ImportZone, PoiTypeRecord, PoiDifficultyRecord } from "~~/types/poi";
 
 export function useApi() {
   const config = useRuntimeConfig();
@@ -91,6 +91,52 @@ export function useApi() {
     return apiFetch<ImportZone[]>("/api/import/zones");
   }
 
+  // --- POI Types ---
+  async function listPoiTypes(): Promise<PoiTypeRecord[]> {
+    return apiFetch<PoiTypeRecord[]>("/api/poi-types");
+  }
+
+  async function createPoiType(data: { slug: string; position?: number }): Promise<PoiTypeRecord> {
+    return apiFetch<PoiTypeRecord>("/api/poi-types", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async function updatePoiType(id: number, data: { slug?: string; position?: number }): Promise<PoiTypeRecord> {
+    return apiFetch<PoiTypeRecord>(`/api/poi-types/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async function deletePoiType(id: number): Promise<void> {
+    return apiFetch<void>(`/api/poi-types/${id}`, { method: "DELETE" });
+  }
+
+  // --- POI Difficulties ---
+  async function listPoiDifficulties(): Promise<PoiDifficultyRecord[]> {
+    return apiFetch<PoiDifficultyRecord[]>("/api/poi-difficulties");
+  }
+
+  async function createPoiDifficulty(data: { slug: string; position?: number }): Promise<PoiDifficultyRecord> {
+    return apiFetch<PoiDifficultyRecord>("/api/poi-difficulties", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async function updatePoiDifficulty(id: number, data: { slug?: string; position?: number }): Promise<PoiDifficultyRecord> {
+    return apiFetch<PoiDifficultyRecord>(`/api/poi-difficulties/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async function deletePoiDifficulty(id: number): Promise<void> {
+    return apiFetch<void>(`/api/poi-difficulties/${id}`, { method: "DELETE" });
+  }
+
   // --- Users ---
   interface ApiUser {
     id: number;
@@ -129,10 +175,43 @@ export function useApi() {
     return apiFetch<void>(`/api/users/${id}`, { method: "DELETE" });
   }
 
+  // --- Logs ---
+  interface LogEntry {
+    id: number;
+    userId: number | null;
+    userName: string | null;
+    event: string;
+    data: Record<string, unknown>;
+    deviceInfo: Record<string, unknown>;
+    lat: number | null;
+    lon: number | null;
+    createdAt: string;
+  }
+
+  interface LogsResponse {
+    logs: LogEntry[];
+    total: number;
+  }
+
+  async function listLogs(params: { event?: string; userId?: string; from?: string; to?: string; limit?: number; offset?: number } = {}): Promise<LogsResponse> {
+    const qs = new URLSearchParams();
+    if (params.event) qs.set("event", params.event);
+    if (params.userId) qs.set("userId", params.userId);
+    if (params.from) qs.set("from", params.from);
+    if (params.to) qs.set("to", params.to);
+    if (params.limit) qs.set("limit", String(params.limit));
+    if (params.offset) qs.set("offset", String(params.offset));
+    const query = qs.toString();
+    return apiFetch<LogsResponse>(`/api/logs${query ? `?${query}` : ""}`);
+  }
+
   return {
     listPois, getPoi, createPoi, updatePoi, deletePoi,
     importOverpass, listStaging, updateStaging, approveStaged, rejectStaged, approveAllStaged,
     listImportZones,
+    listPoiTypes, createPoiType, updatePoiType, deletePoiType,
+    listPoiDifficulties, createPoiDifficulty, updatePoiDifficulty, deletePoiDifficulty,
     listUsers, createUser, updateUser, updateUserPermissions, deleteUser,
+    listLogs,
   };
 }
