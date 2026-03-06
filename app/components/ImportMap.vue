@@ -7,7 +7,7 @@ import type { ImportZone } from "~~/types/poi";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const MAPTILER_KEY = "AyCHMh8YkchCiGvdiwd0";
+const { maptilerKey: MAPTILER_KEY } = useRuntimeConfig().public;
 
 const props = defineProps<{
   zones: ImportZone[];
@@ -129,5 +129,12 @@ watch(() => props.previewRadius, () => {
 watch(() => colorMode.value, () => {
   if (!map || !tileLayer) return;
   tileLayer.setUrl(getTileUrl());
+});
+
+onBeforeUnmount(() => {
+  if (map) {
+    map.remove();
+    map = null;
+  }
 });
 </script>

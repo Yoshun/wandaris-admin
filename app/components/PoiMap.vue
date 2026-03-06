@@ -7,7 +7,7 @@ import type { PoiDefinition } from "~~/types/poi";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const MAPTILER_KEY = "AyCHMh8YkchCiGvdiwd0";
+const { maptilerKey: MAPTILER_KEY } = useRuntimeConfig().public;
 
 const props = defineProps<{
   pois: PoiDefinition[];
@@ -102,7 +102,9 @@ function updateMarkers() {
     const marker = L.marker([poi.lat, poi.lon], {
       icon: createPoiIcon(selected),
     });
-    marker.bindPopup(`<strong>${poi.name}</strong>`);
+    const popupContent = document.createElement('strong');
+    popupContent.textContent = poi.name;
+    marker.bindPopup(popupContent);
     marker.on("click", (e) => {
       L.DomEvent.stopPropagation(e);
       emit("poiClick", poi);
@@ -118,11 +120,28 @@ function updateMarkers() {
   }
 }
 
-// Re-render markers on pois or selectedId change
+// Rebuild markers when pois change
 watch(
-  () => [props.pois, props.selectedId],
+  () => props.pois,
   () => updateMarkers(),
   { deep: true }
+);
+
+// Only update highlight when selectedId changes (no full rebuild)
+watch(
+  () => props.selectedId,
+  () => {
+    if (!markersLayer || !map) return;
+    const layers = markersLayer.getLayers() as L.Marker[];
+    for (let i = 0; i < props.pois.length; i++) {
+      const poi = props.pois[i];
+      if (!poi) continue;
+      const marker = layers[i];
+      if (!marker) continue;
+      const selected = poi.id === props.selectedId;
+      marker.setIcon(createPoiIcon(selected));
+    }
+  }
 );
 
 // Switch tile layer on color mode change
@@ -145,6 +164,13 @@ function panTo(lat: number, lon: number) {
   if (!map) return;
   map.panTo([lat, lon]);
 }
+
+onBeforeUnmount(() => {
+  if (map) {
+    map.remove();
+    map = null;
+  }
+});
 
 defineExpose({ setClickPosition, panTo });
 </script>

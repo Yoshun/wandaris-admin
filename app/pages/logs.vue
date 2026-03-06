@@ -33,10 +33,10 @@
     <div v-else-if="error" class="text-error">{{ error }}</div>
 
     <template v-else>
-      <div class="text-muted text-sm mb-2">{{ total }} log{{ total > 1 ? 's' : '' }} au total</div>
+      <div class="text-muted mb-2">{{ total }} log{{ total > 1 ? 's' : '' }} au total</div>
 
       <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+        <table class="w-full">
           <thead class="bg-default">
             <tr class="border-b border-default text-left text-muted">
               <th class="py-2 px-3">Date</th>
@@ -56,24 +56,24 @@
               <td class="py-2 px-3 whitespace-nowrap text-muted">{{ formatDate(log.createdAt) }}</td>
               <td class="py-2 px-3 whitespace-nowrap">{{ log.userName ?? '—' }}</td>
               <td class="py-2 px-3">
-                <UBadge variant="subtle" :color="eventColor(log.event)" size="sm">
+                <UBadge variant="subtle" :color="eventColor(log.event)">
                   {{ log.event }}
                 </UBadge>
               </td>
               <td class="py-2 px-3 max-w-80">
                 <code
                   v-if="Object.keys(log.data ?? {}).length > 0"
-                  class="text-xs break-all text-muted"
+                  class="break-all text-muted"
                 >{{ formatJson(log.data) }}</code>
                 <span v-else class="text-dimmed">—</span>
               </td>
               <td class="py-2 px-3 max-w-48">
-                <span v-if="log.deviceInfo && Object.keys(log.deviceInfo).length > 0" class="text-xs text-muted">
+                <span v-if="log.deviceInfo && Object.keys(log.deviceInfo).length > 0" class="text-muted">
                   {{ deviceSummary(log.deviceInfo) }}
                 </span>
                 <span v-else class="text-dimmed">—</span>
               </td>
-              <td class="py-2 px-3 whitespace-nowrap text-muted text-xs">
+              <td class="py-2 px-3 whitespace-nowrap text-muted">
                 <template v-if="log.lat != null && log.lon != null">
                   {{ log.lat.toFixed(4) }}, {{ log.lon.toFixed(4) }}
                 </template>
@@ -90,7 +90,7 @@
       <!-- Pagination -->
       <div v-if="total > pageSize" class="flex items-center justify-center gap-2 mt-4">
         <UButton
-          size="xs"
+          size="sm"
           variant="soft"
           color="neutral"
           :disabled="page === 0"
@@ -98,11 +98,11 @@
         >
           Precedent
         </UButton>
-        <span class="text-sm text-muted">
+        <span class="text-muted">
           Page {{ page + 1 }} / {{ totalPages }}
         </span>
         <UButton
-          size="xs"
+          size="sm"
           variant="soft"
           color="neutral"
           :disabled="page >= totalPages - 1"
@@ -222,7 +222,6 @@ async function fetchLogs() {
 // Reload on filter/page change
 watch([filterEvent, filterUser, filterFrom, filterTo], () => {
   page.value = 0;
-  fetchLogs();
 });
 
 watch(page, () => fetchLogs());

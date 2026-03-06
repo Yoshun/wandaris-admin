@@ -78,6 +78,38 @@ const navItems = computed(() => {
       active: route.path === '/types'
     })
   }
+  if (can('pois.manage')) {
+    items.push({
+      label: 'Biomes',
+      icon: 'i-lucide-trees',
+      to: '/biomes',
+      active: route.path === '/biomes'
+    })
+  }
+  if (can('pois.manage')) {
+    items.push({
+      label: 'Monstres',
+      icon: 'i-lucide-swords',
+      to: '/monsters',
+      active: route.path === '/monsters'
+    })
+  }
+  if (can('pois.manage')) {
+    items.push({
+      label: 'Crafting',
+      icon: 'i-lucide-hammer',
+      to: '/crafting',
+      active: route.path === '/crafting'
+    })
+  }
+  if (can('pois.manage')) {
+    items.push({
+      label: 'Settings',
+      icon: 'i-lucide-sliders-horizontal',
+      to: '/settings',
+      active: route.path === '/settings'
+    })
+  }
   if (can('users.view')) {
     items.push({
       label: 'Utilisateurs',

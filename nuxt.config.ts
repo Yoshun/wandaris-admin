@@ -7,6 +7,7 @@ export default defineNuxtConfig({
 runtimeConfig: {
     public: {
       apiBase: "http://localhost:4000",
+      maptilerKey: "",
     },
   },
 });

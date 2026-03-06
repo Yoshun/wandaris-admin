@@ -9,11 +9,12 @@
 
         <!-- Add form -->
         <div class="flex gap-2 mb-4">
-          <UInput v-model="newTypeSlug" placeholder="nouveau_slug" size="sm" class="flex-1" />
+          <UInput v-model="newTypeSlug" placeholder="nouveau_slug" class="flex-1" />
+          <USelect v-model="newTypeBiome" :items="biomeItems" size="sm" class="w-36" />
           <UButton size="sm" :disabled="!newTypeSlug.trim()" @click="addType">Ajouter</UButton>
         </div>
 
-        <div v-if="loadingTypes" class="text-muted text-sm">Chargement...</div>
+        <div v-if="loadingTypes" class="text-muted">Chargement...</div>
         <div v-else class="space-y-1">
           <div
             v-for="(t, idx) in types"
@@ -22,14 +23,14 @@
           >
             <div class="flex flex-col gap-0.5">
               <UButton
-                size="xs"
+                size="sm"
                 variant="ghost"
                 color="neutral"
                 :disabled="idx === 0"
                 @click="moveType(t, idx, -1)"
               >↑</UButton>
               <UButton
-                size="xs"
+                size="sm"
                 variant="ghost"
                 color="neutral"
                 :disabled="idx === types.length - 1"
@@ -38,13 +39,15 @@
             </div>
             <template v-if="editingTypeId === t.id">
               <UInput v-model="editingTypeSlug" size="sm" class="flex-1" @keyup.enter="saveType(t)" />
-              <UButton size="xs" @click="saveType(t)">OK</UButton>
-              <UButton size="xs" variant="solid" color="neutral" @click="cancelEditType">Annuler</UButton>
+              <USelect v-model="editingTypeBiome" :items="biomeItems" size="sm" class="w-36" />
+              <UButton size="sm" @click="saveType(t)">OK</UButton>
+              <UButton size="sm" variant="solid" color="neutral" @click="cancelEditType">Annuler</UButton>
             </template>
             <template v-else>
-              <span class="flex-1 text-sm">{{ typeLabel(t.slug) }} <span class="text-dimmed">({{ t.slug }})</span></span>
-              <UButton size="xs" variant="soft" @click="startEditType(t)">Modifier</UButton>
-              <UButton size="xs" variant="solid" color="error" @click="confirmDeleteType(t)">Supprimer</UButton>
+              <span class="flex-1">{{ typeLabel(t.slug) }} <span class="text-dimmed">({{ t.slug }})</span></span>
+              <span class="text-muted bg-default px-2 py-0.5 rounded">{{ t.biome }}</span>
+              <UButton size="sm" variant="soft" @click="startEditType(t)">Modifier</UButton>
+              <UButton size="sm" variant="solid" color="error" @click="confirmDeleteType(t)">Supprimer</UButton>
             </template>
           </div>
         </div>
@@ -56,49 +59,118 @@
 
         <!-- Add form -->
         <div class="flex gap-2 mb-4">
-          <UInput v-model="newDiffSlug" placeholder="nouveau_slug" size="sm" class="flex-1" />
+          <UInput v-model="newDiffSlug" placeholder="nouveau_slug" class="flex-1" />
           <UButton size="sm" :disabled="!newDiffSlug.trim()" @click="addDifficulty">Ajouter</UButton>
         </div>
 
-        <div v-if="loadingDiffs" class="text-muted text-sm">Chargement...</div>
+        <div v-if="loadingDiffs" class="text-muted">Chargement...</div>
         <div v-else class="space-y-1">
           <div
             v-for="(d, idx) in difficulties"
             :key="d.id"
-            class="flex items-center gap-2 bg-elevated border border-default rounded px-3 py-2"
+            class="bg-elevated border border-default rounded px-3 py-2"
           >
-            <div class="flex flex-col gap-0.5">
-              <UButton
-                size="xs"
-                variant="ghost"
-                color="neutral"
-                :disabled="idx === 0"
-                @click="moveDifficulty(d, idx, -1)"
-              >↑</UButton>
-              <UButton
-                size="xs"
-                variant="ghost"
-                color="neutral"
-                :disabled="idx === difficulties.length - 1"
-                @click="moveDifficulty(d, idx, 1)"
-              >↓</UButton>
+            <div class="flex items-center gap-2">
+              <div class="flex flex-col gap-0.5">
+                <UButton
+                  size="sm"
+                  variant="ghost"
+                  color="neutral"
+                  :disabled="idx === 0"
+                  @click="moveDifficulty(d, idx, -1)"
+                >↑</UButton>
+                <UButton
+                  size="sm"
+                  variant="ghost"
+                  color="neutral"
+                  :disabled="idx === difficulties.length - 1"
+                  @click="moveDifficulty(d, idx, 1)"
+                >↓</UButton>
+              </div>
+              <template v-if="editingDiffId === d.id">
+                <UInput v-model="editingDiffSlug" size="sm" class="flex-1" @keyup.enter="saveDifficulty(d)" />
+                <UButton size="sm" @click="saveDifficulty(d)">OK</UButton>
+                <UButton size="sm" variant="solid" color="neutral" @click="cancelEditDiff">Annuler</UButton>
+              </template>
+              <template v-else>
+                <span class="flex-1">{{ difficultyLabel(d.slug) }} <span class="text-dimmed">({{ d.slug }})</span></span>
+                <UButton size="sm" variant="soft" @click="startEditDiff(d)">Modifier</UButton>
+                <UButton size="sm" variant="ghost" @click="toggleDiffExpand(d.id)">
+                  {{ expandedDiffId === d.id ? '▲' : '▼' }}
+                </UButton>
+                <UButton size="sm" variant="solid" color="error" @click="confirmDeleteDiff(d)">Supprimer</UButton>
+              </template>
             </div>
-            <template v-if="editingDiffId === d.id">
-              <UInput v-model="editingDiffSlug" size="sm" class="flex-1" @keyup.enter="saveDifficulty(d)" />
-              <UButton size="xs" @click="saveDifficulty(d)">OK</UButton>
-              <UButton size="xs" variant="solid" color="neutral" @click="cancelEditDiff">Annuler</UButton>
-            </template>
-            <template v-else>
-              <span class="flex-1 text-sm">{{ difficultyLabel(d.slug) }} <span class="text-dimmed">({{ d.slug }})</span></span>
-              <UButton size="xs" variant="soft" @click="startEditDiff(d)">Modifier</UButton>
-              <UButton size="xs" variant="solid" color="error" @click="confirmDeleteDiff(d)">Supprimer</UButton>
-            </template>
+
+            <!-- Gameplay fields (always visible) -->
+            <div class="grid grid-cols-3 gap-2 mt-2">
+              <div>
+                <label class="text-muted">Cooldown (h)</label>
+                <UInput
+                  type="number"
+                  :model-value="d.cooldownHours"
+                  size="sm"
+                  @change="updateDiffField(d, 'cooldownHours', Number(($event.target as HTMLInputElement).value))"
+                />
+              </div>
+              <div>
+                <label class="text-muted">XP</label>
+                <UInput
+                  type="number"
+                  :model-value="d.rewardXp"
+                  size="sm"
+                  @change="updateDiffField(d, 'rewardXp', Number(($event.target as HTMLInputElement).value))"
+                />
+              </div>
+              <div>
+                <label class="text-muted">Gold</label>
+                <UInput
+                  type="number"
+                  :model-value="d.rewardGold"
+                  size="sm"
+                  @change="updateDiffField(d, 'rewardGold', Number(($event.target as HTMLInputElement).value))"
+                />
+              </div>
+            </div>
+
+            <!-- Loot table (expandable) -->
+            <div v-if="expandedDiffId === d.id" class="mt-2 border-t border-default pt-2">
+              <p class="text-muted mb-1 font-semibold">Loot Table</p>
+              <div class="space-y-1">
+                <div v-for="res in ['wood', 'ore', 'fabric', 'herbs']" :key="res" class="grid grid-cols-4 gap-1 items-center">
+                  <span class="text-muted capitalize">{{ res }}</span>
+                  <UInput
+                    type="number"
+                    step="0.1"
+                    placeholder="chance"
+                    :model-value="d.lootTable[res]?.chance ?? 0"
+                    size="sm"
+                    @change="updateLootField(d, res, 'chance', Number(($event.target as HTMLInputElement).value))"
+                  />
+                  <UInput
+                    type="number"
+                    placeholder="min"
+                    :model-value="d.lootTable[res]?.min ?? 0"
+                    size="sm"
+                    @change="updateLootField(d, res, 'min', Number(($event.target as HTMLInputElement).value))"
+                  />
+                  <UInput
+                    type="number"
+                    placeholder="max"
+                    :model-value="d.lootTable[res]?.max ?? 0"
+                    size="sm"
+                    @change="updateLootField(d, res, 'max', Number(($event.target as HTMLInputElement).value))"
+                  />
+                </div>
+                <div class="text-dimmed mt-1">chance (0-1) | min | max</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <p v-if="errorMsg" class="text-error text-sm mt-4">{{ errorMsg }}</p>
+    <p v-if="errorMsg" class="text-error mt-4">{{ errorMsg }}</p>
 
     <ConfirmDialog
       :visible="!!deleteTarget"
@@ -118,6 +190,13 @@ const {
   listPoiDifficulties, createPoiDifficulty, updatePoiDifficulty, deletePoiDifficulty,
 } = useApi();
 
+const biomeItems = [
+  { label: 'Wilderness', value: 'wilderness' },
+  { label: 'Urban', value: 'urban' },
+  { label: 'Forest', value: 'forest' },
+  { label: 'Mountain', value: 'mountain' },
+];
+
 const types = ref<PoiTypeRecord[]>([]);
 const difficulties = ref<PoiDifficultyRecord[]>([]);
 const loadingTypes = ref(true);
@@ -126,18 +205,27 @@ const errorMsg = ref("");
 
 // Add forms
 const newTypeSlug = ref("");
+const newTypeBiome = ref("wilderness");
 const newDiffSlug = ref("");
 
 // Inline editing — types
 const editingTypeId = ref<number | null>(null);
 const editingTypeSlug = ref("");
+const editingTypeBiome = ref("wilderness");
 
 // Inline editing — difficulties
 const editingDiffId = ref<number | null>(null);
 const editingDiffSlug = ref("");
 
+// Expand loot table
+const expandedDiffId = ref<number | null>(null);
+
 // Delete confirmation
 const deleteTarget = ref<{ kind: "type" | "difficulty"; id: number; slug: string } | null>(null);
+
+function toggleDiffExpand(id: number) {
+  expandedDiffId.value = expandedDiffId.value === id ? null : id;
+}
 
 async function fetchTypes() {
   loadingTypes.value = true;
@@ -169,7 +257,7 @@ async function addType() {
   errorMsg.value = "";
   try {
     const maxPos = types.value.length > 0 ? Math.max(...types.value.map((t) => t.position)) + 1 : 0;
-    const created = await createPoiType({ slug, position: maxPos });
+    const created = await createPoiType({ slug, position: maxPos, biome: newTypeBiome.value });
     types.value.push(created);
     newTypeSlug.value = "";
   } catch (e: any) {
@@ -180,6 +268,7 @@ async function addType() {
 function startEditType(t: PoiTypeRecord) {
   editingTypeId.value = t.id;
   editingTypeSlug.value = t.slug;
+  editingTypeBiome.value = t.biome;
 }
 
 function cancelEditType() {
@@ -189,7 +278,7 @@ function cancelEditType() {
 async function saveType(t: PoiTypeRecord) {
   errorMsg.value = "";
   try {
-    const updated = await updatePoiType(t.id, { slug: editingTypeSlug.value.trim() });
+    const updated = await updatePoiType(t.id, { slug: editingTypeSlug.value.trim(), biome: editingTypeBiome.value });
     const idx = types.value.findIndex((x) => x.id === t.id);
     if (idx >= 0) types.value[idx] = updated;
     editingTypeId.value = null;
@@ -250,6 +339,35 @@ async function saveDifficulty(d: PoiDifficultyRecord) {
     const idx = difficulties.value.findIndex((x) => x.id === d.id);
     if (idx >= 0) difficulties.value[idx] = updated;
     editingDiffId.value = null;
+  } catch (e: any) {
+    errorMsg.value = e.message;
+  }
+}
+
+async function updateDiffField(d: PoiDifficultyRecord, field: 'cooldownHours' | 'rewardXp' | 'rewardGold', value: number) {
+  errorMsg.value = "";
+  try {
+    const updated = await updatePoiDifficulty(d.id, { [field]: value });
+    const idx = difficulties.value.findIndex((x) => x.id === d.id);
+    if (idx >= 0) difficulties.value[idx] = updated;
+  } catch (e: any) {
+    errorMsg.value = e.message;
+  }
+}
+
+async function updateLootField(d: PoiDifficultyRecord, resource: string, field: 'chance' | 'min' | 'max', value: number) {
+  errorMsg.value = "";
+  try {
+    const newLootTable = { ...d.lootTable };
+    newLootTable[resource] = {
+      chance: d.lootTable[resource]?.chance ?? 0,
+      min: d.lootTable[resource]?.min ?? 0,
+      max: d.lootTable[resource]?.max ?? 0,
+      [field]: value,
+    };
+    const updated = await updatePoiDifficulty(d.id, { lootTable: newLootTable });
+    const idx = difficulties.value.findIndex((x) => x.id === d.id);
+    if (idx >= 0) difficulties.value[idx] = updated;
   } catch (e: any) {
     errorMsg.value = e.message;
   }

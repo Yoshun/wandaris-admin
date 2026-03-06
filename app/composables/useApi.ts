@@ -1,4 +1,4 @@
-import type { PoiDefinition, CreatePoiInput, UpdatePoiInput, StagedPoi, ImportResult, ImportZone, PoiTypeRecord, PoiDifficultyRecord } from "~~/types/poi";
+import type { PoiDefinition, CreatePoiInput, UpdatePoiInput, StagedPoi, ImportResult, ImportZone, PoiTypeRecord, PoiDifficultyRecord, BiomeResourceWeightRecord, BiomeMonsterWeightRecord, MonsterTemplateRecord, GameSettingRecord, ItemTemplateRecord, RecipeRecord, ProfessionRecord } from "~~/types/poi";
 
 export function useApi() {
   const config = useRuntimeConfig();
@@ -10,8 +10,8 @@ export function useApi() {
     if (fetchOptions?.body) headers["Content-Type"] = "application/json";
     if (token.value) headers["Authorization"] = `Bearer ${token.value}`;
     const res = await fetch(`${apiBase}${path}`, {
-      headers,
       ...fetchOptions,
+      headers: { ...headers, ...(fetchOptions?.headers as Record<string, string> ?? {}) },
     });
     if (res.status === 401) {
       logout();
@@ -96,14 +96,14 @@ export function useApi() {
     return apiFetch<PoiTypeRecord[]>("/api/poi-types");
   }
 
-  async function createPoiType(data: { slug: string; position?: number }): Promise<PoiTypeRecord> {
+  async function createPoiType(data: { slug: string; position?: number; biome?: string }): Promise<PoiTypeRecord> {
     return apiFetch<PoiTypeRecord>("/api/poi-types", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async function updatePoiType(id: number, data: { slug?: string; position?: number }): Promise<PoiTypeRecord> {
+  async function updatePoiType(id: number, data: { slug?: string; position?: number; biome?: string }): Promise<PoiTypeRecord> {
     return apiFetch<PoiTypeRecord>(`/api/poi-types/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -119,14 +119,14 @@ export function useApi() {
     return apiFetch<PoiDifficultyRecord[]>("/api/poi-difficulties");
   }
 
-  async function createPoiDifficulty(data: { slug: string; position?: number }): Promise<PoiDifficultyRecord> {
+  async function createPoiDifficulty(data: { slug: string; position?: number; cooldownHours?: number; rewardXp?: number; rewardGold?: number; lootTable?: Record<string, { chance: number; min: number; max: number }> }): Promise<PoiDifficultyRecord> {
     return apiFetch<PoiDifficultyRecord>("/api/poi-difficulties", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async function updatePoiDifficulty(id: number, data: { slug?: string; position?: number }): Promise<PoiDifficultyRecord> {
+  async function updatePoiDifficulty(id: number, data: { slug?: string; position?: number; cooldownHours?: number; rewardXp?: number; rewardGold?: number; lootTable?: Record<string, { chance: number; min: number; max: number }> }): Promise<PoiDifficultyRecord> {
     return apiFetch<PoiDifficultyRecord>(`/api/poi-difficulties/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -205,6 +205,137 @@ export function useApi() {
     return apiFetch<LogsResponse>(`/api/logs${query ? `?${query}` : ""}`);
   }
 
+  // --- Biome Weights ---
+  let gameConfigCache: { promise: Promise<any>; ts: number } | null = null;
+
+  function fetchGameConfig(): Promise<any> {
+    const now = Date.now();
+    if (gameConfigCache && now - gameConfigCache.ts < 5000) {
+      return gameConfigCache.promise;
+    }
+    const promise = apiFetch<any>("/api/game-config");
+    gameConfigCache = { promise, ts: now };
+    // Clear cache after 5s
+    setTimeout(() => { gameConfigCache = null; }, 5000);
+    return promise;
+  }
+
+  async function listBiomeResourceWeights(): Promise<BiomeResourceWeightRecord[]> {
+    const cfg = await fetchGameConfig();
+    return Object.entries(cfg.biomeResourceWeights).map(([biome, w]: [string, any], i) => ({
+      id: i + 1, biome, wood: w.wood, ore: w.ore, fabric: w.fabric, herbs: w.herbs,
+    }));
+  }
+
+  async function updateBiomeResourceWeights(biome: string, data: { wood: number; ore: number; fabric: number; herbs: number }): Promise<BiomeResourceWeightRecord> {
+    gameConfigCache = null;
+    return apiFetch<BiomeResourceWeightRecord>(`/api/biome-resource-weights/${biome}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async function listBiomeMonsterWeights(): Promise<BiomeMonsterWeightRecord[]> {
+    const cfg = await fetchGameConfig();
+    return Object.entries(cfg.biomeMonsterWeights).map(([biome, weights]: [string, any], i) => ({
+      id: i + 1, biome, weights,
+    }));
+  }
+
+  async function updateBiomeMonsterWeights(biome: string, data: { weights: Record<string, number> }): Promise<BiomeMonsterWeightRecord> {
+    gameConfigCache = null;
+    return apiFetch<BiomeMonsterWeightRecord>(`/api/biome-monster-weights/${biome}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  // --- Monster Templates ---
+  async function listMonsterTemplates(): Promise<MonsterTemplateRecord[]> {
+    return apiFetch<MonsterTemplateRecord[]>("/api/monster-templates");
+  }
+
+  async function createMonsterTemplate(data: Omit<MonsterTemplateRecord, "id">): Promise<MonsterTemplateRecord> {
+    return apiFetch<MonsterTemplateRecord>("/api/monster-templates", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async function updateMonsterTemplate(id: number, data: Partial<Omit<MonsterTemplateRecord, "id">>): Promise<MonsterTemplateRecord> {
+    return apiFetch<MonsterTemplateRecord>(`/api/monster-templates/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async function deleteMonsterTemplate(id: number): Promise<void> {
+    return apiFetch<void>(`/api/monster-templates/${id}`, { method: "DELETE" });
+  }
+
+  // --- Game Settings ---
+  async function listGameSettings(): Promise<GameSettingRecord[]> {
+    return apiFetch<GameSettingRecord[]>("/api/game-settings");
+  }
+
+  async function updateGameSetting(id: number, data: { value: number }): Promise<GameSettingRecord> {
+    return apiFetch<GameSettingRecord>(`/api/game-settings/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  // --- Item Templates ---
+  async function listItemTemplates(): Promise<ItemTemplateRecord[]> {
+    return apiFetch<ItemTemplateRecord[]>("/api/item-templates");
+  }
+
+  async function createItemTemplate(data: Omit<ItemTemplateRecord, "id">): Promise<ItemTemplateRecord> {
+    return apiFetch<ItemTemplateRecord>("/api/item-templates", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async function updateItemTemplate(id: number, data: Partial<Omit<ItemTemplateRecord, "id">>): Promise<ItemTemplateRecord> {
+    return apiFetch<ItemTemplateRecord>(`/api/item-templates/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async function deleteItemTemplate(id: number): Promise<void> {
+    return apiFetch<void>(`/api/item-templates/${id}`, { method: "DELETE" });
+  }
+
+  // --- Recipes ---
+  async function listRecipes(): Promise<RecipeRecord[]> {
+    return apiFetch<RecipeRecord[]>("/api/recipes/all");
+  }
+
+  async function createRecipe(data: { itemTemplateId: number; ingredients: Record<string, number>; quantity?: number; known?: boolean }): Promise<RecipeRecord> {
+    return apiFetch<RecipeRecord>("/api/recipes", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async function updateRecipe(id: number, data: { ingredients?: Record<string, number>; quantity?: number; known?: boolean }): Promise<RecipeRecord> {
+    return apiFetch<RecipeRecord>(`/api/recipes/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async function deleteRecipe(id: number): Promise<void> {
+    return apiFetch<void>(`/api/recipes/${id}`, { method: "DELETE" });
+  }
+
+  // --- Professions ---
+  async function listProfessions(): Promise<ProfessionRecord[]> {
+    return apiFetch<ProfessionRecord[]>("/api/professions/all");
+  }
+
   return {
     listPois, getPoi, createPoi, updatePoi, deletePoi,
     importOverpass, listStaging, updateStaging, approveStaged, rejectStaged, approveAllStaged,
@@ -213,5 +344,12 @@ export function useApi() {
     listPoiDifficulties, createPoiDifficulty, updatePoiDifficulty, deletePoiDifficulty,
     listUsers, createUser, updateUser, updateUserPermissions, deleteUser,
     listLogs,
+    listBiomeResourceWeights, updateBiomeResourceWeights,
+    listBiomeMonsterWeights, updateBiomeMonsterWeights,
+    listMonsterTemplates, createMonsterTemplate, updateMonsterTemplate, deleteMonsterTemplate,
+    listGameSettings, updateGameSetting,
+    listItemTemplates, createItemTemplate, updateItemTemplate, deleteItemTemplate,
+    listRecipes, createRecipe, updateRecipe, deleteRecipe,
+    listProfessions,
   };
 }

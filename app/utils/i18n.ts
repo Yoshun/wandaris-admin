@@ -47,12 +47,12 @@ export function difficultyLabel(difficulty: string): string {
 export function parseGoogleMapsUrl(url: string): { lat: number; lon: number } | null {
   // Try !3d...!4d... (exact marker position)
   const dataMatch = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-  if (dataMatch) {
+  if (dataMatch?.[1] && dataMatch[2]) {
     return { lat: parseFloat(dataMatch[1]), lon: parseFloat(dataMatch[2]) };
   }
   // Fallback to @lat,lon in URL
   const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (atMatch) {
+  if (atMatch?.[1] && atMatch[2]) {
     return { lat: parseFloat(atMatch[1]), lon: parseFloat(atMatch[2]) };
   }
   return null;

@@ -9,7 +9,7 @@
     <div v-else-if="error" class="text-error">{{ error }}</div>
 
     <div v-else class="overflow-x-auto">
-      <table class="w-full text-sm">
+      <table class="w-full">
         <thead class="bg-default">
           <tr class="border-b border-default text-left text-muted">
             <th class="py-2 px-3">Nom</th>
@@ -29,7 +29,6 @@
                   :key="p"
                   variant="subtle"
                   :color="p === '*' ? 'warning' : 'neutral'"
-                  size="sm"
                 >
                   {{ permLabel(p) }}
                 </UBadge>
@@ -38,11 +37,11 @@
             </td>
             <td v-if="can('users.manage')" class="py-2 px-3">
               <div class="flex gap-1">
-                <UButton size="xs" @click="openEditModal(u)">Modifier</UButton>
-                <UButton size="xs" color="warning" variant="solid" @click="openPermsModal(u)">Permissions</UButton>
+                <UButton size="sm" @click="openEditModal(u)">Modifier</UButton>
+                <UButton size="sm" color="warning" variant="solid" @click="openPermsModal(u)">Permissions</UButton>
                 <UButton
                   v-if="u.id !== currentUser?.id"
-                  size="xs"
+                  size="sm"
                   color="error"
                   variant="solid"
                   @click="onDeleteRequest(u)"
@@ -77,15 +76,15 @@
               <UInput v-model="form.password" type="password" :required="!editingUser" />
             </UFormField>
             <div v-if="!editingUser">
-              <p class="text-sm text-muted mb-2">Permissions</p>
+              <p class="text-muted mb-2">Permissions</p>
               <div class="space-y-1">
                 <label v-for="p in ASSIGNABLE_PERMS" :key="p" class="flex items-center gap-2">
                   <input v-model="form.permissions" type="checkbox" :value="p" />
-                  <span class="text-sm">{{ permLabel(p) }}</span>
+                  <span>{{ permLabel(p) }}</span>
                 </label>
               </div>
             </div>
-            <div v-if="formError" class="text-error text-sm">{{ formError }}</div>
+            <div v-if="formError" class="text-error">{{ formError }}</div>
             <div class="flex gap-2 justify-end">
               <UButton variant="soft" color="neutral" @click="showUserModal = false">Annuler</UButton>
               <UButton type="submit" :loading="formLoading">{{ editingUser ? 'Enregistrer' : 'Creer' }}</UButton>
@@ -103,10 +102,10 @@
           <div class="space-y-2">
             <label v-for="p in ASSIGNABLE_PERMS" :key="p" class="flex items-center gap-2">
               <input v-model="permsForm" type="checkbox" :value="p" />
-              <span class="text-sm">{{ permLabel(p) }}</span>
+              <span>{{ permLabel(p) }}</span>
             </label>
           </div>
-          <div v-if="permsError" class="text-error text-sm mt-2">{{ permsError }}</div>
+          <div v-if="permsError" class="text-error mt-2">{{ permsError }}</div>
           <div class="flex gap-2 justify-end mt-4">
             <UButton variant="soft" color="neutral" @click="showPermsModal = false">Annuler</UButton>
             <UButton :loading="permsLoading" @click="savePerms">Enregistrer</UButton>
@@ -220,6 +219,10 @@ async function saveUser() {
         formError.value = "Le mot de passe est requis";
         return;
       }
+      if (form.password.length < 8) {
+        formError.value = "Le mot de passe doit contenir au moins 8 caracteres";
+        return;
+      }
       const created = await createUser({
         name: form.name,
         email: form.email,
@@ -249,7 +252,9 @@ async function savePerms() {
   permsError.value = "";
   try {
     const result = await updateUserPermissions(permsTarget.value.id, permsForm.value);
-    const idx = userList.value.findIndex((u) => u.id === permsTarget.value!.id);
+    const target = permsTarget.value;
+    if (!target) return;
+    const idx = userList.value.findIndex((u) => u.id === target.id);
     if (idx >= 0) userList.value[idx].permissions = result.permissions;
     showPermsModal.value = false;
   } catch (e: any) {

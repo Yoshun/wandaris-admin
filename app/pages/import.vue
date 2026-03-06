@@ -14,7 +14,7 @@
             />
           </ClientOnly>
         </div>
-        <p class="text-xs text-dimmed mt-2">
+        <p class="text-dimmed mt-2">
           Cliquez sur la carte pour choisir le centre de l'import.
           Les zones grises sont deja couvertes.
         </p>
@@ -26,8 +26,8 @@
         <div class="bg-elevated border border-default rounded-lg p-4">
           <div class="flex flex-wrap gap-3 items-end">
             <div class="flex-1 min-w-[120px]">
-              <label class="block text-xs text-muted mb-1">Coordonnees</label>
-              <div class="text-sm">
+              <label class="block text-muted mb-1">Coordonnees</label>
+              <div>
                 <template v-if="clickedLat !== null">
                   {{ clickedLat.toFixed(5) }}, {{ clickedLon!.toFixed(5) }}
                 </template>
@@ -35,27 +35,27 @@
               </div>
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1">Rayon (km)</label>
-              <UInput v-model.number="radiusKm" type="number" :min="1" :max="50" size="sm" class="w-full sm:w-20" />
+              <label class="block text-muted mb-1">Rayon (km)</label>
+              <UInput v-model.number="radiusKm" type="number" :min="1" :max="50" class="w-full sm:w-20" />
             </div>
             <UButton :disabled="importing || clickedLat === null" :loading="importing" @click="runImport">
               Importer cette zone
             </UButton>
           </div>
-          <p v-if="importMessage" class="text-sm mt-2" :class="importError ? 'text-error' : 'text-success'">
+          <p v-if="importMessage" class="mt-2" :class="importError ? 'text-error' : 'text-success'">
             {{ importMessage }}
           </p>
         </div>
 
         <!-- Staged POIs -->
         <div v-if="staged.length > 0" class="flex items-center justify-between">
-          <span class="text-muted text-sm">{{ staged.length }} POI(s) en attente</span>
-          <UButton color="success" variant="solid" size="sm" @click="approveAll">Tout valider</UButton>
+          <span class="text-muted">{{ staged.length }} POI(s) en attente</span>
+          <UButton color="success" variant="solid" @click="approveAll">Tout valider</UButton>
         </div>
 
-        <div v-if="loadingStaged" class="text-muted text-sm">Chargement...</div>
+        <div v-if="loadingStaged" class="text-muted">Chargement...</div>
 
-        <div v-else-if="staged.length === 0 && !loadingStaged" class="text-dimmed text-sm">
+        <div v-else-if="staged.length === 0 && !loadingStaged" class="text-dimmed">
           Aucun POI en attente. Cliquez sur la carte pour importer une zone.
         </div>
 
@@ -67,30 +67,28 @@
           >
             <div class="flex flex-wrap gap-2 items-start">
               <div class="flex-1 min-w-[150px]">
-                <UInput v-model="poi.name" size="sm" class="w-full" @blur="saveStaged(poi)" />
+                <UInput v-model="poi.name" class="w-full" @blur="saveStaged(poi)" />
               </div>
               <USelect
                 v-model="poi.type"
                 :items="typeOptions"
-                size="sm"
                 class="w-full sm:w-32"
                 @update:model-value="saveStaged(poi)"
               />
               <USelect
                 v-model="poi.difficulty"
                 :items="difficultyOptions"
-                size="sm"
                 class="w-full sm:w-28"
                 @update:model-value="saveStaged(poi)"
               />
               <a
                 :href="`https://www.google.com/maps/search/?api=1&query=${poi.lat},${poi.lon}`"
                 target="_blank"
-                class="text-xs text-primary hover:underline pt-2"
+                class="text-primary hover:underline pt-2"
               >Google Maps</a>
               <div class="flex gap-1">
-                <UButton size="xs" color="success" variant="solid" @click="approve(poi)">Valider</UButton>
-                <UButton size="xs" color="error" variant="solid" @click="reject(poi)">Refuser</UButton>
+                <UButton size="sm" color="success" variant="solid" :disabled="busyPoiId === poi.id" :loading="busyPoiId === poi.id" @click="approve(poi)">Valider</UButton>
+                <UButton size="sm" color="error" variant="solid" :disabled="busyPoiId === poi.id" :loading="busyPoiId === poi.id" @click="reject(poi)">Refuser</UButton>
               </div>
             </div>
           </div>
@@ -123,6 +121,7 @@ const radius = computed(() => radiusKm.value * 1000);
 const importing = ref(false);
 const importMessage = ref("");
 const importError = ref(false);
+const busyPoiId = ref<number | null>(null);
 
 const poiTypesData = ref<PoiTypeRecord[]>([]);
 const poiDifficultiesData = ref<PoiDifficultyRecord[]>([]);
@@ -187,22 +186,30 @@ async function saveStaged(poi: StagedPoi) {
 }
 
 async function approve(poi: StagedPoi) {
+  if (busyPoiId.value !== null) return;
+  busyPoiId.value = poi.id;
   try {
     await approveStaged(poi.id);
     staged.value = staged.value.filter((p) => p.id !== poi.id);
   } catch (e: any) {
     importMessage.value = e.message;
     importError.value = true;
+  } finally {
+    busyPoiId.value = null;
   }
 }
 
 async function reject(poi: StagedPoi) {
+  if (busyPoiId.value !== null) return;
+  busyPoiId.value = poi.id;
   try {
     await rejectStaged(poi.id);
     staged.value = staged.value.filter((p) => p.id !== poi.id);
   } catch (e: any) {
     importMessage.value = e.message;
     importError.value = true;
+  } finally {
+    busyPoiId.value = null;
   }
 }
 
