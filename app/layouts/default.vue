@@ -118,6 +118,14 @@ const navItems = computed(() => {
       active: route.path === '/users'
     })
   }
+  if (can('pois.manage')) {
+    items.push({
+      label: 'Communaute',
+      icon: 'i-lucide-message-square',
+      to: '/community',
+      active: route.path === '/community'
+    })
+  }
   if (can('pois.view')) {
     items.push({
       label: 'Logs',

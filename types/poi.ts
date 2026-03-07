@@ -144,3 +144,28 @@ export interface ProfessionRecord {
   label: string;
   position: number;
 }
+
+export interface PoiReportRecord {
+  id: number;
+  poiId: number;
+  poiName: string | null;
+  playerId: number;
+  message: string;
+  status: string;
+  adminResponse: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export interface PoiSubmissionRecord {
+  id: number;
+  playerId: number;
+  name: string;
+  description: string | null;
+  lat: number;
+  lon: number;
+  status: string;
+  rejectReason: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+}

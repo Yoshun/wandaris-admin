@@ -63,5 +63,5 @@ Le composable `useApi()` expose toutes les fonctions typées :
 
 ## Types de POI
 
-28 types avec labels français (voir `app/utils/i18n.ts`) :
-castle, church, ruin, fort, manor, archaeological_site, tower, city_gate, summit, viewpoint, waterfall, cave, cliff, arch, hot_spring, volcano, glacier, lake, bridge, garden, square, megalith, rock, windmill, lighthouse, water_mill, aqueduct, geological
+22 types avec labels français (voir `app/utils/i18n.ts`) :
+castle, church, ruin, manor, archaeological_site, tower, city_gate, summit, viewpoint, waterfall, cave, hot_spring, volcano, glacier, lake, bridge, garden, square, mill, lighthouse, geological, monument

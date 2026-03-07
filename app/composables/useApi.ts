@@ -1,4 +1,4 @@
-import type { PoiDefinition, CreatePoiInput, UpdatePoiInput, StagedPoi, ImportResult, ImportZone, PoiTypeRecord, PoiDifficultyRecord, BiomeResourceWeightRecord, BiomeMonsterWeightRecord, MonsterTemplateRecord, GameSettingRecord, ItemTemplateRecord, RecipeRecord, ProfessionRecord } from "~~/types/poi";
+import type { PoiDefinition, CreatePoiInput, UpdatePoiInput, StagedPoi, ImportResult, ImportZone, PoiTypeRecord, PoiDifficultyRecord, BiomeResourceWeightRecord, BiomeMonsterWeightRecord, MonsterTemplateRecord, GameSettingRecord, ItemTemplateRecord, RecipeRecord, ProfessionRecord, PoiReportRecord, PoiSubmissionRecord } from "~~/types/poi";
 
 export function useApi() {
   const config = useRuntimeConfig();
@@ -336,6 +336,30 @@ export function useApi() {
     return apiFetch<ProfessionRecord[]>("/api/professions/all");
   }
 
+  // --- POI Reports ---
+  async function listPoiReports(): Promise<PoiReportRecord[]> {
+    return apiFetch<PoiReportRecord[]>("/api/poi-reports");
+  }
+
+  async function updatePoiReport(id: number, data: { status: string; adminResponse?: string }): Promise<PoiReportRecord> {
+    return apiFetch<PoiReportRecord>(`/api/poi-reports/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  // --- POI Submissions ---
+  async function listPoiSubmissions(): Promise<PoiSubmissionRecord[]> {
+    return apiFetch<PoiSubmissionRecord[]>("/api/poi-submissions");
+  }
+
+  async function updatePoiSubmission(id: number, data: { status: string; rejectReason?: string }): Promise<PoiSubmissionRecord> {
+    return apiFetch<PoiSubmissionRecord>(`/api/poi-submissions/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
   return {
     listPois, getPoi, createPoi, updatePoi, deletePoi,
     importOverpass, listStaging, updateStaging, approveStaged, rejectStaged, approveAllStaged,
@@ -351,5 +375,7 @@ export function useApi() {
     listItemTemplates, createItemTemplate, updateItemTemplate, deleteItemTemplate,
     listRecipes, createRecipe, updateRecipe, deleteRecipe,
     listProfessions,
+    listPoiReports, updatePoiReport,
+    listPoiSubmissions, updatePoiSubmission,
   };
 }

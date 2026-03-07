@@ -2,7 +2,6 @@ export const POI_TYPE_LABELS: Record<string, string> = {
   castle: "Chateau",
   church: "Eglise",
   ruin: "Ruine",
-  fort: "Fort",
   manor: "Manoir",
   archaeological_site: "Site archeologique",
   tower: "Tour",
@@ -11,8 +10,6 @@ export const POI_TYPE_LABELS: Record<string, string> = {
   viewpoint: "Point de vue",
   waterfall: "Cascade",
   cave: "Grotte",
-  cliff: "Falaise",
-  arch: "Arche naturelle",
   hot_spring: "Source chaude",
   volcano: "Volcan",
   glacier: "Glacier",
@@ -20,13 +17,10 @@ export const POI_TYPE_LABELS: Record<string, string> = {
   bridge: "Pont",
   garden: "Jardin",
   square: "Place",
-  megalith: "Megalithes",
-  rock: "Rocher",
-  windmill: "Moulin a vent",
+  mill: "Moulin",
   lighthouse: "Phare",
-  water_mill: "Moulin a eau",
-  aqueduct: "Aqueduc",
   geological: "Curiosite geologique",
+  monument: "Monument",
 };
 
 export const POI_DIFFICULTY_LABELS: Record<string, string> = {
