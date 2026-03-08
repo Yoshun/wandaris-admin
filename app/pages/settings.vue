@@ -47,13 +47,12 @@ const savingId = ref<number | null>(null);
 const allSettings = ref<GameSettingRecord[]>([]);
 
 const categoryLabels: Record<string, string> = {
-  monster_spawn: "Spawn monstres",
-  resource_spawn: "Spawn ressources",
+  spawn: "Spawns",
   combat: "Combat",
   monster_scaling: "Scaling monstres",
   combat_tiers: "Tiers de combat",
   player_formulas: "Formules joueur",
-  combat_rewards: "R\u00E9compenses combat",
+  combat_rewards: "Récompenses combat",
   progression: "Progression",
 };
 
