@@ -6,8 +6,8 @@ export default defineNuxtConfig({
   ssr: false,
 runtimeConfig: {
     public: {
-      apiBase: "http://localhost:4000",
-      maptilerKey: "",
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || "http://localhost:4000",
+      maptilerKey: process.env.NUXT_PUBLIC_MAPTILER_KEY || "",
     },
   },
 });
