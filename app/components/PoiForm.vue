@@ -35,14 +35,14 @@
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-sm text-muted mb-1">Latitude</label>
-          <UInput :model-value="form.lat?.toFixed(7) ?? ''" class="w-full" readonly disabled />
+          <UInput v-model="latInput" class="w-full" @blur="onLatBlur" />
         </div>
         <div>
           <label class="block text-sm text-muted mb-1">Longitude</label>
-          <UInput :model-value="form.lon?.toFixed(7) ?? ''" class="w-full" readonly disabled />
+          <UInput v-model="lonInput" class="w-full" @blur="onLonBlur" />
         </div>
       </div>
-      <p class="text-xs text-dimmed">Cliquez sur la carte ou collez un lien Google Maps</p>
+      <p class="text-xs text-dimmed">Cliquez sur la carte, collez un lien Google Maps ou saisissez les coordonnées</p>
 
       <div class="flex gap-3 pt-1">
         <UButton type="submit" :disabled="!isValid || loading">
@@ -85,6 +85,9 @@ const emit = defineEmits<{
 const googleMapsUrl = ref("");
 const coordsError = ref("");
 
+const latInput = ref(props.initialData?.lat?.toFixed(7) ?? "");
+const lonInput = ref(props.initialData?.lon?.toFixed(7) ?? "");
+
 const form = reactive({
   name: props.initialData?.name ?? "",
   type: props.initialData?.type ?? props.poiTypes[0]?.slug ?? "",
@@ -104,6 +107,28 @@ const isValid = computed(
   () => form.name.trim() !== "" && form.lat !== null && form.lon !== null
 );
 
+function onLatBlur() {
+  const v = parseFloat(latInput.value);
+  if (!isNaN(v) && v >= -90 && v <= 90) {
+    form.lat = v;
+    latInput.value = v.toFixed(7);
+    if (form.lon !== null) emit("coordsChanged", { lat: v, lon: form.lon });
+  } else if (form.lat !== null) {
+    latInput.value = form.lat.toFixed(7);
+  }
+}
+
+function onLonBlur() {
+  const v = parseFloat(lonInput.value);
+  if (!isNaN(v) && v >= -180 && v <= 180) {
+    form.lon = v;
+    lonInput.value = v.toFixed(7);
+    if (form.lat !== null) emit("coordsChanged", { lat: form.lat, lon: v });
+  } else if (form.lon !== null) {
+    lonInput.value = form.lon.toFixed(7);
+  }
+}
+
 function extractCoords() {
   coordsError.value = "";
   const result = parseGoogleMapsUrl(googleMapsUrl.value);
@@ -113,12 +138,16 @@ function extractCoords() {
   }
   form.lat = result.lat;
   form.lon = result.lon;
+  latInput.value = result.lat.toFixed(7);
+  lonInput.value = result.lon.toFixed(7);
   emit("coordsChanged", result);
 }
 
 function setCoords(lat: number, lon: number) {
   form.lat = lat;
   form.lon = lon;
+  latInput.value = lat.toFixed(7);
+  lonInput.value = lon.toFixed(7);
 }
 
 function handleSubmit() {
