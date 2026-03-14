@@ -15,6 +15,7 @@
             <th class="py-2 px-3">Nom</th>
             <th class="py-2 px-3">Type</th>
             <th class="py-2 px-3">Difficulte</th>
+            <th class="py-2 px-3">Lien</th>
             <th v-if="!readonly" class="py-2 px-3">Actions</th>
           </tr>
         </thead>
@@ -34,13 +35,20 @@
                 {{ difficultyLabel(poi.difficulty) }}
               </UBadge>
             </td>
+            <td class="py-2 px-3" @click.stop>
+              <a
+                :href="`https://www.google.com/maps/search/?api=1&query=${poi.lat},${poi.lon}`"
+                target="_blank"
+                class="text-primary hover:underline"
+              >Google Maps</a>
+            </td>
             <td v-if="!readonly" class="py-2 px-3 flex gap-1" @click.stop>
               <UButton size="xs" @click="emit('edit', poi)">Modifier</UButton>
               <UButton size="xs" color="error" variant="solid" @click="emit('delete', poi)">Supprimer</UButton>
             </td>
           </tr>
           <tr v-if="filtered.length === 0">
-            <td colspan="4" class="py-8 text-center text-dimmed">Aucun POI trouve</td>
+            <td colspan="5" class="py-8 text-center text-dimmed">Aucun POI trouve</td>
           </tr>
         </tbody>
       </table>
