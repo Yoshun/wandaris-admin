@@ -25,6 +25,7 @@ export interface BiomeResourceWeightRecord {
   ore: number;
   fabric: number;
   herbs: number;
+  leather: number;
 }
 
 export interface BiomeMonsterWeightRecord {

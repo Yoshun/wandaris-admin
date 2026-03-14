@@ -10,17 +10,18 @@
 
       <div v-if="loadingResources" class="text-muted">Chargement...</div>
       <div v-else class="space-y-2">
-        <div class="grid grid-cols-5 gap-2 text-muted font-semibold px-3">
+        <div class="grid grid-cols-6 gap-2 text-muted font-semibold px-3">
           <span>Biome</span>
           <span>Wood</span>
           <span>Ore</span>
           <span>Fabric</span>
           <span>Herbs</span>
+          <span>Cuir</span>
         </div>
         <div
           v-for="r in resourceWeights"
           :key="r.biome"
-          class="grid grid-cols-5 gap-2 items-center bg-elevated border border-default rounded px-3 py-2"
+          class="grid grid-cols-6 gap-2 items-center bg-elevated border border-default rounded px-3 py-2"
         >
           <span class="font-medium capitalize">{{ r.biome }}</span>
           <UInput
@@ -38,10 +39,15 @@
             v-model.number="r.fabric"
             size="sm"
           />
+          <UInput
+            type="number"
+            v-model.number="r.herbs"
+            size="sm"
+          />
           <div class="flex gap-1">
             <UInput
               type="number"
-              v-model.number="r.herbs"
+              v-model.number="r.leather"
               size="sm"
               class="flex-1"
             />
@@ -136,14 +142,14 @@ async function fetchMonsterWeights() {
 
 async function saveResourceWeights(r: BiomeResourceWeightRecord) {
   errorMsg.value = "";
-  if ([r.wood, r.ore, r.fabric, r.herbs].some((v) => v == null || isNaN(v) || v < 0)) {
+  if ([r.wood, r.ore, r.fabric, r.herbs, r.leather].some((v) => v == null || isNaN(v) || v < 0)) {
     errorMsg.value = "Les poids doivent etre >= 0";
     return;
   }
   savingResource.value = r.biome;
   try {
     await updateBiomeResourceWeights(r.biome, {
-      wood: r.wood, ore: r.ore, fabric: r.fabric, herbs: r.herbs,
+      wood: r.wood, ore: r.ore, fabric: r.fabric, herbs: r.herbs, leather: r.leather,
     });
   } catch (e: any) {
     errorMsg.value = e.message;

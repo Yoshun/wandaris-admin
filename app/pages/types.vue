@@ -137,7 +137,7 @@
             <div v-if="expandedDiffId === d.id" class="mt-2 border-t border-default pt-2">
               <p class="text-muted mb-1 font-semibold">Loot Table</p>
               <div class="space-y-1">
-                <div v-for="res in ['wood', 'ore', 'fabric', 'herbs']" :key="res" class="grid grid-cols-4 gap-1 items-center">
+                <div v-for="res in ['wood', 'ore', 'fabric', 'herbs', 'leather']" :key="res" class="grid grid-cols-4 gap-1 items-center">
                   <span class="text-muted capitalize">{{ res }}</span>
                   <UInput
                     type="number"
