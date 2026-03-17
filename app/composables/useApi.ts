@@ -175,6 +175,20 @@ export function useApi() {
     return apiFetch<void>(`/api/users/${id}`, { method: "DELETE" });
   }
 
+  async function suspendUser(id: number, suspended: boolean, reason?: string): Promise<void> {
+    return apiFetch(`/api/users/${id}/suspend`, {
+      method: "PUT",
+      body: JSON.stringify({ suspended, reason }),
+    });
+  }
+
+  async function communityBanUser(id: number, banned: boolean): Promise<void> {
+    return apiFetch(`/api/users/${id}/community-ban`, {
+      method: "PUT",
+      body: JSON.stringify({ banned }),
+    });
+  }
+
   // --- Logs ---
   interface LogEntry {
     id: number;
@@ -366,7 +380,7 @@ export function useApi() {
     listImportZones,
     listPoiTypes, createPoiType, updatePoiType, deletePoiType,
     listPoiDifficulties, createPoiDifficulty, updatePoiDifficulty, deletePoiDifficulty,
-    listUsers, createUser, updateUser, updateUserPermissions, deleteUser,
+    listUsers, createUser, updateUser, updateUserPermissions, deleteUser, suspendUser, communityBanUser,
     listLogs,
     listBiomeResourceWeights, updateBiomeResourceWeights,
     listBiomeMonsterWeights, updateBiomeMonsterWeights,

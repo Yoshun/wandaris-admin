@@ -36,9 +36,27 @@
               </div>
             </td>
             <td v-if="can('users.manage')" class="py-2 px-3">
-              <div class="flex gap-1">
+              <div class="flex flex-wrap gap-1">
                 <UButton size="sm" @click="openEditModal(u)">Modifier</UButton>
                 <UButton size="sm" color="warning" variant="solid" @click="openPermsModal(u)">Permissions</UButton>
+                <UButton
+                  v-if="u.id !== currentUser?.id"
+                  size="sm"
+                  :color="u.suspended ? 'success' : 'error'"
+                  variant="outline"
+                  @click="toggleSuspend(u)"
+                >
+                  {{ u.suspended ? 'Réactiver' : 'Suspendre' }}
+                </UButton>
+                <UButton
+                  v-if="u.id !== currentUser?.id"
+                  size="sm"
+                  :color="u.communityBanned ? 'success' : 'warning'"
+                  variant="outline"
+                  @click="toggleCommunityBan(u)"
+                >
+                  {{ u.communityBanned ? 'Débannir communauté' : 'Ban communauté' }}
+                </UButton>
                 <UButton
                   v-if="u.id !== currentUser?.id"
                   size="sm"
@@ -126,7 +144,7 @@
 
 <script setup lang="ts">
 const { can, user: currentUser } = useAuth();
-const { listUsers, createUser, updateUser, updateUserPermissions, deleteUser } = useApi();
+const { listUsers, createUser, updateUser, updateUserPermissions, deleteUser, suspendUser, communityBanUser } = useApi();
 
 const ASSIGNABLE_PERMS = ["*", "pois.view", "pois.manage", "users.view", "users.manage"];
 
@@ -147,6 +165,8 @@ interface UserRow {
   name: string;
   createdAt: string;
   permissions: string[];
+  suspended?: boolean;
+  communityBanned?: boolean;
 }
 
 const userList = ref<UserRow[]>([]);
@@ -277,6 +297,26 @@ async function confirmDelete() {
     error.value = e.message;
   }
   userToDelete.value = null;
+}
+
+async function toggleSuspend(u: UserRow) {
+  const next = !u.suspended;
+  const reason = next ? prompt("Raison de la suspension (optionnel) :") ?? undefined : undefined;
+  try {
+    await suspendUser(u.id, next, reason);
+    u.suspended = next;
+  } catch (e: any) {
+    error.value = e.message;
+  }
+}
+
+async function toggleCommunityBan(u: UserRow) {
+  try {
+    await communityBanUser(u.id, !u.communityBanned);
+    u.communityBanned = !u.communityBanned;
+  } catch (e: any) {
+    error.value = e.message;
+  }
 }
 
 onMounted(fetchUsers);
