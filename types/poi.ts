@@ -21,11 +21,7 @@ export interface PoiDifficultyRecord {
 export interface BiomeResourceWeightRecord {
   id: number;
   biome: string;
-  wood: number;
-  ore: number;
-  fabric: number;
-  herbs: number;
-  leather: number;
+  weights: Record<string, number>;
 }
 
 export interface BiomeMonsterWeightRecord {

@@ -9,51 +9,33 @@
       <h2 class="text-lg font-bold text-primary mb-3">Poids des ressources par biome</h2>
 
       <div v-if="loadingResources" class="text-muted">Chargement...</div>
-      <div v-else class="space-y-2">
-        <div class="grid grid-cols-6 gap-2 text-muted font-semibold px-3">
-          <span>Biome</span>
-          <span>Wood</span>
-          <span>Ore</span>
-          <span>Fabric</span>
-          <span>Herbs</span>
-          <span>Cuir</span>
-        </div>
+      <div v-else class="space-y-3">
         <div
           v-for="r in resourceWeights"
           :key="r.biome"
-          class="grid grid-cols-6 gap-2 items-center bg-elevated border border-default rounded px-3 py-2"
+          class="bg-elevated border border-default rounded px-3 py-2"
         >
-          <span class="font-medium capitalize">{{ r.biome }}</span>
-          <UInput
-            type="number"
-            v-model.number="r.wood"
-            size="sm"
-          />
-          <UInput
-            type="number"
-            v-model.number="r.ore"
-            size="sm"
-          />
-          <UInput
-            type="number"
-            v-model.number="r.fabric"
-            size="sm"
-          />
-          <UInput
-            type="number"
-            v-model.number="r.herbs"
-            size="sm"
-          />
-          <div class="flex gap-1">
-            <UInput
-              type="number"
-              v-model.number="r.leather"
-              size="sm"
-              class="flex-1"
-            />
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-medium capitalize">{{ r.biome }}</span>
             <UButton size="sm" @click="saveResourceWeights(r)" :loading="savingResource === r.biome">
               Sauver
             </UButton>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+            <div v-for="(weight, resType) in r.weights" :key="resType">
+              <label class="text-muted text-sm capitalize">{{ resType }}</label>
+              <UInput
+                type="number"
+                v-model.number="r.weights[resType]"
+                size="sm"
+              />
+            </div>
+          </div>
+          <!-- Add resource type -->
+          <div class="flex gap-1 mt-2">
+            <UInput v-model="newResKey[r.biome]" placeholder="resource_slug" size="sm" class="flex-1" />
+            <UInput v-model.number="newResWeight[r.biome]" type="number" placeholder="weight" size="sm" class="w-20" />
+            <UButton size="sm" variant="soft" @click="addResourceEntry(r)" :disabled="!newResKey[r.biome]?.trim()">+</UButton>
           </div>
         </div>
       </div>
@@ -78,7 +60,7 @@
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
             <div v-for="(weight, monsterType) in m.weights" :key="monsterType">
-              <label class="text-muted capitalize">{{ monsterType }}</label>
+              <label class="text-muted text-sm capitalize">{{ monsterType }}</label>
               <UInput
                 type="number"
                 v-model.number="m.weights[monsterType]"
@@ -115,6 +97,8 @@ const savingMonster = ref<string | null>(null);
 const resourceWeights = ref<BiomeResourceWeightRecord[]>([]);
 const monsterWeights = ref<BiomeMonsterWeightRecord[]>([]);
 
+const newResKey = ref<Record<string, string>>({});
+const newResWeight = ref<Record<string, number>>({});
 const newMonsterKey = ref<Record<string, string>>({});
 const newMonsterWeight = ref<Record<string, number>>({});
 
@@ -142,15 +126,13 @@ async function fetchMonsterWeights() {
 
 async function saveResourceWeights(r: BiomeResourceWeightRecord) {
   errorMsg.value = "";
-  if ([r.wood, r.ore, r.fabric, r.herbs, r.leather].some((v) => v == null || isNaN(v) || v < 0)) {
+  if (Object.values(r.weights).some((v) => v == null || isNaN(v) || v < 0)) {
     errorMsg.value = "Les poids doivent etre >= 0";
     return;
   }
   savingResource.value = r.biome;
   try {
-    await updateBiomeResourceWeights(r.biome, {
-      wood: r.wood, ore: r.ore, fabric: r.fabric, herbs: r.herbs, leather: r.leather,
-    });
+    await updateBiomeResourceWeights(r.biome, r.weights);
   } catch (e: any) {
     errorMsg.value = e.message;
   } finally {
@@ -172,6 +154,14 @@ async function saveMonsterWeights(m: BiomeMonsterWeightRecord) {
   } finally {
     savingMonster.value = null;
   }
+}
+
+function addResourceEntry(r: BiomeResourceWeightRecord) {
+  const key = newResKey.value[r.biome]?.trim();
+  if (!key) return;
+  r.weights[key] = newResWeight.value[r.biome] ?? 10;
+  newResKey.value[r.biome] = "";
+  newResWeight.value[r.biome] = 0;
 }
 
 function addMonsterEntry(m: BiomeMonsterWeightRecord) {

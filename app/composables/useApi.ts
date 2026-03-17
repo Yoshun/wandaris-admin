@@ -222,16 +222,16 @@ export function useApi() {
 
   async function listBiomeResourceWeights(): Promise<BiomeResourceWeightRecord[]> {
     const cfg = await fetchGameConfig();
-    return Object.entries(cfg.biomeResourceWeights).map(([biome, w]: [string, any], i) => ({
-      id: i + 1, biome, wood: w.wood, ore: w.ore, fabric: w.fabric, herbs: w.herbs, leather: w.leather ?? 0,
+    return Object.entries(cfg.biomeResourceWeights).map(([biome, weights]: [string, any], i) => ({
+      id: i + 1, biome, weights,
     }));
   }
 
-  async function updateBiomeResourceWeights(biome: string, data: { wood: number; ore: number; fabric: number; herbs: number; leather: number }): Promise<BiomeResourceWeightRecord> {
+  async function updateBiomeResourceWeights(biome: string, weights: Record<string, number>): Promise<BiomeResourceWeightRecord> {
     gameConfigCache = null;
     return apiFetch<BiomeResourceWeightRecord>(`/api/biome-resource-weights/${biome}`, {
       method: "PUT",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ weights }),
     });
   }
 
@@ -377,5 +377,6 @@ export function useApi() {
     listProfessions,
     listPoiReports, updatePoiReport,
     listPoiSubmissions, updatePoiSubmission,
+    fetchGameConfig,
   };
 }

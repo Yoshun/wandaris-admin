@@ -137,7 +137,7 @@
             <div v-if="expandedDiffId === d.id" class="mt-2 border-t border-default pt-2">
               <p class="text-muted mb-1 font-semibold">Loot Table</p>
               <div class="space-y-1">
-                <div v-for="res in ['wood', 'ore', 'fabric', 'herbs', 'leather']" :key="res" class="grid grid-cols-4 gap-1 items-center">
+                <div v-for="res in resourceSlugs" :key="res" class="grid grid-cols-4 gap-1 items-center">
                   <span class="text-muted capitalize">{{ res }}</span>
                   <UInput
                     type="number"
@@ -188,7 +188,11 @@ import { typeLabel, difficultyLabel } from "~/utils/i18n";
 const {
   listPoiTypes, createPoiType, updatePoiType, deletePoiType,
   listPoiDifficulties, createPoiDifficulty, updatePoiDifficulty, deletePoiDifficulty,
+  fetchGameConfig,
 } = useApi();
+
+// Dynamic resource slugs for loot table (loaded from API)
+const resourceSlugs = ref<string[]>(['wood', 'ore', 'fabric', 'leather']);
 
 const biomeItems = [
   { label: 'Wilderness', value: 'wilderness' },
@@ -412,8 +416,14 @@ async function executeDelete() {
   deleteTarget.value = null;
 }
 
-onMounted(() => {
+onMounted(async () => {
   fetchTypes();
   fetchDifficulties();
+  try {
+    const cfg = await fetchGameConfig();
+    if (cfg.resourceTypes?.length > 0) {
+      resourceSlugs.value = cfg.resourceTypes.map((r: any) => r.slug);
+    }
+  } catch { /* use default fallback */ }
 });
 </script>
