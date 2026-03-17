@@ -221,7 +221,11 @@ async function fetchLogs() {
 
 // Reload on filter/page change
 watch([filterEvent, filterUser, filterFrom, filterTo], () => {
-  page.value = 0;
+  if (page.value === 0) {
+    fetchLogs(); // page didn't change, fetch directly
+  } else {
+    page.value = 0; // will trigger the page watcher
+  }
 });
 
 watch(page, () => fetchLogs());
