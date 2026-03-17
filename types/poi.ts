@@ -161,6 +161,7 @@ export interface PoiSubmissionRecord {
   description: string | null;
   lat: number;
   lon: number;
+  photos: string[];
   status: string;
   rejectReason: string | null;
   createdAt: string;

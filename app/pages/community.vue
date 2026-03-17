@@ -39,6 +39,20 @@
                 <span class="text-dimmed text-xs">Joueur #{{ s.playerId }}</span>
               </div>
               <p v-if="s.description" class="text-muted text-sm mb-1">{{ s.description }}</p>
+              <!-- Photos -->
+              <div v-if="s.photos && s.photos.length > 0" class="flex gap-2 my-2">
+                <a
+                  v-for="(photo, i) in s.photos"
+                  :key="i"
+                  :href="`${apiBase}/uploads/poi-submissions/${photo}`"
+                  target="_blank"
+                >
+                  <img
+                    :src="`${apiBase}/uploads/poi-submissions/${photo}`"
+                    class="w-24 h-24 object-cover rounded border border-default hover:opacity-80 transition"
+                  />
+                </a>
+              </div>
               <p class="text-dimmed text-xs">
                 {{ s.lat.toFixed(5) }}, {{ s.lon.toFixed(5) }} — {{ formatDate(s.createdAt) }}
               </p>
@@ -125,6 +139,8 @@
 
 <script setup lang="ts">
 import type { PoiReportRecord, PoiSubmissionRecord } from '~~/types/poi'
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase as string
 
 const api = useApi()
 
