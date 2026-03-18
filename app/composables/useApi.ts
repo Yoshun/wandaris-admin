@@ -350,6 +350,11 @@ export function useApi() {
     return apiFetch<ProfessionRecord[]>("/api/professions/all");
   }
 
+  // --- Coverage ---
+  async function listCoverage(): Promise<any> {
+    return apiFetch<any>("/api/coverage/departments");
+  }
+
   // --- POI Reports ---
   async function listPoiReports(): Promise<PoiReportRecord[]> {
     return apiFetch<PoiReportRecord[]>("/api/poi-reports");
@@ -389,6 +394,7 @@ export function useApi() {
     listItemTemplates, createItemTemplate, updateItemTemplate, deleteItemTemplate,
     listRecipes, createRecipe, updateRecipe, deleteRecipe,
     listProfessions,
+    listCoverage,
     listPoiReports, updatePoiReport,
     listPoiSubmissions, updatePoiSubmission,
     fetchGameConfig,

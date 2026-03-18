@@ -128,6 +128,14 @@ const navItems = computed(() => {
   }
   if (can('pois.view')) {
     items.push({
+      label: 'Couverture',
+      icon: 'i-lucide-map-pin',
+      to: '/coverage',
+      active: route.path === '/coverage'
+    })
+  }
+  if (can('pois.view')) {
+    items.push({
       label: 'Logs',
       icon: 'i-lucide-scroll-text',
       to: '/logs',
