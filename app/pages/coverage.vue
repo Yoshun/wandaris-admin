@@ -1,14 +1,21 @@
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="Couverture par département" icon="i-lucide-map-pin" />
+      <UDashboardNavbar title="Couverture par département" icon="i-lucide-map-pin">
+        <template #right>
+          <UButton icon="i-lucide-copy" variant="soft" @click="copyForDiscord" :disabled="!coverageData">
+            Copier pour Discord
+          </UButton>
+        </template>
+      </UDashboardNavbar>
     </template>
 
     <template #body>
       <div v-if="loading" class="p-4 space-y-3">
         <USkeleton class="h-8 w-48" />
         <USkeleton class="h-3 w-full" />
-        <USkeleton class="h-[480px] w-full rounded-lg" />
+        <USkeleton class="h-10 w-full" />
+        <USkeleton class="h-10 w-full" />
       </div>
       <div v-else-if="errorMsg" class="text-error p-4">{{ errorMsg }}</div>
 
@@ -33,14 +40,7 @@
           />
         </div>
 
-        <!-- Map -->
-        <div class="mb-6">
-          <ClientOnly>
-            <div ref="mapEl" class="w-full rounded-lg overflow-hidden border border-default" style="height: 480px;" />
-          </ClientOnly>
-        </div>
-
-        <!-- Dept list -->
+        <!-- Dept list sorted by code -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
           <div
             v-for="dept in sortedDepts"
@@ -66,17 +66,19 @@
           Mis à jour le {{ formatDate(coverageData.updatedAt) }}
         </p>
       </div>
+
+      <!-- Copied toast -->
+      <div
+        v-if="showCopied"
+        class="fixed bottom-6 right-6 bg-elevated border border-default rounded-lg px-4 py-2 text-sm shadow-lg"
+      >
+        Copié dans le presse-papiers !
+      </div>
     </template>
   </UDashboardPanel>
 </template>
 
 <script setup lang="ts">
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-
-const GEOJSON_URL =
-  "https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements-version-simplifiee.geojson";
-
 interface DeptCoverage {
   code: string;
   name: string;
@@ -92,18 +94,15 @@ interface CoverageResponse {
 }
 
 const { listCoverage } = useApi();
-const colorMode = useColorMode();
 
 const loading = ref(true);
 const errorMsg = ref("");
 const coverageData = ref<CoverageResponse | null>(null);
-const mapEl = ref<HTMLDivElement>();
-let map: L.Map | null = null;
-let tileLayer: L.TileLayer | null = null;
+const showCopied = ref(false);
 
 const sortedDepts = computed(() => {
   if (!coverageData.value) return [];
-  return [...coverageData.value.departments].sort((a, b) => b.coverage - a.coverage);
+  return [...coverageData.value.departments].sort((a, b) => a.code.localeCompare(b.code));
 });
 
 function getCoverageColor(pct: number): string {
@@ -127,79 +126,56 @@ function formatDate(iso?: string): string {
   });
 }
 
-function getTileUrl() {
-  const { maptilerKey } = useRuntimeConfig().public;
-  const style = colorMode.value === "dark" ? "topo-v2-dark" : "topo-v2";
-  return `https://api.maptiler.com/maps/${style}/{z}/{x}/{y}.png?key=${maptilerKey}`;
+function makeProgressBar(pct: number, length = 10): string {
+  const filled = Math.round((pct / 100) * length);
+  const empty = length - filled;
+  return "\u2588".repeat(filled) + "\u2591".repeat(empty);
 }
 
-function initMap(geoJSON: any) {
-  if (!mapEl.value) return;
+function copyForDiscord() {
+  if (!coverageData.value) return;
 
-  map = L.map(mapEl.value, { zoomControl: true, attributionControl: false }).setView([46.6, 2.5], 6);
+  const d = coverageData.value;
+  const lines: string[] = [];
 
-  tileLayer = L.tileLayer(getTileUrl(), {
-    tileSize: 512,
-    zoomOffset: -1,
-  }).addTo(map);
+  lines.push("## \u2694\uFE0F Wandaris \u2014 Couverture des POI");
+  lines.push("");
+  lines.push(`**${d.overall}%** couverture nationale \u2014 **${d.departmentsStarted}**/${d.totalDepartments} départements`);
+  lines.push(`\`${makeProgressBar(d.overall, 20)}\` ${d.overall}%`);
+  lines.push("");
 
-  const coverageMap = new Map<string, number>();
-  if (coverageData.value) {
-    for (const dept of coverageData.value.departments) {
-      coverageMap.set(dept.code, dept.coverage);
+  // Only show departments that have coverage > 0, sorted by code
+  const active = [...d.departments]
+    .filter((dept) => dept.coverage > 0)
+    .sort((a, b) => a.code.localeCompare(b.code));
+
+  if (active.length > 0) {
+    lines.push("**Départements actifs :**");
+    for (const dept of active) {
+      lines.push(`\`${dept.code}\` ${dept.name} \u2014 \`${makeProgressBar(dept.coverage)}\` **${dept.coverage}%**`);
     }
   }
 
-  L.geoJSON(geoJSON, {
-    style: (feature) => {
-      const code = feature?.properties?.code ?? "";
-      const cov = coverageMap.get(code) ?? 0;
-      return {
-        fillColor: getCoverageColor(cov),
-        fillOpacity: cov > 0 ? 0.55 : 0.15,
-        color: colorMode.value === "dark" ? "#6b7280" : "#9ca3af",
-        weight: 1,
-      };
-    },
-    onEachFeature: (feature, layer) => {
-      const code = feature.properties?.code ?? "";
-      const name = feature.properties?.nom ?? "";
-      const cov = coverageMap.get(code) ?? 0;
-      layer.bindTooltip(`<b>${code} — ${name}</b><br>${cov}%`, { sticky: true });
-    },
-  }).addTo(map);
-}
+  const remaining = d.totalDepartments - d.departmentsStarted;
+  if (remaining > 0) {
+    lines.push("");
+    lines.push(`*${remaining} départements restants à explorer...*`);
+  }
 
-watch(() => colorMode.value, () => {
-  if (tileLayer) tileLayer.setUrl(getTileUrl());
-});
+  const text = lines.join("\n");
+  navigator.clipboard.writeText(text);
+
+  showCopied.value = true;
+  setTimeout(() => { showCopied.value = false; }, 2000);
+}
 
 onMounted(async () => {
   try {
-    const [coverage, geo] = await Promise.all([
-      listCoverage(),
-      fetch(GEOJSON_URL).then((r) => {
-        if (!r.ok) throw new Error("Erreur GeoJSON");
-        return r.json();
-      }),
-    ]);
-    coverageData.value = coverage;
-    await nextTick();
-    await nextTick();
-    initMap(geo);
-    // Leaflet needs the container to be fully rendered and sized
-    if (map) setTimeout(() => map!.invalidateSize(), 200);
+    coverageData.value = await listCoverage();
   } catch (e: any) {
     errorMsg.value = e.message;
   } finally {
     loading.value = false;
-  }
-});
-
-onBeforeUnmount(() => {
-  if (map) {
-    map.remove();
-    map = null;
   }
 });
 </script>
