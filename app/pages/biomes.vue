@@ -1,83 +1,95 @@
 <template>
-  <div>
-    <h1 class="text-2xl font-bold text-primary mb-6">Biomes</h1>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Biomes" icon="i-lucide-trees" />
+    </template>
 
-    <p v-if="errorMsg" class="text-error mb-4">{{ errorMsg }}</p>
+    <template #body>
+      <p v-if="errorMsg" class="text-error p-4">{{ errorMsg }}</p>
 
-    <!-- Resource Weights -->
-    <div class="mb-8">
-      <h2 class="text-lg font-bold text-primary mb-3">Poids des ressources par biome</h2>
+      <div class="p-4 space-y-8">
+        <!-- Resource Weights -->
+        <div>
+          <h2 class="text-lg font-bold text-primary mb-3">Poids des ressources par biome</h2>
 
-      <div v-if="loadingResources" class="text-muted">Chargement...</div>
-      <div v-else class="space-y-3">
-        <div
-          v-for="r in resourceWeights"
-          :key="r.biome"
-          class="bg-elevated border border-default rounded px-3 py-2"
-        >
-          <div class="flex items-center justify-between mb-2">
-            <span class="font-medium capitalize">{{ r.biome }}</span>
-            <UButton size="sm" @click="saveResourceWeights(r)" :loading="savingResource === r.biome">
-              Sauver
-            </UButton>
+          <div v-if="loadingResources" class="space-y-3">
+            <USkeleton class="h-24 w-full" />
+            <USkeleton class="h-24 w-full" />
           </div>
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-            <div v-for="(weight, resType) in r.weights" :key="resType">
-              <label class="text-muted text-sm capitalize">{{ resType }}</label>
-              <UInput
-                type="number"
-                v-model.number="r.weights[resType]"
-                size="sm"
-              />
+          <div v-else class="space-y-3">
+            <div
+              v-for="r in resourceWeights"
+              :key="r.biome"
+              class="bg-elevated border border-default rounded-lg p-4"
+            >
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-medium capitalize">{{ r.biome }}</span>
+                <UButton size="sm" @click="saveResourceWeights(r)" :loading="savingResource === r.biome">
+                  Sauver
+                </UButton>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                <div v-for="(weight, resType) in r.weights" :key="resType">
+                  <label class="text-muted text-sm capitalize">{{ resType }}</label>
+                  <UInput
+                    type="number"
+                    v-model.number="r.weights[resType]"
+                    size="sm"
+                  />
+                </div>
+              </div>
+              <!-- Add resource type -->
+              <div class="flex gap-1 mt-2">
+                <UInput v-model="newResKey[r.biome]" placeholder="resource_slug" size="sm" class="flex-1" />
+                <UInput v-model.number="newResWeight[r.biome]" type="number" placeholder="weight" size="sm" class="w-20" />
+                <UButton size="sm" variant="soft" @click="addResourceEntry(r)" :disabled="!newResKey[r.biome]?.trim()">+</UButton>
+              </div>
             </div>
           </div>
-          <!-- Add resource type -->
-          <div class="flex gap-1 mt-2">
-            <UInput v-model="newResKey[r.biome]" placeholder="resource_slug" size="sm" class="flex-1" />
-            <UInput v-model.number="newResWeight[r.biome]" type="number" placeholder="weight" size="sm" class="w-20" />
-            <UButton size="sm" variant="soft" @click="addResourceEntry(r)" :disabled="!newResKey[r.biome]?.trim()">+</UButton>
+        </div>
+
+        <!-- Monster Weights -->
+        <div>
+          <h2 class="text-lg font-bold text-primary mb-3">Poids des monstres par biome</h2>
+
+          <div v-if="loadingMonsters" class="space-y-3">
+            <USkeleton class="h-24 w-full" />
+            <USkeleton class="h-24 w-full" />
+          </div>
+          <div v-else class="space-y-3">
+            <div
+              v-for="m in monsterWeights"
+              :key="m.biome"
+              class="bg-elevated border border-default rounded-lg p-4"
+            >
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-medium capitalize">{{ m.biome }}</span>
+                <UButton size="sm" @click="saveMonsterWeights(m)" :loading="savingMonster === m.biome">
+                  Sauver
+                </UButton>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                <div v-for="(weight, monsterType) in m.weights" :key="monsterType">
+                  <label class="text-muted text-sm capitalize">{{ monsterType }}</label>
+                  <UInput
+                    type="number"
+                    v-model.number="m.weights[monsterType]"
+                    size="sm"
+                  />
+                </div>
+              </div>
+              <!-- Add monster type -->
+              <div class="flex gap-1 mt-2">
+                <UInput v-model="newMonsterKey[m.biome]" placeholder="monster_type" size="sm" class="flex-1" />
+                <UInput v-model.number="newMonsterWeight[m.biome]" type="number" placeholder="weight" size="sm" class="w-20" />
+                <UButton size="sm" variant="soft" @click="addMonsterEntry(m)" :disabled="!newMonsterKey[m.biome]?.trim()">+</UButton>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Monster Weights -->
-    <div>
-      <h2 class="text-lg font-bold text-primary mb-3">Poids des monstres par biome</h2>
-
-      <div v-if="loadingMonsters" class="text-muted">Chargement...</div>
-      <div v-else class="space-y-3">
-        <div
-          v-for="m in monsterWeights"
-          :key="m.biome"
-          class="bg-elevated border border-default rounded px-3 py-2"
-        >
-          <div class="flex items-center justify-between mb-2">
-            <span class="font-medium capitalize">{{ m.biome }}</span>
-            <UButton size="sm" @click="saveMonsterWeights(m)" :loading="savingMonster === m.biome">
-              Sauver
-            </UButton>
-          </div>
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-            <div v-for="(weight, monsterType) in m.weights" :key="monsterType">
-              <label class="text-muted text-sm capitalize">{{ monsterType }}</label>
-              <UInput
-                type="number"
-                v-model.number="m.weights[monsterType]"
-                size="sm"
-              />
-            </div>
-          </div>
-          <!-- Add monster type -->
-          <div class="flex gap-1 mt-2">
-            <UInput v-model="newMonsterKey[m.biome]" placeholder="monster_type" size="sm" class="flex-1" />
-            <UInput v-model.number="newMonsterWeight[m.biome]" type="number" placeholder="weight" size="sm" class="w-20" />
-            <UButton size="sm" variant="soft" @click="addMonsterEntry(m)" :disabled="!newMonsterKey[m.biome]?.trim()">+</UButton>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+    </template>
+  </UDashboardPanel>
 </template>
 
 <script setup lang="ts">

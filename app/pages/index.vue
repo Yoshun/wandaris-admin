@@ -1,86 +1,99 @@
 <template>
-  <div>
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold text-primary">Dashboard</h1>
-      <UButton v-if="panel === 'list' && can('pois.manage')" @click="startCreate">+ Nouveau POI</UButton>
-    </div>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Dashboard" icon="i-lucide-map">
+        <template #right>
+          <UButton v-if="panel === 'list' && can('pois.manage')" icon="i-lucide-plus" @click="startCreate">
+            Nouveau POI
+          </UButton>
+        </template>
+      </UDashboardNavbar>
+    </template>
 
-    <div v-if="loading" class="text-muted">Chargement...</div>
-    <div v-else-if="fetchError" class="text-error">{{ fetchError }}</div>
+    <template #body>
+      <div v-if="loading" class="flex items-center justify-center py-12">
+        <div class="space-y-3 w-full max-w-md">
+          <USkeleton class="h-4 w-3/4" />
+          <USkeleton class="h-4 w-1/2" />
+          <USkeleton class="h-4 w-5/6" />
+        </div>
+      </div>
+      <div v-else-if="fetchError" class="text-error p-4">{{ fetchError }}</div>
 
-    <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Map -->
-      <div class="h-[calc(100vh-8rem)] min-h-[400px] rounded-lg overflow-hidden">
-        <ClientOnly>
-          <PoiMap
-            ref="mapRef"
-            :pois="pois"
-            :selected-id="selectedId"
-            :clickable="panel !== 'list'"
-            @poi-click="onMapPoiClick"
-            @map-click="onMapClick"
-          />
-        </ClientOnly>
+      <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full p-4">
+        <!-- Map -->
+        <div class="h-[calc(100vh-8rem)] min-h-[400px] rounded-lg overflow-hidden">
+          <ClientOnly>
+            <PoiMap
+              ref="mapRef"
+              :pois="pois"
+              :selected-id="selectedId"
+              :clickable="panel !== 'list'"
+              @poi-click="onMapPoiClick"
+              @map-click="onMapClick"
+            />
+          </ClientOnly>
+        </div>
+
+        <!-- Right panel: list OR form -->
+        <div class="h-[calc(100vh-8rem)] min-h-[400px] overflow-y-auto">
+          <!-- List mode -->
+          <template v-if="panel === 'list'">
+            <PoiList
+              :pois="pois"
+              :poi-types="poiTypesData"
+              :poi-difficulties="poiDifficultiesData"
+              :readonly="!can('pois.manage')"
+              @select="onListSelect"
+              @edit="startEdit"
+              @delete="onDeleteRequest"
+            />
+          </template>
+
+          <!-- Create mode -->
+          <template v-else-if="panel === 'create'">
+            <PoiForm
+              ref="formRef"
+              title="Nouveau POI"
+              submit-label="Creer"
+              :poi-types="poiTypesData"
+              :poi-difficulties="poiDifficultiesData"
+              :loading="saving"
+              :error="saveError"
+              @submit="handleCreate"
+              @cancel="closePanel"
+              @coords-changed="onFormCoordsChanged"
+            />
+          </template>
+
+          <!-- Edit mode -->
+          <template v-else-if="panel === 'edit'">
+            <PoiForm
+              ref="formRef"
+              :key="formKey"
+              title="Modifier le POI"
+              submit-label="Enregistrer"
+              :initial-data="editData!"
+              :poi-types="poiTypesData"
+              :poi-difficulties="poiDifficultiesData"
+              :loading="saving"
+              :error="saveError"
+              @submit="handleUpdate"
+              @cancel="closePanel"
+              @coords-changed="onFormCoordsChanged"
+            />
+          </template>
+        </div>
       </div>
 
-      <!-- Right panel: list OR form -->
-      <div class="h-[calc(100vh-8rem)] min-h-[400px] overflow-y-auto">
-        <!-- List mode -->
-        <template v-if="panel === 'list'">
-          <PoiList
-            :pois="pois"
-            :poi-types="poiTypesData"
-            :poi-difficulties="poiDifficultiesData"
-            :readonly="!can('pois.manage')"
-            @select="onListSelect"
-            @edit="startEdit"
-            @delete="onDeleteRequest"
-          />
-        </template>
-
-        <!-- Create mode -->
-        <template v-else-if="panel === 'create'">
-          <PoiForm
-            ref="formRef"
-            title="Nouveau POI"
-            submit-label="Creer"
-            :poi-types="poiTypesData"
-            :poi-difficulties="poiDifficultiesData"
-            :loading="saving"
-            :error="saveError"
-            @submit="handleCreate"
-            @cancel="closePanel"
-            @coords-changed="onFormCoordsChanged"
-          />
-        </template>
-
-        <!-- Edit mode -->
-        <template v-else-if="panel === 'edit'">
-          <PoiForm
-            ref="formRef"
-            :key="formKey"
-            title="Modifier le POI"
-            submit-label="Enregistrer"
-            :initial-data="editData!"
-            :poi-types="poiTypesData"
-            :poi-difficulties="poiDifficultiesData"
-            :loading="saving"
-            :error="saveError"
-            @submit="handleUpdate"
-            @cancel="closePanel"
-            @coords-changed="onFormCoordsChanged"
-          />
-        </template>
-      </div>
-    </div>
-
-    <ConfirmDialog
-      :visible="!!poiToDelete"
-      :message="`Supprimer le POI \u00AB ${poiToDelete?.name} \u00BB ?`"
-      @confirm="confirmDelete"
-      @cancel="poiToDelete = null"
-    />
-  </div>
+      <ConfirmDialog
+        :visible="!!poiToDelete"
+        :message="`Supprimer le POI \u00AB ${poiToDelete?.name} \u00BB ?`"
+        @confirm="confirmDelete"
+        @cancel="poiToDelete = null"
+      />
+    </template>
+  </UDashboardPanel>
 </template>
 
 <script setup lang="ts">

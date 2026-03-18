@@ -8,7 +8,7 @@
     >
       <template #header="{ collapsed }">
         <NuxtLink to="/" class="flex items-center gap-2 px-1 py-1">
-          <span class="text-primary font-bold text-lg">W</span>
+          <UIcon name="i-lucide-compass" class="text-primary text-lg shrink-0" />
           <span v-if="!collapsed" class="text-primary font-bold text-lg truncate">Wandaris</span>
         </NuxtLink>
       </template>
@@ -24,7 +24,7 @@
 
       <template #footer="{ collapsed }">
         <div class="flex items-center gap-2 px-2 py-2">
-          <UColorModeButton />
+          <UIcon name="i-lucide-user" class="text-muted shrink-0" />
           <template v-if="!collapsed && user">
             <span class="text-muted text-sm truncate flex-1">{{ user.name }}</span>
             <UButton
@@ -39,11 +39,7 @@
       </template>
     </UDashboardSidebar>
 
-    <div class="flex-1 min-w-0 h-screen overflow-y-auto">
-      <div class="p-6 h-full">
-        <slot />
-      </div>
-    </div>
+    <slot />
   </UDashboardGroup>
 </template>
 

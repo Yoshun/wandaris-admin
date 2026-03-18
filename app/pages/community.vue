@@ -1,140 +1,146 @@
 <template>
-  <div>
-    <h1 class="text-primary text-2xl font-bold mb-6">Communaute</h1>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Communaute" icon="i-lucide-message-square" />
+      <UDashboardToolbar>
+        <UTabs :items="tabItems" v-model="tab" />
+      </UDashboardToolbar>
+    </template>
 
-    <p v-if="errorMsg" class="text-error mb-4">{{ errorMsg }}</p>
+    <template #body>
+      <p v-if="errorMsg" class="text-error p-4">{{ errorMsg }}</p>
 
-    <!-- Tabs -->
-    <div class="flex gap-2 mb-6">
-      <UButton
-        :variant="tab === 'submissions' ? 'solid' : 'outline'"
-        @click="tab = 'submissions'"
-      >
-        Propositions ({{ submissions.length }})
-      </UButton>
-      <UButton
-        :variant="tab === 'reports' ? 'solid' : 'outline'"
-        @click="tab = 'reports'"
-      >
-        Signalements ({{ reports.length }})
-      </UButton>
-    </div>
+      <!-- Submissions -->
+      <div v-if="tab === 'submissions'" class="p-4">
+        <div v-if="loading" class="space-y-3">
+          <USkeleton class="h-20 w-full" />
+          <USkeleton class="h-20 w-full" />
+        </div>
 
-    <!-- Submissions -->
-    <div v-if="tab === 'submissions'">
-      <p v-if="loading" class="text-muted">Chargement...</p>
-      <p v-else-if="submissions.length === 0" class="text-muted">Aucune proposition.</p>
+        <div v-else-if="submissions.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+          <UIcon name="i-lucide-inbox" class="text-4xl text-muted mb-2" />
+          <p class="text-muted">Aucune proposition.</p>
+        </div>
 
-      <div v-else class="space-y-3">
-        <div
-          v-for="s in submissions"
-          :key="s.id"
-          class="bg-elevated border border-default rounded-lg p-4"
-        >
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-primary font-bold">{{ s.name }}</span>
-                <UBadge :color="statusColor(s.status)" size="xs">{{ statusLabel(s.status) }}</UBadge>
-                <span class="text-dimmed text-xs">Joueur #{{ s.playerId }}</span>
-              </div>
-              <p v-if="s.description" class="text-muted text-sm mb-1">{{ s.description }}</p>
-              <!-- Photos -->
-              <div v-if="s.photos && s.photos.length > 0" class="flex gap-2 my-2">
-                <a
-                  v-for="(photo, i) in s.photos"
-                  :key="i"
-                  :href="`${apiBase}/uploads/poi-submissions/${photo}`"
-                  target="_blank"
-                >
-                  <img
-                    :src="`${apiBase}/uploads/poi-submissions/${photo}`"
-                    class="w-24 h-24 object-cover rounded border border-default hover:opacity-80 transition"
+        <div v-else class="space-y-3">
+          <div
+            v-for="s in submissions"
+            :key="s.id"
+            class="bg-elevated border border-default rounded-lg p-4"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-primary font-bold">{{ s.name }}</span>
+                  <UBadge :color="statusColor(s.status)" size="xs">{{ statusLabel(s.status) }}</UBadge>
+                  <span class="text-dimmed text-xs">Joueur #{{ s.playerId }}</span>
+                </div>
+                <p v-if="s.description" class="text-muted text-sm mb-1">{{ s.description }}</p>
+                <!-- Photos -->
+                <div v-if="s.photos && s.photos.length > 0" class="flex gap-2 my-2">
+                  <a
+                    v-for="(photo, i) in s.photos"
+                    :key="i"
+                    :href="`${apiBase}/uploads/poi-submissions/${photo}`"
+                    target="_blank"
+                  >
+                    <img
+                      :src="`${apiBase}/uploads/poi-submissions/${photo}`"
+                      class="w-24 h-24 object-cover rounded border border-default hover:opacity-80 transition"
+                      @error="($event.target as HTMLImageElement).style.display = 'none'"
+                    />
+                  </a>
+                </div>
+                <p class="text-dimmed text-xs">
+                  {{ s.lat.toFixed(5) }}, {{ s.lon.toFixed(5) }} — {{ formatDate(s.createdAt) }}
+                </p>
+                <!-- Reject reason input -->
+                <div v-if="rejectingId === s.id" class="mt-2 flex gap-2">
+                  <UInput
+                    v-model="rejectReason"
+                    placeholder="Raison du refus (visible par le joueur)"
+                    class="flex-1"
+                    size="sm"
                   />
-                </a>
+                  <UButton size="sm" color="error" :loading="actionLoading === s.id" @click="doRejectSubmission(s.id)">
+                    Confirmer
+                  </UButton>
+                  <UButton size="sm" variant="outline" @click="rejectingId = null">Annuler</UButton>
+                </div>
               </div>
-              <p class="text-dimmed text-xs">
-                {{ s.lat.toFixed(5) }}, {{ s.lon.toFixed(5) }} — {{ formatDate(s.createdAt) }}
-              </p>
-              <!-- Reject reason input -->
-              <div v-if="rejectingId === s.id" class="mt-2 flex gap-2">
-                <UInput
-                  v-model="rejectReason"
-                  placeholder="Raison du refus (visible par le joueur)"
-                  class="flex-1"
-                  size="sm"
-                />
-                <UButton size="sm" color="error" :loading="actionLoading === s.id" @click="doRejectSubmission(s.id)">
-                  Confirmer
-                </UButton>
-                <UButton size="sm" variant="outline" @click="rejectingId = null">Annuler</UButton>
-              </div>
-            </div>
 
-            <div v-if="s.status === 'pending'" class="flex gap-2 shrink-0">
-              <UButton size="sm" color="success" :loading="actionLoading === s.id" @click="approveSubmission(s.id)">
-                Approuver
-              </UButton>
-              <UButton size="sm" color="error" variant="outline" @click="startRejectSubmission(s.id)">
-                Refuser
-              </UButton>
+              <div v-if="s.status === 'pending'" class="flex gap-2 shrink-0">
+                <UButton size="sm" color="success" :loading="actionLoading === s.id" @click="approveSubmission(s.id)">
+                  Approuver
+                </UButton>
+                <UButton size="sm" color="error" variant="outline" @click="startRejectSubmission(s.id)">
+                  Refuser
+                </UButton>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Reports -->
-    <div v-if="tab === 'reports'">
-      <p v-if="loading" class="text-muted">Chargement...</p>
-      <p v-else-if="reports.length === 0" class="text-muted">Aucun signalement.</p>
+      <!-- Reports -->
+      <div v-if="tab === 'reports'" class="p-4">
+        <div v-if="loading" class="space-y-3">
+          <USkeleton class="h-20 w-full" />
+          <USkeleton class="h-20 w-full" />
+        </div>
 
-      <div v-else class="space-y-3">
-        <div
-          v-for="r in reports"
-          :key="r.id"
-          class="bg-elevated border border-default rounded-lg p-4"
-        >
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-primary font-bold">{{ r.poiName ?? 'POI supprime' }}</span>
-                <UBadge :color="statusColor(r.status)" size="xs">{{ statusLabel(r.status) }}</UBadge>
-                <span class="text-dimmed text-xs">Joueur #{{ r.playerId }}</span>
+        <div v-else-if="reports.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+          <UIcon name="i-lucide-inbox" class="text-4xl text-muted mb-2" />
+          <p class="text-muted">Aucun signalement.</p>
+        </div>
+
+        <div v-else class="space-y-3">
+          <div
+            v-for="r in reports"
+            :key="r.id"
+            class="bg-elevated border border-default rounded-lg p-4"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-primary font-bold">{{ r.poiName ?? 'POI supprime' }}</span>
+                  <UBadge :color="statusColor(r.status)" size="xs">{{ statusLabel(r.status) }}</UBadge>
+                  <span class="text-dimmed text-xs">Joueur #{{ r.playerId }}</span>
+                </div>
+                <p class="text-muted text-sm mb-1">{{ r.message }}</p>
+                <p class="text-dimmed text-xs">{{ formatDate(r.createdAt) }}</p>
+
+                <!-- Admin response input -->
+                <div v-if="respondingId === r.id" class="mt-2 flex gap-2">
+                  <UInput
+                    v-model="adminResponse"
+                    placeholder="Reponse (visible par le joueur)"
+                    class="flex-1"
+                    size="sm"
+                  />
+                  <UButton size="sm" color="success" :loading="actionLoading === r.id" @click="resolveReport(r.id)">
+                    Resoudre
+                  </UButton>
+                  <UButton size="sm" color="error" :loading="actionLoading === r.id" @click="dismissReport(r.id)">
+                    Rejeter
+                  </UButton>
+                  <UButton size="sm" variant="outline" @click="respondingId = null">Annuler</UButton>
+                </div>
+
+                <p v-if="r.adminResponse" class="text-warning text-sm mt-1 italic">Reponse : {{ r.adminResponse }}</p>
               </div>
-              <p class="text-muted text-sm mb-1">{{ r.message }}</p>
-              <p class="text-dimmed text-xs">{{ formatDate(r.createdAt) }}</p>
 
-              <!-- Admin response input -->
-              <div v-if="respondingId === r.id" class="mt-2 flex gap-2">
-                <UInput
-                  v-model="adminResponse"
-                  placeholder="Reponse (visible par le joueur)"
-                  class="flex-1"
-                  size="sm"
-                />
-                <UButton size="sm" color="success" :loading="actionLoading === r.id" @click="resolveReport(r.id)">
-                  Resoudre
+              <div v-if="r.status === 'pending'" class="shrink-0">
+                <UButton size="sm" variant="outline" @click="startRespondReport(r.id)">
+                  Repondre
                 </UButton>
-                <UButton size="sm" color="error" :loading="actionLoading === r.id" @click="dismissReport(r.id)">
-                  Rejeter
-                </UButton>
-                <UButton size="sm" variant="outline" @click="respondingId = null">Annuler</UButton>
               </div>
-
-              <p v-if="r.adminResponse" class="text-warning text-sm mt-1 italic">Reponse : {{ r.adminResponse }}</p>
-            </div>
-
-            <div v-if="r.status === 'pending'" class="shrink-0">
-              <UButton size="sm" variant="outline" @click="startRespondReport(r.id)">
-                Repondre
-              </UButton>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
+    </template>
+  </UDashboardPanel>
 </template>
 
 <script setup lang="ts">
@@ -150,6 +156,11 @@ const errorMsg = ref('')
 const submissions = ref<PoiSubmissionRecord[]>([])
 const reports = ref<PoiReportRecord[]>([])
 const actionLoading = ref<number | null>(null)
+
+const tabItems = computed(() => [
+  { label: `Propositions (${submissions.value.length})`, value: 'submissions' },
+  { label: `Signalements (${reports.value.length})`, value: 'reports' },
+])
 
 // Reject submission state
 const rejectingId = ref<number | null>(null)

@@ -1,121 +1,73 @@
 <template>
-  <div>
-    <h1 class="text-2xl font-bold text-primary mb-4">Logs d'activite</h1>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Logs d'activite" icon="i-lucide-scroll-text" />
+      <UDashboardToolbar>
+        <template #left>
+          <div class="flex flex-wrap gap-3 items-end">
+            <UFormField label="Evenement">
+              <USelect
+                v-model="filterEvent"
+                :items="eventItems"
+                class="w-48"
+                placeholder="Tous"
+              />
+            </UFormField>
+            <UFormField label="Utilisateur">
+              <USelect
+                v-model="filterUser"
+                :items="userItems"
+                class="w-48"
+                placeholder="Tous"
+              />
+            </UFormField>
+            <UFormField label="De">
+              <UInput v-model="filterFrom" type="date" class="w-40" />
+            </UFormField>
+            <UFormField label="A">
+              <UInput v-model="filterTo" type="date" class="w-40" />
+            </UFormField>
+            <UButton @click="resetFilters" variant="soft" color="neutral" size="sm">Reset</UButton>
+          </div>
+        </template>
+      </UDashboardToolbar>
+    </template>
 
-    <!-- Filters -->
-    <div class="flex flex-wrap gap-3 mb-4 items-end">
-      <UFormField label="Evenement">
-        <USelect
-          v-model="filterEvent"
-          :items="eventItems"
-          class="w-48"
-          placeholder="Tous"
-        />
-      </UFormField>
-      <UFormField label="Utilisateur">
-        <USelect
-          v-model="filterUser"
-          :items="userItems"
-          class="w-48"
-          placeholder="Tous"
-        />
-      </UFormField>
-      <UFormField label="De">
-        <UInput v-model="filterFrom" type="date" class="w-40" />
-      </UFormField>
-      <UFormField label="A">
-        <UInput v-model="filterTo" type="date" class="w-40" />
-      </UFormField>
-      <UButton @click="resetFilters" variant="soft" color="neutral">Reset</UButton>
-    </div>
-
-    <div v-if="loading" class="text-muted">Chargement...</div>
-    <div v-else-if="error" class="text-error">{{ error }}</div>
-
-    <template v-else>
-      <div class="text-muted mb-2">{{ total }} log{{ total > 1 ? 's' : '' }} au total</div>
-
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead class="bg-default">
-            <tr class="border-b border-default text-left text-muted">
-              <th class="py-2 px-3">Date</th>
-              <th class="py-2 px-3">Joueur</th>
-              <th class="py-2 px-3">Event</th>
-              <th class="py-2 px-3">Data</th>
-              <th class="py-2 px-3">Device</th>
-              <th class="py-2 px-3">Position</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="log in logList"
-              :key="log.id"
-              class="border-b border-default hover:bg-elevated"
-            >
-              <td class="py-2 px-3 whitespace-nowrap text-muted">{{ formatDate(log.createdAt) }}</td>
-              <td class="py-2 px-3 whitespace-nowrap">{{ log.userName ?? '—' }}</td>
-              <td class="py-2 px-3">
-                <UBadge variant="subtle" :color="eventColor(log.event)">
-                  {{ log.event }}
-                </UBadge>
-              </td>
-              <td class="py-2 px-3 max-w-80">
-                <code
-                  v-if="Object.keys(log.data ?? {}).length > 0"
-                  class="break-all text-muted"
-                >{{ formatJson(log.data) }}</code>
-                <span v-else class="text-dimmed">—</span>
-              </td>
-              <td class="py-2 px-3 max-w-48">
-                <span v-if="log.deviceInfo && Object.keys(log.deviceInfo).length > 0" class="text-muted">
-                  {{ deviceSummary(log.deviceInfo) }}
-                </span>
-                <span v-else class="text-dimmed">—</span>
-              </td>
-              <td class="py-2 px-3 whitespace-nowrap text-muted">
-                <template v-if="log.lat != null && log.lon != null">
-                  {{ log.lat.toFixed(4) }}, {{ log.lon.toFixed(4) }}
-                </template>
-                <span v-else class="text-dimmed">—</span>
-              </td>
-            </tr>
-            <tr v-if="logList.length === 0">
-              <td colspan="6" class="py-8 text-center text-dimmed">Aucun log</td>
-            </tr>
-          </tbody>
-        </table>
+    <template #body>
+      <div v-if="loading" class="p-4 space-y-3">
+        <USkeleton class="h-10 w-full" />
+        <USkeleton class="h-10 w-full" />
+        <USkeleton class="h-10 w-full" />
       </div>
+      <div v-else-if="error" class="text-error p-4">{{ error }}</div>
 
-      <!-- Pagination -->
-      <div v-if="total > pageSize" class="flex items-center justify-center gap-2 mt-4">
-        <UButton
-          size="sm"
-          variant="soft"
-          color="neutral"
-          :disabled="page === 0"
-          @click="page--"
-        >
-          Precedent
-        </UButton>
-        <span class="text-muted">
-          Page {{ page + 1 }} / {{ totalPages }}
-        </span>
-        <UButton
-          size="sm"
-          variant="soft"
-          color="neutral"
-          :disabled="page >= totalPages - 1"
-          @click="page++"
-        >
-          Suivant
-        </UButton>
+      <div v-else class="p-4">
+        <div class="text-muted mb-3">{{ total }} log{{ total > 1 ? 's' : '' }} au total</div>
+
+        <UTable :data="logList" :columns="tableColumns" class="w-full" />
+
+        <div v-if="logList.length === 0" class="flex flex-col items-center justify-center py-12">
+          <UIcon name="i-lucide-inbox" class="text-4xl text-muted mb-2" />
+          <p class="text-muted">Aucun log</p>
+        </div>
+
+        <!-- Pagination -->
+        <div v-if="total > pageSize" class="flex justify-center mt-4">
+          <UPagination
+            v-model:page="paginationPage"
+            :total="total"
+            :items-per-page="pageSize"
+            show-edges
+          />
+        </div>
       </div>
     </template>
-  </div>
+  </UDashboardPanel>
 </template>
 
 <script setup lang="ts">
+import { h } from "vue";
+
 const { listLogs, listUsers } = useApi();
 
 interface LogRow {
@@ -136,6 +88,12 @@ const loading = ref(true);
 const error = ref("");
 const page = ref(0);
 const pageSize = 50;
+
+// UPagination is 1-based, our API is 0-based
+const paginationPage = computed({
+  get: () => page.value + 1,
+  set: (v: number) => { page.value = v - 1; },
+});
 
 // Filters
 const filterEvent = ref<string | undefined>(undefined);
@@ -159,8 +117,6 @@ const usersList = ref<{ id: number; name: string }[]>([]);
 const userItems = computed(() =>
   usersList.value.map((u) => ({ label: u.name, value: String(u.id) }))
 );
-
-const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
 
 function eventColor(event: string): string {
   if (event.includes("failed")) return "error";
@@ -187,6 +143,55 @@ function deviceSummary(info: Record<string, unknown>): string {
   if (info.osVersion) parts.push(`v${info.osVersion}`);
   return parts.join(" · ") || "—";
 }
+
+const tableColumns = [
+  {
+    accessorKey: "createdAt",
+    header: "Date",
+    cell: ({ row }: any) => formatDate(row.original.createdAt),
+  },
+  {
+    accessorKey: "userName",
+    header: "Joueur",
+    cell: ({ row }: any) => row.original.userName ?? "—",
+  },
+  {
+    accessorKey: "event",
+    header: "Event",
+    cell: ({ row }: any) => {
+      return h(resolveComponent("UBadge"), { variant: "subtle", color: eventColor(row.original.event) }, () => row.original.event);
+    },
+  },
+  {
+    id: "data",
+    header: "Data",
+    cell: ({ row }: any) => {
+      const data = row.original.data ?? {};
+      if (Object.keys(data).length === 0) return "—";
+      return h("code", { class: "break-all text-muted text-xs" }, formatJson(data));
+    },
+    meta: { class: { td: "max-w-80" } },
+  },
+  {
+    id: "device",
+    header: "Device",
+    cell: ({ row }: any) => {
+      const info = row.original.deviceInfo;
+      if (!info || Object.keys(info).length === 0) return "—";
+      return deviceSummary(info);
+    },
+    meta: { class: { td: "max-w-48" } },
+  },
+  {
+    id: "position",
+    header: "Position",
+    cell: ({ row }: any) => {
+      const { lat, lon } = row.original;
+      if (lat != null && lon != null) return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+      return "—";
+    },
+  },
+];
 
 function resetFilters() {
   filterEvent.value = undefined;

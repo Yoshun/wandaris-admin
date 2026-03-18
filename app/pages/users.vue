@@ -1,148 +1,98 @@
 <template>
-  <div>
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold text-primary">Utilisateurs</h1>
-      <UButton v-if="can('users.manage')" @click="openCreateModal">+ Nouvel utilisateur</UButton>
-    </div>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Utilisateurs" icon="i-lucide-users">
+        <template #right>
+          <UButton v-if="can('users.manage')" icon="i-lucide-plus" @click="openCreateModal">Nouvel utilisateur</UButton>
+        </template>
+      </UDashboardNavbar>
+    </template>
 
-    <div v-if="loading" class="text-muted">Chargement...</div>
-    <div v-else-if="error" class="text-error">{{ error }}</div>
+    <template #body>
+      <div v-if="loading" class="p-4 space-y-3">
+        <USkeleton class="h-10 w-full" />
+        <USkeleton class="h-10 w-full" />
+        <USkeleton class="h-10 w-3/4" />
+      </div>
+      <div v-else-if="error" class="text-error p-4">{{ error }}</div>
 
-    <div v-else class="overflow-x-auto">
-      <table class="w-full">
-        <thead class="bg-default">
-          <tr class="border-b border-default text-left text-muted">
-            <th class="py-2 px-3">Nom</th>
-            <th class="py-2 px-3">Email</th>
-            <th class="py-2 px-3">Permissions</th>
-            <th v-if="can('users.manage')" class="py-2 px-3">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="u in userList" :key="u.id" class="border-b border-default hover:bg-elevated">
-            <td class="py-2 px-3">{{ u.name }}</td>
-            <td class="py-2 px-3">{{ u.email }}</td>
-            <td class="py-2 px-3">
-              <div class="flex flex-wrap gap-1">
-                <UBadge
-                  v-for="p in u.permissions"
-                  :key="p"
-                  variant="subtle"
-                  :color="p === '*' ? 'warning' : 'neutral'"
-                >
-                  {{ permLabel(p) }}
-                </UBadge>
-                <span v-if="u.permissions.length === 0" class="text-dimmed">Aucune</span>
-              </div>
-            </td>
-            <td v-if="can('users.manage')" class="py-2 px-3">
-              <div class="flex flex-wrap gap-1">
-                <UButton size="sm" @click="openEditModal(u)">Modifier</UButton>
-                <UButton size="sm" color="warning" variant="solid" @click="openPermsModal(u)">Permissions</UButton>
-                <UButton
-                  v-if="u.id !== currentUser?.id"
-                  size="sm"
-                  :color="u.suspended ? 'success' : 'error'"
-                  variant="outline"
-                  @click="toggleSuspend(u)"
-                >
-                  {{ u.suspended ? 'Réactiver' : 'Suspendre' }}
-                </UButton>
-                <UButton
-                  v-if="u.id !== currentUser?.id"
-                  size="sm"
-                  :color="u.communityBanned ? 'success' : 'warning'"
-                  variant="outline"
-                  @click="toggleCommunityBan(u)"
-                >
-                  {{ u.communityBanned ? 'Débannir communauté' : 'Ban communauté' }}
-                </UButton>
-                <UButton
-                  v-if="u.id !== currentUser?.id"
-                  size="sm"
-                  color="error"
-                  variant="solid"
-                  @click="onDeleteRequest(u)"
-                >
-                  Supprimer
-                </UButton>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="userList.length === 0">
-            <td :colspan="can('users.manage') ? 4 : 3" class="py-8 text-center text-dimmed">
-              Aucun utilisateur
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <div v-else class="p-4">
+        <UTable :data="userList" :columns="tableColumns" class="w-full" />
 
-    <!-- Create/Edit User Modal -->
-    <UModal v-model:open="showUserModal">
-      <template #content>
-        <div class="p-6">
-          <h2 class="text-lg font-bold mb-4">{{ editingUser ? 'Modifier' : 'Nouvel' }} utilisateur</h2>
-          <form class="space-y-4" @submit.prevent="saveUser">
-            <UFormField label="Nom">
-              <UInput v-model="form.name" required />
-            </UFormField>
-            <UFormField label="Email">
-              <UInput v-model="form.email" type="email" required />
-            </UFormField>
-            <UFormField :label="editingUser ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe'">
-              <UInput v-model="form.password" type="password" :required="!editingUser" />
-            </UFormField>
-            <div v-if="!editingUser">
-              <p class="text-muted mb-2">Permissions</p>
-              <div class="space-y-1">
-                <label v-for="p in ASSIGNABLE_PERMS" :key="p" class="flex items-center gap-2">
-                  <input v-model="form.permissions" type="checkbox" :value="p" />
-                  <span>{{ permLabel(p) }}</span>
-                </label>
-              </div>
-            </div>
-            <div v-if="formError" class="text-error">{{ formError }}</div>
-            <div class="flex gap-2 justify-end">
-              <UButton variant="soft" color="neutral" @click="showUserModal = false">Annuler</UButton>
-              <UButton type="submit" :loading="formLoading">{{ editingUser ? 'Enregistrer' : 'Creer' }}</UButton>
-            </div>
-          </form>
+        <div v-if="userList.length === 0" class="flex flex-col items-center justify-center py-12">
+          <UIcon name="i-lucide-inbox" class="text-4xl text-muted mb-2" />
+          <p class="text-muted">Aucun utilisateur</p>
         </div>
-      </template>
-    </UModal>
+      </div>
 
-    <!-- Permissions Modal -->
-    <UModal v-model:open="showPermsModal">
-      <template #content>
-        <div class="p-6">
-          <h2 class="text-lg font-bold mb-4">Permissions — {{ permsTarget?.name }}</h2>
-          <div class="space-y-2">
-            <label v-for="p in ASSIGNABLE_PERMS" :key="p" class="flex items-center gap-2">
-              <input v-model="permsForm" type="checkbox" :value="p" />
-              <span>{{ permLabel(p) }}</span>
-            </label>
+      <!-- Create/Edit User Modal -->
+      <UModal v-model:open="showUserModal">
+        <template #content>
+          <div class="p-6">
+            <h2 class="text-lg font-bold mb-4">{{ editingUser ? 'Modifier' : 'Nouvel' }} utilisateur</h2>
+            <form class="space-y-4" @submit.prevent="saveUser">
+              <UFormField label="Nom">
+                <UInput v-model="form.name" required />
+              </UFormField>
+              <UFormField label="Email">
+                <UInput v-model="form.email" type="email" required />
+              </UFormField>
+              <UFormField :label="editingUser ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe'">
+                <UInput v-model="form.password" type="password" :required="!editingUser" />
+              </UFormField>
+              <div v-if="!editingUser">
+                <p class="text-muted mb-2">Permissions</p>
+                <div class="space-y-1">
+                  <label v-for="p in ASSIGNABLE_PERMS" :key="p" class="flex items-center gap-2">
+                    <input v-model="form.permissions" type="checkbox" :value="p" />
+                    <span>{{ permLabel(p) }}</span>
+                  </label>
+                </div>
+              </div>
+              <div v-if="formError" class="text-error">{{ formError }}</div>
+              <div class="flex gap-2 justify-end">
+                <UButton variant="soft" color="neutral" @click="showUserModal = false">Annuler</UButton>
+                <UButton type="submit" :loading="formLoading">{{ editingUser ? 'Enregistrer' : 'Creer' }}</UButton>
+              </div>
+            </form>
           </div>
-          <div v-if="permsError" class="text-error mt-2">{{ permsError }}</div>
-          <div class="flex gap-2 justify-end mt-4">
-            <UButton variant="soft" color="neutral" @click="showPermsModal = false">Annuler</UButton>
-            <UButton :loading="permsLoading" @click="savePerms">Enregistrer</UButton>
-          </div>
-        </div>
-      </template>
-    </UModal>
+        </template>
+      </UModal>
 
-    <!-- Delete Confirm -->
-    <ConfirmDialog
-      :visible="!!userToDelete"
-      :message="`Supprimer l'utilisateur « ${userToDelete?.name} » ?`"
-      @confirm="confirmDelete"
-      @cancel="userToDelete = null"
-    />
-  </div>
+      <!-- Permissions Modal -->
+      <UModal v-model:open="showPermsModal">
+        <template #content>
+          <div class="p-6">
+            <h2 class="text-lg font-bold mb-4">Permissions — {{ permsTarget?.name }}</h2>
+            <div class="space-y-2">
+              <label v-for="p in ASSIGNABLE_PERMS" :key="p" class="flex items-center gap-2">
+                <input v-model="permsForm" type="checkbox" :value="p" />
+                <span>{{ permLabel(p) }}</span>
+              </label>
+            </div>
+            <div v-if="permsError" class="text-error mt-2">{{ permsError }}</div>
+            <div class="flex gap-2 justify-end mt-4">
+              <UButton variant="soft" color="neutral" @click="showPermsModal = false">Annuler</UButton>
+              <UButton :loading="permsLoading" @click="savePerms">Enregistrer</UButton>
+            </div>
+          </div>
+        </template>
+      </UModal>
+
+      <!-- Delete Confirm -->
+      <ConfirmDialog
+        :visible="!!userToDelete"
+        :message="`Supprimer l'utilisateur « ${userToDelete?.name} » ?`"
+        @confirm="confirmDelete"
+        @cancel="userToDelete = null"
+      />
+    </template>
+  </UDashboardPanel>
 </template>
 
 <script setup lang="ts">
+import { h } from "vue";
+
 const { can, user: currentUser } = useAuth();
 const { listUsers, createUser, updateUser, updateUserPermissions, deleteUser, suspendUser, communityBanUser } = useApi();
 
@@ -189,6 +139,63 @@ const permsError = ref("");
 
 // Delete
 const userToDelete = ref<UserRow | null>(null);
+
+const tableColumns = computed(() => {
+  const cols: any[] = [
+    { accessorKey: "name", header: "Nom" },
+    { accessorKey: "email", header: "Email" },
+    {
+      id: "permissions",
+      header: "Permissions",
+      cell: ({ row }: any) => {
+        const u = row.original as UserRow;
+        if (u.permissions.length === 0) return h("span", { class: "text-dimmed" }, "Aucune");
+        return h("div", { class: "flex flex-wrap gap-1" }, u.permissions.map((p: string) =>
+          h(resolveComponent("UBadge"), { variant: "subtle", color: p === "*" ? "warning" : "neutral", key: p }, () => permLabel(p))
+        ));
+      },
+    },
+  ];
+
+  if (can("users.manage")) {
+    cols.push({
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }: any) => {
+        const u = row.original as UserRow;
+        const buttons = [
+          h(resolveComponent("UButton"), { size: "sm", onClick: () => openEditModal(u) }, () => "Modifier"),
+          h(resolveComponent("UButton"), { size: "sm", color: "warning", variant: "solid", onClick: () => openPermsModal(u) }, () => "Permissions"),
+        ];
+        if (u.id !== currentUser.value?.id) {
+          buttons.push(
+            h(resolveComponent("UButton"), {
+              size: "sm",
+              color: u.suspended ? "success" : "error",
+              variant: "outline",
+              onClick: () => toggleSuspend(u),
+            }, () => u.suspended ? "Réactiver" : "Suspendre"),
+            h(resolveComponent("UButton"), {
+              size: "sm",
+              color: u.communityBanned ? "success" : "warning",
+              variant: "outline",
+              onClick: () => toggleCommunityBan(u),
+            }, () => u.communityBanned ? "Débannir communauté" : "Ban communauté"),
+            h(resolveComponent("UButton"), {
+              size: "sm",
+              color: "error",
+              variant: "solid",
+              onClick: () => onDeleteRequest(u),
+            }, () => "Supprimer"),
+          );
+        }
+        return h("div", { class: "flex flex-wrap gap-1" }, buttons);
+      },
+    });
+  }
+
+  return cols;
+});
 
 async function fetchUsers() {
   loading.value = true;
@@ -275,7 +282,7 @@ async function savePerms() {
     const target = permsTarget.value;
     if (!target) return;
     const idx = userList.value.findIndex((u) => u.id === target.id);
-    if (idx >= 0) userList.value[idx].permissions = result.permissions;
+    if (idx >= 0) userList.value[idx]!.permissions = result.permissions;
     showPermsModal.value = false;
   } catch (e: any) {
     permsError.value = e.message;

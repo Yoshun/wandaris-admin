@@ -1,101 +1,109 @@
 <template>
-  <div>
-    <h1 class="text-2xl font-bold text-primary mb-4">Import de POIs</h1>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Import de POIs" icon="i-lucide-download" />
+    </template>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Left: Map -->
-      <div>
-        <div class="h-[calc(100vh-8rem)] min-h-[400px] rounded-lg overflow-hidden">
-          <ClientOnly>
-            <ImportMap
-              :zones="zones"
-              :preview-radius="radius"
-              @map-click="onMapClick"
-            />
-          </ClientOnly>
-        </div>
-        <p class="text-dimmed mt-2">
-          Cliquez sur la carte pour choisir le centre de l'import.
-          Les zones grises sont deja couvertes.
-        </p>
-      </div>
-
-      <!-- Right: Controls + Staged list -->
-      <div class="h-[calc(100vh-8rem)] min-h-[400px] overflow-y-auto space-y-4">
-        <!-- Import controls -->
-        <div class="bg-elevated border border-default rounded-lg p-4">
-          <div class="flex flex-wrap gap-3 items-end">
-            <div class="flex-1 min-w-[120px]">
-              <label class="block text-muted mb-1">Coordonnees</label>
-              <div>
-                <template v-if="clickedLat !== null">
-                  {{ clickedLat.toFixed(5) }}, {{ clickedLon!.toFixed(5) }}
-                </template>
-                <span v-else class="text-dimmed">Cliquez sur la carte</span>
-              </div>
+    <template #body>
+      <div class="p-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Left: Map -->
+          <div>
+            <div class="h-[calc(100vh-10rem)] min-h-[400px] rounded-lg overflow-hidden">
+              <ClientOnly>
+                <ImportMap
+                  :zones="zones"
+                  :preview-radius="radius"
+                  @map-click="onMapClick"
+                />
+              </ClientOnly>
             </div>
-            <div>
-              <label class="block text-muted mb-1">Rayon (km)</label>
-              <UInput v-model.number="radiusKm" type="number" :min="1" :max="50" class="w-full sm:w-20" />
-            </div>
-            <UButton :disabled="importing || clickedLat === null" :loading="importing" @click="runImport">
-              Importer cette zone
-            </UButton>
+            <p class="text-dimmed mt-2">
+              Cliquez sur la carte pour choisir le centre de l'import.
+              Les zones grises sont deja couvertes.
+            </p>
           </div>
-          <p v-if="importMessage" class="mt-2" :class="importError ? 'text-error' : 'text-success'">
-            {{ importMessage }}
-          </p>
-        </div>
 
-        <!-- Staged POIs -->
-        <div v-if="staged.length > 0" class="flex items-center justify-between">
-          <span class="text-muted">{{ staged.length }} POI(s) en attente</span>
-          <UButton color="success" variant="solid" @click="approveAll">Tout valider</UButton>
-        </div>
-
-        <div v-if="loadingStaged" class="text-muted">Chargement...</div>
-
-        <div v-else-if="staged.length === 0 && !loadingStaged" class="text-dimmed">
-          Aucun POI en attente. Cliquez sur la carte pour importer une zone.
-        </div>
-
-        <div v-else class="space-y-2">
-          <div
-            v-for="poi in staged"
-            :key="poi.id"
-            class="bg-elevated border border-default rounded-lg p-3"
-          >
-            <div class="flex flex-wrap gap-2 items-start">
-              <div class="flex-1 min-w-[150px]">
-                <UInput v-model="poi.name" class="w-full" @blur="saveStaged(poi)" />
+          <!-- Right: Controls + Staged list -->
+          <div class="h-[calc(100vh-10rem)] min-h-[400px] overflow-y-auto space-y-4">
+            <!-- Import controls -->
+            <div class="bg-elevated border border-default rounded-lg p-4">
+              <div class="flex flex-wrap gap-3 items-end">
+                <UFormField label="Coordonnees" class="flex-1 min-w-[120px]">
+                  <div>
+                    <template v-if="clickedLat !== null">
+                      {{ clickedLat.toFixed(5) }}, {{ clickedLon!.toFixed(5) }}
+                    </template>
+                    <span v-else class="text-dimmed">Cliquez sur la carte</span>
+                  </div>
+                </UFormField>
+                <UFormField label="Rayon (km)">
+                  <UInput v-model.number="radiusKm" type="number" :min="1" :max="50" class="w-full sm:w-20" />
+                </UFormField>
+                <UButton :disabled="importing || clickedLat === null" :loading="importing" @click="runImport">
+                  Importer cette zone
+                </UButton>
               </div>
-              <USelect
-                v-model="poi.type"
-                :items="typeOptions"
-                class="w-full sm:w-32"
-                @update:model-value="saveStaged(poi)"
-              />
-              <USelect
-                v-model="poi.difficulty"
-                :items="difficultyOptions"
-                class="w-full sm:w-28"
-                @update:model-value="saveStaged(poi)"
-              />
-              <a
-                :href="`https://www.google.com/maps/search/?api=1&query=${poi.lat},${poi.lon}`"
-                target="_blank"
-                class="text-primary hover:underline pt-2"
-              >Google Maps</a>
-              <div class="flex gap-1">
-                <UButton size="sm" color="success" variant="solid" :disabled="busyPoiId === poi.id" :loading="busyPoiId === poi.id" @click="approve(poi)">Valider</UButton>
-                <UButton size="sm" color="error" variant="solid" :disabled="busyPoiId === poi.id" :loading="busyPoiId === poi.id" @click="reject(poi)">Refuser</UButton>
+              <p v-if="importMessage" class="mt-2" :class="importError ? 'text-error' : 'text-success'">
+                {{ importMessage }}
+              </p>
+            </div>
+
+            <!-- Staged POIs -->
+            <div v-if="staged.length > 0" class="flex items-center justify-between">
+              <span class="text-muted">{{ staged.length }} POI(s) en attente</span>
+              <UButton color="success" variant="solid" @click="approveAll">Tout valider</UButton>
+            </div>
+
+            <div v-if="loadingStaged" class="space-y-2">
+              <USkeleton class="h-14 w-full" />
+              <USkeleton class="h-14 w-full" />
+            </div>
+
+            <div v-else-if="staged.length === 0 && !loadingStaged" class="flex flex-col items-center justify-center py-12">
+              <UIcon name="i-lucide-inbox" class="text-4xl text-muted mb-2" />
+              <p class="text-muted">Aucun POI en attente. Cliquez sur la carte pour importer une zone.</p>
+            </div>
+
+            <div v-else class="space-y-2">
+              <div
+                v-for="poi in staged"
+                :key="poi.id"
+                class="bg-elevated border border-default rounded-lg p-3"
+              >
+                <div class="flex flex-wrap gap-2 items-start">
+                  <div class="flex-1 min-w-[150px]">
+                    <UInput v-model="poi.name" class="w-full" @blur="saveStaged(poi)" />
+                  </div>
+                  <USelect
+                    v-model="poi.type"
+                    :items="typeOptions"
+                    class="w-full sm:w-32"
+                    @update:model-value="saveStaged(poi)"
+                  />
+                  <USelect
+                    v-model="poi.difficulty"
+                    :items="difficultyOptions"
+                    class="w-full sm:w-28"
+                    @update:model-value="saveStaged(poi)"
+                  />
+                  <a
+                    :href="`https://www.google.com/maps/search/?api=1&query=${poi.lat},${poi.lon}`"
+                    target="_blank"
+                    class="text-primary hover:underline pt-2"
+                  >Google Maps</a>
+                  <div class="flex gap-1">
+                    <UButton size="sm" color="success" variant="solid" :disabled="busyPoiId === poi.id" :loading="busyPoiId === poi.id" @click="approve(poi)">Valider</UButton>
+                    <UButton size="sm" color="error" variant="solid" :disabled="busyPoiId === poi.id" :loading="busyPoiId === poi.id" @click="reject(poi)">Refuser</UButton>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
+    </template>
+  </UDashboardPanel>
 </template>
 
 <script setup lang="ts">

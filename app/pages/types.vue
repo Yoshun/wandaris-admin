@@ -1,184 +1,199 @@
 <template>
-  <div>
-    <h1 class="text-2xl font-bold text-primary mb-6">Types & Difficultes</h1>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Types & Difficultes" icon="i-lucide-tags" />
+    </template>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <!-- POI Types -->
-      <div>
-        <h2 class="text-lg font-bold text-primary mb-3">Types de POI</h2>
-
-        <!-- Add form -->
-        <div class="flex gap-2 mb-4">
-          <UInput v-model="newTypeSlug" placeholder="nouveau_slug" class="flex-1" />
-          <USelect v-model="newTypeBiome" :items="biomeItems" size="sm" class="w-36" />
-          <UButton size="sm" :disabled="!newTypeSlug.trim()" @click="addType">Ajouter</UButton>
-        </div>
-
-        <div v-if="loadingTypes" class="text-muted">Chargement...</div>
-        <div v-else class="space-y-1">
-          <div
-            v-for="(t, idx) in types"
-            :key="t.id"
-            class="flex items-center gap-2 bg-elevated border border-default rounded px-3 py-2"
-          >
-            <div class="flex flex-col gap-0.5">
-              <UButton
-                size="sm"
-                variant="ghost"
-                color="neutral"
-                :disabled="idx === 0"
-                @click="moveType(t, idx, -1)"
-              >↑</UButton>
-              <UButton
-                size="sm"
-                variant="ghost"
-                color="neutral"
-                :disabled="idx === types.length - 1"
-                @click="moveType(t, idx, 1)"
-              >↓</UButton>
+    <template #body>
+      <div class="p-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- POI Types -->
+          <div class="bg-elevated border border-default rounded-lg overflow-hidden">
+            <div class="px-4 py-3 border-b border-default">
+              <h2 class="text-lg font-bold text-primary">Types de POI</h2>
             </div>
-            <template v-if="editingTypeId === t.id">
-              <UInput v-model="editingTypeSlug" size="sm" class="flex-1" @keyup.enter="saveType(t)" />
-              <USelect v-model="editingTypeBiome" :items="biomeItems" size="sm" class="w-36" />
-              <UButton size="sm" @click="saveType(t)">OK</UButton>
-              <UButton size="sm" variant="solid" color="neutral" @click="cancelEditType">Annuler</UButton>
-            </template>
-            <template v-else>
-              <span class="flex-1">{{ typeLabel(t.slug) }} <span class="text-dimmed">({{ t.slug }})</span></span>
-              <span class="text-muted bg-default px-2 py-0.5 rounded">{{ t.biome }}</span>
-              <UButton size="sm" variant="soft" @click="startEditType(t)">Modifier</UButton>
-              <UButton size="sm" variant="solid" color="error" @click="confirmDeleteType(t)">Supprimer</UButton>
-            </template>
-          </div>
-        </div>
-      </div>
-
-      <!-- POI Difficulties -->
-      <div>
-        <h2 class="text-lg font-bold text-primary mb-3">Difficultes</h2>
-
-        <!-- Add form -->
-        <div class="flex gap-2 mb-4">
-          <UInput v-model="newDiffSlug" placeholder="nouveau_slug" class="flex-1" />
-          <UButton size="sm" :disabled="!newDiffSlug.trim()" @click="addDifficulty">Ajouter</UButton>
-        </div>
-
-        <div v-if="loadingDiffs" class="text-muted">Chargement...</div>
-        <div v-else class="space-y-1">
-          <div
-            v-for="(d, idx) in difficulties"
-            :key="d.id"
-            class="bg-elevated border border-default rounded px-3 py-2"
-          >
-            <div class="flex items-center gap-2">
-              <div class="flex flex-col gap-0.5">
-                <UButton
-                  size="sm"
-                  variant="ghost"
-                  color="neutral"
-                  :disabled="idx === 0"
-                  @click="moveDifficulty(d, idx, -1)"
-                >↑</UButton>
-                <UButton
-                  size="sm"
-                  variant="ghost"
-                  color="neutral"
-                  :disabled="idx === difficulties.length - 1"
-                  @click="moveDifficulty(d, idx, 1)"
-                >↓</UButton>
+            <div class="p-4">
+              <!-- Add form -->
+              <div class="flex gap-2 mb-4">
+                <UInput v-model="newTypeSlug" placeholder="nouveau_slug" class="flex-1" />
+                <USelect v-model="newTypeBiome" :items="biomeItems" size="sm" class="w-36" />
+                <UButton size="sm" :disabled="!newTypeSlug.trim()" @click="addType">Ajouter</UButton>
               </div>
-              <template v-if="editingDiffId === d.id">
-                <UInput v-model="editingDiffSlug" size="sm" class="flex-1" @keyup.enter="saveDifficulty(d)" />
-                <UButton size="sm" @click="saveDifficulty(d)">OK</UButton>
-                <UButton size="sm" variant="solid" color="neutral" @click="cancelEditDiff">Annuler</UButton>
-              </template>
-              <template v-else>
-                <span class="flex-1">{{ difficultyLabel(d.slug) }} <span class="text-dimmed">({{ d.slug }})</span></span>
-                <UButton size="sm" variant="soft" @click="startEditDiff(d)">Modifier</UButton>
-                <UButton size="sm" variant="ghost" @click="toggleDiffExpand(d.id)">
-                  {{ expandedDiffId === d.id ? '▲' : '▼' }}
-                </UButton>
-                <UButton size="sm" variant="solid" color="error" @click="confirmDeleteDiff(d)">Supprimer</UButton>
-              </template>
-            </div>
 
-            <!-- Gameplay fields (always visible) -->
-            <div class="grid grid-cols-3 gap-2 mt-2">
-              <div>
-                <label class="text-muted">Cooldown (h)</label>
-                <UInput
-                  type="number"
-                  :model-value="d.cooldownHours"
-                  size="sm"
-                  @change="updateDiffField(d, 'cooldownHours', Number(($event.target as HTMLInputElement).value))"
-                />
+              <div v-if="loadingTypes" class="space-y-2">
+                <USkeleton class="h-10 w-full" />
+                <USkeleton class="h-10 w-full" />
               </div>
-              <div>
-                <label class="text-muted">XP</label>
-                <UInput
-                  type="number"
-                  :model-value="d.rewardXp"
-                  size="sm"
-                  @change="updateDiffField(d, 'rewardXp', Number(($event.target as HTMLInputElement).value))"
-                />
-              </div>
-              <div>
-                <label class="text-muted">Gold</label>
-                <UInput
-                  type="number"
-                  :model-value="d.rewardGold"
-                  size="sm"
-                  @change="updateDiffField(d, 'rewardGold', Number(($event.target as HTMLInputElement).value))"
-                />
-              </div>
-            </div>
-
-            <!-- Loot table (expandable) -->
-            <div v-if="expandedDiffId === d.id" class="mt-2 border-t border-default pt-2">
-              <p class="text-muted mb-1 font-semibold">Loot Table</p>
-              <div class="space-y-1">
-                <div v-for="res in resourceSlugs" :key="res" class="grid grid-cols-4 gap-1 items-center">
-                  <span class="text-muted capitalize">{{ res }}</span>
-                  <UInput
-                    type="number"
-                    step="0.1"
-                    placeholder="chance"
-                    :model-value="d.lootTable[res]?.chance ?? 0"
-                    size="sm"
-                    @change="updateLootField(d, res, 'chance', Number(($event.target as HTMLInputElement).value))"
-                  />
-                  <UInput
-                    type="number"
-                    placeholder="min"
-                    :model-value="d.lootTable[res]?.min ?? 0"
-                    size="sm"
-                    @change="updateLootField(d, res, 'min', Number(($event.target as HTMLInputElement).value))"
-                  />
-                  <UInput
-                    type="number"
-                    placeholder="max"
-                    :model-value="d.lootTable[res]?.max ?? 0"
-                    size="sm"
-                    @change="updateLootField(d, res, 'max', Number(($event.target as HTMLInputElement).value))"
-                  />
+              <div v-else class="space-y-1">
+                <div
+                  v-for="(t, idx) in types"
+                  :key="t.id"
+                  class="flex items-center gap-2 border border-default rounded-lg px-3 py-2"
+                >
+                  <div class="flex flex-col gap-0.5">
+                    <UButton
+                      size="sm"
+                      variant="ghost"
+                      color="neutral"
+                      :disabled="idx === 0"
+                      @click="moveType(t, idx, -1)"
+                    >↑</UButton>
+                    <UButton
+                      size="sm"
+                      variant="ghost"
+                      color="neutral"
+                      :disabled="idx === types.length - 1"
+                      @click="moveType(t, idx, 1)"
+                    >↓</UButton>
+                  </div>
+                  <template v-if="editingTypeId === t.id">
+                    <UInput v-model="editingTypeSlug" size="sm" class="flex-1" @keyup.enter="saveType(t)" />
+                    <USelect v-model="editingTypeBiome" :items="biomeItems" size="sm" class="w-36" />
+                    <UButton size="sm" @click="saveType(t)">OK</UButton>
+                    <UButton size="sm" variant="solid" color="neutral" @click="cancelEditType">Annuler</UButton>
+                  </template>
+                  <template v-else>
+                    <span class="flex-1">{{ typeLabel(t.slug) }} <span class="text-dimmed">({{ t.slug }})</span></span>
+                    <span class="text-muted bg-default px-2 py-0.5 rounded">{{ t.biome }}</span>
+                    <UButton size="sm" variant="soft" @click="startEditType(t)">Modifier</UButton>
+                    <UButton size="sm" variant="solid" color="error" @click="confirmDeleteType(t)">Supprimer</UButton>
+                  </template>
                 </div>
-                <div class="text-dimmed mt-1">chance (0-1) | min | max</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- POI Difficulties -->
+          <div class="bg-elevated border border-default rounded-lg overflow-hidden">
+            <div class="px-4 py-3 border-b border-default">
+              <h2 class="text-lg font-bold text-primary">Difficultes</h2>
+            </div>
+            <div class="p-4">
+              <!-- Add form -->
+              <div class="flex gap-2 mb-4">
+                <UInput v-model="newDiffSlug" placeholder="nouveau_slug" class="flex-1" />
+                <UButton size="sm" :disabled="!newDiffSlug.trim()" @click="addDifficulty">Ajouter</UButton>
+              </div>
+
+              <div v-if="loadingDiffs" class="space-y-2">
+                <USkeleton class="h-10 w-full" />
+                <USkeleton class="h-10 w-full" />
+              </div>
+              <div v-else class="space-y-1">
+                <div
+                  v-for="(d, idx) in difficulties"
+                  :key="d.id"
+                  class="border border-default rounded-lg px-3 py-2"
+                >
+                  <div class="flex items-center gap-2">
+                    <div class="flex flex-col gap-0.5">
+                      <UButton
+                        size="sm"
+                        variant="ghost"
+                        color="neutral"
+                        :disabled="idx === 0"
+                        @click="moveDifficulty(d, idx, -1)"
+                      >↑</UButton>
+                      <UButton
+                        size="sm"
+                        variant="ghost"
+                        color="neutral"
+                        :disabled="idx === difficulties.length - 1"
+                        @click="moveDifficulty(d, idx, 1)"
+                      >↓</UButton>
+                    </div>
+                    <template v-if="editingDiffId === d.id">
+                      <UInput v-model="editingDiffSlug" size="sm" class="flex-1" @keyup.enter="saveDifficulty(d)" />
+                      <UButton size="sm" @click="saveDifficulty(d)">OK</UButton>
+                      <UButton size="sm" variant="solid" color="neutral" @click="cancelEditDiff">Annuler</UButton>
+                    </template>
+                    <template v-else>
+                      <span class="flex-1">{{ difficultyLabel(d.slug) }} <span class="text-dimmed">({{ d.slug }})</span></span>
+                      <UButton size="sm" variant="soft" @click="startEditDiff(d)">Modifier</UButton>
+                      <UButton size="sm" variant="ghost" @click="toggleDiffExpand(d.id)">
+                        {{ expandedDiffId === d.id ? '▲' : '▼' }}
+                      </UButton>
+                      <UButton size="sm" variant="solid" color="error" @click="confirmDeleteDiff(d)">Supprimer</UButton>
+                    </template>
+                  </div>
+
+                  <!-- Gameplay fields (always visible) -->
+                  <div class="grid grid-cols-3 gap-2 mt-2">
+                    <UFormField label="Cooldown (h)">
+                      <UInput
+                        type="number"
+                        :model-value="d.cooldownHours"
+                        size="sm"
+                        @change="updateDiffField(d, 'cooldownHours', Number(($event.target as HTMLInputElement).value))"
+                      />
+                    </UFormField>
+                    <UFormField label="XP">
+                      <UInput
+                        type="number"
+                        :model-value="d.rewardXp"
+                        size="sm"
+                        @change="updateDiffField(d, 'rewardXp', Number(($event.target as HTMLInputElement).value))"
+                      />
+                    </UFormField>
+                    <UFormField label="Gold">
+                      <UInput
+                        type="number"
+                        :model-value="d.rewardGold"
+                        size="sm"
+                        @change="updateDiffField(d, 'rewardGold', Number(($event.target as HTMLInputElement).value))"
+                      />
+                    </UFormField>
+                  </div>
+
+                  <!-- Loot table (expandable) -->
+                  <div v-if="expandedDiffId === d.id" class="mt-2 border-t border-default pt-2">
+                    <p class="text-muted mb-1 font-semibold">Loot Table</p>
+                    <div class="space-y-1">
+                      <div v-for="res in resourceSlugs" :key="res" class="grid grid-cols-4 gap-1 items-center">
+                        <span class="text-muted capitalize">{{ res }}</span>
+                        <UInput
+                          type="number"
+                          step="0.1"
+                          placeholder="chance"
+                          :model-value="d.lootTable[res]?.chance ?? 0"
+                          size="sm"
+                          @change="updateLootField(d, res, 'chance', Number(($event.target as HTMLInputElement).value))"
+                        />
+                        <UInput
+                          type="number"
+                          placeholder="min"
+                          :model-value="d.lootTable[res]?.min ?? 0"
+                          size="sm"
+                          @change="updateLootField(d, res, 'min', Number(($event.target as HTMLInputElement).value))"
+                        />
+                        <UInput
+                          type="number"
+                          placeholder="max"
+                          :model-value="d.lootTable[res]?.max ?? 0"
+                          size="sm"
+                          @change="updateLootField(d, res, 'max', Number(($event.target as HTMLInputElement).value))"
+                        />
+                      </div>
+                      <div class="text-dimmed mt-1">chance (0-1) | min | max</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <p v-if="errorMsg" class="text-error mt-4">{{ errorMsg }}</p>
+
+        <ConfirmDialog
+          :visible="!!deleteTarget"
+          :message="`Supprimer « ${deleteTarget?.slug} » ?`"
+          @confirm="executeDelete"
+          @cancel="deleteTarget = null"
+        />
       </div>
-    </div>
-
-    <p v-if="errorMsg" class="text-error mt-4">{{ errorMsg }}</p>
-
-    <ConfirmDialog
-      :visible="!!deleteTarget"
-      :message="`Supprimer « ${deleteTarget?.slug} » ?`"
-      @confirm="executeDelete"
-      @cancel="deleteTarget = null"
-    />
-  </div>
+    </template>
+  </UDashboardPanel>
 </template>
 
 <script setup lang="ts">

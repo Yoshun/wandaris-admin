@@ -1,82 +1,94 @@
 <template>
-  <div>
-    <h1 class="text-2xl font-bold text-primary mb-6">Monstres</h1>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Monstres" icon="i-lucide-swords">
+        <template #right>
+          <UButton icon="i-lucide-plus" size="sm" @click="scrollToNew">Ajouter</UButton>
+        </template>
+      </UDashboardNavbar>
+    </template>
 
-    <p v-if="errorMsg" class="text-error mb-4">{{ errorMsg }}</p>
+    <template #body>
+      <p v-if="errorMsg" class="text-error p-4">{{ errorMsg }}</p>
 
-    <div v-if="loading" class="text-muted">Chargement...</div>
-    <div v-else>
-      <!-- Header -->
-      <div class="grid grid-cols-9 gap-2 text-muted font-semibold px-3 mb-1">
-        <span>Icône</span>
-        <span>Type</span>
-        <span>Nom</span>
-        <span>HP</span>
-        <span>Attaque</span>
-        <span>Intervalle (ms)</span>
-        <span>Couleur</span>
-        <span>Boss</span>
-        <span>Actions</span>
+      <div v-if="loading" class="p-4 space-y-3">
+        <USkeleton class="h-12 w-full" />
+        <USkeleton class="h-12 w-full" />
+        <USkeleton class="h-12 w-full" />
+      </div>
+      <div v-else class="p-4">
+        <!-- Header -->
+        <div class="grid grid-cols-9 gap-2 text-muted font-semibold px-3 mb-1">
+          <span>Icone</span>
+          <span>Type</span>
+          <span>Nom</span>
+          <span>HP</span>
+          <span>Attaque</span>
+          <span>Intervalle (ms)</span>
+          <span>Couleur</span>
+          <span>Boss</span>
+          <span>Actions</span>
+        </div>
+
+        <!-- Existing rows -->
+        <div
+          v-for="t in templates"
+          :key="t.id"
+          class="grid grid-cols-9 gap-2 items-center bg-elevated border border-default rounded-lg px-3 py-2 mb-1"
+        >
+          <div>
+            <img
+              :src="`https://api.wandaris.com/static/monster-icons/monster-${t.type}.png`"
+              :alt="t.name"
+              class="w-8 h-8 object-contain"
+              @error="($event.target as HTMLImageElement).style.display = 'none'"
+            />
+          </div>
+          <UInput v-model="t.type" size="sm" />
+          <UInput v-model="t.name" size="sm" />
+          <UInput type="number" v-model.number="t.baseHp" size="sm" />
+          <UInput type="number" v-model.number="t.baseAttack" size="sm" />
+          <UInput type="number" v-model.number="t.attackIntervalMs" size="sm" />
+          <div class="flex items-center gap-1">
+            <input type="color" v-model="t.color" class="w-6 h-6 rounded cursor-pointer" />
+            <span class="text-muted text-xs">{{ t.color }}</span>
+          </div>
+          <span class="text-xs" :class="t.bossOnly ? 'text-warning' : 'text-muted'">
+            {{ t.bossOnly ? 'Boss' : '—' }}
+          </span>
+          <div class="flex gap-1">
+            <UButton size="sm" @click="save(t)" :loading="savingId === t.id">Sauver</UButton>
+            <UButton size="sm" color="error" variant="soft" @click="confirmTarget = t" :loading="deletingId === t.id">Suppr</UButton>
+          </div>
+        </div>
+
+        <!-- New row -->
+        <div ref="newRowEl" class="grid grid-cols-9 gap-2 items-center bg-elevated border border-dashed border-default rounded-lg px-3 py-2 mt-3">
+          <div />
+          <UInput v-model="newTemplate.type" size="sm" placeholder="type" />
+          <UInput v-model="newTemplate.name" size="sm" placeholder="Nom" />
+          <UInput type="number" v-model.number="newTemplate.baseHp" size="sm" placeholder="HP" />
+          <UInput type="number" v-model.number="newTemplate.baseAttack" size="sm" placeholder="ATK" />
+          <UInput type="number" v-model.number="newTemplate.attackIntervalMs" size="sm" placeholder="ms" />
+          <div class="flex items-center gap-1">
+            <input type="color" v-model="newTemplate.color" class="w-6 h-6 rounded cursor-pointer" />
+            <span class="text-muted text-xs">{{ newTemplate.color }}</span>
+          </div>
+          <div />
+          <div>
+            <UButton size="sm" @click="create" :loading="creating" :disabled="!newTemplate.type?.trim()">Ajouter</UButton>
+          </div>
+        </div>
       </div>
 
-      <!-- Existing rows -->
-      <div
-        v-for="t in templates"
-        :key="t.id"
-        class="grid grid-cols-9 gap-2 items-center bg-elevated border border-default rounded px-3 py-2 mb-1"
-      >
-        <div>
-          <img
-            :src="`https://api.wandaris.com/static/monster-icons/monster-${t.type}.png`"
-            :alt="t.name"
-            class="w-8 h-8 object-contain"
-            @error="($event.target as HTMLImageElement).style.display = 'none'"
-          />
-        </div>
-        <UInput v-model="t.type" size="sm" />
-        <UInput v-model="t.name" size="sm" />
-        <UInput type="number" v-model.number="t.baseHp" size="sm" />
-        <UInput type="number" v-model.number="t.baseAttack" size="sm" />
-        <UInput type="number" v-model.number="t.attackIntervalMs" size="sm" />
-        <div class="flex items-center gap-1">
-          <input type="color" v-model="t.color" class="w-6 h-6 rounded cursor-pointer" />
-          <span class="text-muted">{{ t.color }}</span>
-        </div>
-        <span class="text-xs" :class="t.bossOnly ? 'text-warning' : 'text-muted'">
-          {{ t.bossOnly ? 'Boss' : '—' }}
-        </span>
-        <div class="flex gap-1">
-          <UButton size="sm" @click="save(t)" :loading="savingId === t.id">Sauver</UButton>
-          <UButton size="sm" color="error" variant="soft" @click="confirmTarget = t" :loading="deletingId === t.id">Suppr</UButton>
-        </div>
-      </div>
-
-      <!-- New row -->
-      <div class="grid grid-cols-9 gap-2 items-center bg-elevated border border-dashed border-default rounded px-3 py-2 mt-3">
-        <div />
-        <UInput v-model="newTemplate.type" size="sm" placeholder="type" />
-        <UInput v-model="newTemplate.name" size="sm" placeholder="Nom" />
-        <UInput type="number" v-model.number="newTemplate.baseHp" size="sm" placeholder="HP" />
-        <UInput type="number" v-model.number="newTemplate.baseAttack" size="sm" placeholder="ATK" />
-        <UInput type="number" v-model.number="newTemplate.attackIntervalMs" size="sm" placeholder="ms" />
-        <div class="flex items-center gap-1">
-          <input type="color" v-model="newTemplate.color" class="w-6 h-6 rounded cursor-pointer" />
-          <span class="text-muted">{{ newTemplate.color }}</span>
-        </div>
-        <div />
-        <div>
-          <UButton size="sm" @click="create" :loading="creating" :disabled="!newTemplate.type?.trim()">Ajouter</UButton>
-        </div>
-      </div>
-    </div>
-
-    <ConfirmDialog
-      :visible="!!confirmTarget"
-      :message="`Supprimer le monstre \u00AB ${confirmTarget?.name} \u00BB ?`"
-      @confirm="confirmDelete"
-      @cancel="confirmTarget = null"
-    />
-  </div>
+      <ConfirmDialog
+        :visible="!!confirmTarget"
+        :message="`Supprimer le monstre \u00AB ${confirmTarget?.name} \u00BB ?`"
+        @confirm="confirmDelete"
+        @cancel="confirmTarget = null"
+      />
+    </template>
+  </UDashboardPanel>
 </template>
 
 <script setup lang="ts">
@@ -92,6 +104,7 @@ const creating = ref(false);
 
 const confirmTarget = ref<MonsterTemplateRecord | null>(null);
 const templates = ref<MonsterTemplateRecord[]>([]);
+const newRowEl = ref<HTMLElement>();
 
 const newTemplate = ref({
   type: "",
@@ -101,6 +114,10 @@ const newTemplate = ref({
   attackIntervalMs: 2000,
   color: "#888888",
 });
+
+function scrollToNew() {
+  newRowEl.value?.scrollIntoView({ behavior: "smooth", block: "center" });
+}
 
 async function fetchTemplates() {
   loading.value = true;

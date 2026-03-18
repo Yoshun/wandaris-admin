@@ -1,62 +1,73 @@
 <template>
-  <div>
-    <h1 class="text-2xl font-bold text-primary mb-6">Couverture par departement</h1>
-
-    <div v-if="loading" class="text-muted">Chargement...</div>
-    <div v-else-if="errorMsg" class="text-error">{{ errorMsg }}</div>
-
-    <template v-else-if="coverageData">
-      <!-- Stats -->
-      <div class="flex items-center gap-6 mb-4">
-        <div>
-          <span class="text-3xl font-bold text-primary">{{ coverageData.overall }}%</span>
-          <span class="text-muted text-sm ml-2">couverture nationale</span>
-        </div>
-        <div class="text-sm text-muted">
-          {{ coverageData.departmentsStarted }} / {{ coverageData.totalDepartments }} departements commences
-        </div>
-      </div>
-      <div class="w-full h-3 bg-default rounded-full overflow-hidden border border-default mb-6">
-        <div
-          class="h-full rounded-full transition-all duration-700 bg-primary"
-          :style="{ width: coverageData.overall + '%' }"
-        />
-      </div>
-
-      <!-- Map -->
-      <div class="mb-6">
-        <ClientOnly>
-          <div ref="mapEl" class="w-full rounded-lg overflow-hidden border border-default" style="height: 480px;" />
-        </ClientOnly>
-      </div>
-
-      <!-- Dept list -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
-        <div
-          v-for="dept in sortedDepts"
-          :key="dept.code"
-          class="flex items-center gap-2 px-2.5 py-1.5 rounded bg-elevated border border-default"
-        >
-          <span class="text-xs text-muted w-6 text-right font-mono">{{ dept.code }}</span>
-          <span class="text-sm flex-1 truncate">{{ dept.name }}</span>
-          <div class="w-20 h-2 bg-default rounded-full overflow-hidden">
-            <div
-              class="h-full rounded-full"
-              :style="{ width: Math.max(dept.coverage, dept.coverage > 0 ? 3 : 0) + '%', background: getCoverageColor(dept.coverage) }"
-            />
-          </div>
-          <span class="text-xs font-mono w-12 text-right" :style="{ color: getCoverageColor(dept.coverage) }">
-            {{ dept.coverage }}%
-          </span>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <p class="text-dimmed text-xs mt-4 text-center">
-        Mis a jour le {{ formatDate(coverageData.updatedAt) }}
-      </p>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Couverture par departement" icon="i-lucide-map-pin" />
     </template>
-  </div>
+
+    <template #body>
+      <div v-if="loading" class="p-4 space-y-3">
+        <USkeleton class="h-8 w-48" />
+        <USkeleton class="h-3 w-full" />
+        <USkeleton class="h-[480px] w-full rounded-lg" />
+      </div>
+      <div v-else-if="errorMsg" class="text-error p-4">{{ errorMsg }}</div>
+
+      <div v-else-if="coverageData" class="p-4">
+        <!-- Stats cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div class="bg-elevated border border-default rounded-lg p-4">
+            <span class="text-3xl font-bold text-primary">{{ coverageData.overall }}%</span>
+            <p class="text-muted text-sm mt-1">Couverture nationale</p>
+          </div>
+          <div class="bg-elevated border border-default rounded-lg p-4">
+            <span class="text-3xl font-bold text-primary">{{ coverageData.departmentsStarted }}</span>
+            <span class="text-muted text-lg"> / {{ coverageData.totalDepartments }}</span>
+            <p class="text-muted text-sm mt-1">Departements commences</p>
+          </div>
+        </div>
+
+        <div class="w-full h-3 bg-default rounded-full overflow-hidden border border-default mb-6">
+          <div
+            class="h-full rounded-full transition-all duration-700 bg-primary"
+            :style="{ width: coverageData.overall + '%' }"
+          />
+        </div>
+
+        <!-- Map -->
+        <div class="mb-6">
+          <ClientOnly>
+            <div ref="mapEl" class="w-full rounded-lg overflow-hidden border border-default" style="height: 480px;" />
+          </ClientOnly>
+        </div>
+
+        <!-- Dept list -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
+          <div
+            v-for="dept in sortedDepts"
+            :key="dept.code"
+            class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-elevated border border-default"
+          >
+            <span class="text-xs text-muted w-6 text-right font-mono">{{ dept.code }}</span>
+            <span class="text-sm flex-1 truncate">{{ dept.name }}</span>
+            <div class="w-20 h-2 bg-default rounded-full overflow-hidden">
+              <div
+                class="h-full rounded-full"
+                :style="{ width: Math.max(dept.coverage, dept.coverage > 0 ? 3 : 0) + '%', background: getCoverageColor(dept.coverage) }"
+              />
+            </div>
+            <span class="text-xs font-mono w-12 text-right" :style="{ color: getCoverageColor(dept.coverage) }">
+              {{ dept.coverage }}%
+            </span>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <p class="text-dimmed text-xs mt-4 text-center">
+          Mis a jour le {{ formatDate(coverageData.updatedAt) }}
+        </p>
+      </div>
+    </template>
+  </UDashboardPanel>
 </template>
 
 <script setup lang="ts">

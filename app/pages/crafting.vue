@@ -1,176 +1,146 @@
 <template>
-  <div>
-    <h1 class="text-2xl font-bold text-primary mb-6">Crafting</h1>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Crafting" icon="i-lucide-hammer">
+        <template #right>
+          <UButton icon="i-lucide-plus" @click="openCreateModal">Ajouter un item</UButton>
+        </template>
+      </UDashboardNavbar>
+      <UDashboardToolbar>
+        <template #left>
+          <UTabs :items="professionTabs" v-model="activeTab" />
+        </template>
+        <template #right>
+          <div class="flex flex-wrap gap-2">
+            <UButton
+              v-for="t in typeFilters"
+              :key="t.value"
+              size="xs"
+              :variant="typeFilter === t.value ? 'solid' : 'soft'"
+              @click="typeFilter = t.value"
+            >
+              {{ t.label }}
+            </UButton>
+          </div>
+        </template>
+      </UDashboardToolbar>
+    </template>
 
-    <p v-if="errorMsg" class="text-error mb-4">{{ errorMsg }}</p>
+    <template #body>
+      <p v-if="errorMsg" class="text-error p-4">{{ errorMsg }}</p>
 
-    <div v-if="loading" class="text-muted">Chargement...</div>
-    <div v-else>
-      <!-- Profession tabs -->
-      <UTabs :items="professionTabs" v-model="activeTab" class="mb-6" />
-
-      <!-- Stats -->
-      <div class="flex gap-4 mb-4 text-muted">
-        <span>{{ filteredItems.length }} items</span>
-        <span>{{ filteredRecipes.length }} recettes</span>
+      <div v-if="loading" class="p-4 space-y-3">
+        <USkeleton class="h-10 w-full" />
+        <USkeleton class="h-10 w-full" />
+        <USkeleton class="h-10 w-full" />
+        <USkeleton class="h-10 w-3/4" />
       </div>
-
-      <!-- Filter by type -->
-      <div class="flex flex-wrap gap-2 mb-4">
-        <UButton
-          v-for="t in typeFilters"
-          :key="t.value"
-          size="sm"
-          :variant="typeFilter === t.value ? 'solid' : 'soft'"
-          @click="typeFilter = t.value"
-        >
-          {{ t.label }}
-        </UButton>
-      </div>
-
-      <!-- Items table -->
-      <div class="space-y-2">
-        <!-- Header -->
-        <div class="grid grid-cols-12 gap-3 text-muted font-semibold px-4 mb-2">
-          <span class="col-span-2">Slug</span>
-          <span class="col-span-2">Nom</span>
-          <span>Type</span>
-          <span>Slot</span>
-          <span>Rarete</span>
-          <span>Niv. joueur</span>
-          <span>Niv. metier</span>
-          <span>Stats / Effets</span>
-          <span>Recette</span>
-          <span>Actions</span>
+      <div v-else class="p-4">
+        <!-- Stats -->
+        <div class="flex gap-4 mb-4 text-muted">
+          <span>{{ filteredItems.length }} items</span>
+          <span>{{ filteredRecipes.length }} recettes</span>
         </div>
 
-        <!-- Rows -->
-        <div
-          v-for="item in filteredItems"
-          :key="item.id"
-          class="grid grid-cols-12 gap-3 items-center bg-elevated border border-default rounded-lg px-4 py-3"
-        >
-          <span class="col-span-2 font-mono truncate">{{ item.slug }}</span>
-          <span class="col-span-2 truncate">{{ item.name }}</span>
-          <UBadge variant="subtle" :color="typeBadgeColor(item.type)">{{ typeLabel(item.type) }}</UBadge>
-          <span class="text-muted">{{ item.slot ?? '-' }}</span>
-          <UBadge :color="rarityColor(item.rarity)">{{ item.rarity }}</UBadge>
-          <span>{{ item.requiredLevel }}</span>
-          <span>{{ item.professionLevel }}</span>
-          <span class="text-muted truncate">{{ formatStatsEffects(item) }}</span>
-          <span class="text-muted truncate">{{ formatRecipe(item.id) }}</span>
-          <div class="flex gap-2">
-            <UButton size="sm" variant="soft" @click="editItem(item)">Edit</UButton>
-            <UButton size="sm" color="error" variant="soft" @click="confirmTarget = item" :loading="deletingId === item.id">Suppr</UButton>
-          </div>
+        <!-- Items table -->
+        <UTable :data="paginatedItems" :columns="tableColumns" class="w-full" />
+
+        <!-- Pagination -->
+        <div v-if="filteredItems.length > pageSize" class="flex justify-center mt-4">
+          <UPagination
+            v-model:page="page"
+            :total="filteredItems.length"
+            :items-per-page="pageSize"
+            show-edges
+          />
         </div>
       </div>
 
-      <!-- Add button -->
-      <div class="mt-6">
-        <UButton @click="openCreateModal">Ajouter un item</UButton>
-      </div>
-    </div>
+      <ConfirmDialog
+        :visible="!!confirmTarget"
+        :message="`Supprimer l'item \u00AB ${confirmTarget?.name} \u00BB ?`"
+        @confirm="confirmDelete"
+        @cancel="confirmTarget = null"
+      />
 
-    <ConfirmDialog
-      :visible="!!confirmTarget"
-      :message="`Supprimer l'item \u00AB ${confirmTarget?.name} \u00BB ?`"
-      @confirm="confirmDelete"
-      @cancel="confirmTarget = null"
-    />
+      <!-- Edit/Create Modal -->
+      <UModal v-model:open="modalOpen">
+        <template #content>
+          <div class="p-6 space-y-5">
+            <h2 class="text-xl font-bold text-primary">{{ editingItem ? 'Modifier' : 'Nouvel' }} item</h2>
 
-    <!-- Edit/Create Modal -->
-    <UModal v-model:open="modalOpen">
-      <template #content>
-        <div class="p-6 space-y-5">
-          <h2 class="text-xl font-bold text-primary">{{ editingItem ? 'Modifier' : 'Nouvel' }} item</h2>
+            <div class="grid grid-cols-2 gap-4">
+              <UFormField label="Slug">
+                <UInput v-model="form.slug" />
+              </UFormField>
+              <UFormField label="Nom">
+                <UInput v-model="form.name" />
+              </UFormField>
+              <UFormField label="Type">
+                <USelect v-model="form.type" :items="itemTypeOptions" />
+              </UFormField>
+              <UFormField label="Slot">
+                <USelect :model-value="form.slot ?? undefined" @update:model-value="form.slot = $event ?? null" :items="slotOptions" placeholder="Aucun" />
+              </UFormField>
+              <UFormField label="Rarete">
+                <USelect v-model="form.rarity" :items="rarityOptions" />
+              </UFormField>
+              <UFormField label="Metier">
+                <USelect v-model="form.professionSlug" :items="professionOptions" />
+              </UFormField>
+              <UFormField label="Niv. joueur requis">
+                <UInput type="number" v-model.number="form.requiredLevel" />
+              </UFormField>
+              <UFormField label="Niv. metier requis">
+                <UInput type="number" v-model.number="form.professionLevel" />
+              </UFormField>
+              <UFormField label="Valeur de vente (or)">
+                <UInput type="number" v-model.number="form.sellValue" />
+              </UFormField>
+              <UFormField v-if="form.type === 'potion_heal'" label="Soin (HP)">
+                <UInput type="number" v-model.number="form.healAmount" />
+              </UFormField>
+              <UFormField v-if="form.type === 'potion_buff'" label="Duree (min)">
+                <UInput type="number" v-model.number="form.duration" />
+              </UFormField>
+            </div>
 
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-muted block mb-1">Slug</label>
-              <UInput v-model="form.slug" />
+            <!-- Stats (for equipment) -->
+            <UFormField v-if="['weapon', 'armor_heavy', 'armor_light', 'cape'].includes(form.type)" label="Stats (JSON)">
+              <UInput v-model="form.statsJson" placeholder='{"force": 3, "endurance": 2}' />
+            </UFormField>
+
+            <!-- Effects (for potions) -->
+            <UFormField v-if="form.type === 'potion_buff'" label="Effets (JSON)">
+              <UInput v-model="form.effectsJson" placeholder='{"atk": 0.15, "gold": 0.2}' />
+            </UFormField>
+
+            <!-- Recipe -->
+            <UFormField label="Ingredients (JSON)">
+              <UInput v-model="form.ingredientsJson" placeholder='{"wood": 3}' />
+            </UFormField>
+            <div class="grid grid-cols-2 gap-4">
+              <UFormField label="Quantite produite">
+                <UInput type="number" v-model.number="form.quantity" />
+              </UFormField>
+              <UFormField label="Recette connue">
+                <UCheckbox v-model="form.known" class="mt-2" />
+              </UFormField>
             </div>
-            <div>
-              <label class="text-muted block mb-1">Nom</label>
-              <UInput v-model="form.name" />
-            </div>
-            <div>
-              <label class="text-muted block mb-1">Type</label>
-              <USelect v-model="form.type" :items="itemTypeOptions" />
-            </div>
-            <div>
-              <label class="text-muted block mb-1">Slot</label>
-              <USelect v-model="form.slot" :items="slotOptions" placeholder="Aucun" />
-            </div>
-            <div>
-              <label class="text-muted block mb-1">Rarete</label>
-              <USelect v-model="form.rarity" :items="rarityOptions" />
-            </div>
-            <div>
-              <label class="text-muted block mb-1">Metier</label>
-              <USelect v-model="form.professionSlug" :items="professionOptions" />
-            </div>
-            <div>
-              <label class="text-muted block mb-1">Niv. joueur requis</label>
-              <UInput type="number" v-model.number="form.requiredLevel" />
-            </div>
-            <div>
-              <label class="text-muted block mb-1">Niv. metier requis</label>
-              <UInput type="number" v-model.number="form.professionLevel" />
-            </div>
-            <div>
-              <label class="text-muted block mb-1">Valeur de vente (or)</label>
-              <UInput type="number" v-model.number="form.sellValue" />
-            </div>
-            <div v-if="form.type === 'potion_heal'">
-              <label class="text-muted block mb-1">Soin (HP)</label>
-              <UInput type="number" v-model.number="form.healAmount" />
-            </div>
-            <div v-if="form.type === 'potion_buff'">
-              <label class="text-muted block mb-1">Duree (min)</label>
-              <UInput type="number" v-model.number="form.duration" />
+
+            <div class="flex gap-2 justify-end">
+              <UButton variant="soft" @click="modalOpen = false">Annuler</UButton>
+              <UButton @click="saveItem" :loading="saving">{{ editingItem ? 'Sauver' : 'Creer' }}</UButton>
             </div>
           </div>
-
-          <!-- Stats (for equipment) -->
-          <div v-if="['weapon', 'armor_heavy', 'armor_light', 'cape'].includes(form.type)">
-            <label class="text-muted block mb-1">Stats (JSON)</label>
-            <UInput v-model="form.statsJson" placeholder='{"force": 3, "endurance": 2}' />
-          </div>
-
-          <!-- Effects (for potions) -->
-          <div v-if="form.type === 'potion_buff'">
-            <label class="text-muted block mb-1">Effets (JSON)</label>
-            <UInput v-model="form.effectsJson" placeholder='{"atk": 0.15, "gold": 0.2}' />
-          </div>
-
-          <!-- Recipe -->
-          <div>
-            <label class="text-muted block mb-1">Ingredients (JSON)</label>
-            <UInput v-model="form.ingredientsJson" placeholder='{"wood": 3}' />
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-muted block mb-1">Quantite produite</label>
-              <UInput type="number" v-model.number="form.quantity" />
-            </div>
-            <div class="flex items-end gap-2 pb-2">
-              <label class="text-muted">Recette connue</label>
-              <input type="checkbox" v-model="form.known" />
-            </div>
-          </div>
-
-          <div class="flex gap-2 justify-end">
-            <UButton variant="soft" @click="modalOpen = false">Annuler</UButton>
-            <UButton @click="saveItem" :loading="saving">{{ editingItem ? 'Sauver' : 'Creer' }}</UButton>
-          </div>
-        </div>
-      </template>
-    </UModal>
-  </div>
+        </template>
+      </UModal>
+    </template>
+  </UDashboardPanel>
 </template>
 
 <script setup lang="ts">
+import { h } from "vue";
 import type { ItemTemplateRecord, RecipeRecord, ProfessionRecord } from "~~/types/poi";
 
 const { listItemTemplates, createItemTemplate, updateItemTemplate, deleteItemTemplate, listRecipes, createRecipe, updateRecipe, listProfessions } = useApi();
@@ -188,6 +158,10 @@ const professionsList = ref<ProfessionRecord[]>([]);
 
 const activeTab = ref("all");
 const typeFilter = ref("all");
+
+// Pagination
+const page = ref(1);
+const pageSize = 50;
 
 // Edit state
 const editingItem = ref<ItemTemplateRecord | null>(null);
@@ -272,10 +246,66 @@ const filteredItems = computed(() => {
   return result;
 });
 
+const paginatedItems = computed(() => {
+  const start = (page.value - 1) * pageSize;
+  return filteredItems.value.slice(start, start + pageSize);
+});
+
 const filteredRecipes = computed(() => {
   const itemIds = new Set(filteredItems.value.map((i) => i.id));
   return allRecipes.value.filter((r) => itemIds.has(r.itemTemplateId));
 });
+
+// Reset page when filters change
+watch([() => activeTab.value, () => typeFilter.value], () => {
+  page.value = 1;
+});
+
+// Table columns
+const tableColumns = computed(() => [
+  { accessorKey: "slug", header: "Slug" },
+  { accessorKey: "name", header: "Nom" },
+  {
+    accessorKey: "type",
+    header: "Type",
+    cell: ({ row }: any) => {
+      const item = row.original;
+      return h(resolveComponent("UBadge"), { variant: "subtle", color: typeBadgeColor(item.type) }, () => typeLabel(item.type));
+    },
+  },
+  { accessorKey: "slot", header: "Slot", cell: ({ row }: any) => row.original.slot ?? "-" },
+  {
+    accessorKey: "rarity",
+    header: "Rarete",
+    cell: ({ row }: any) => {
+      const item = row.original;
+      return h(resolveComponent("UBadge"), { color: rarityColor(item.rarity) }, () => item.rarity);
+    },
+  },
+  { accessorKey: "requiredLevel", header: "Niv. joueur" },
+  { accessorKey: "professionLevel", header: "Niv. metier" },
+  {
+    id: "stats",
+    header: "Stats / Effets",
+    cell: ({ row }: any) => formatStatsEffects(row.original),
+  },
+  {
+    id: "recipe",
+    header: "Recette",
+    cell: ({ row }: any) => formatRecipe(row.original.id),
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }: any) => {
+      const item = row.original;
+      return h("div", { class: "flex gap-2" }, [
+        h(resolveComponent("UButton"), { size: "sm", variant: "soft", onClick: () => editItem(item) }, () => "Edit"),
+        h(resolveComponent("UButton"), { size: "sm", color: "error", variant: "soft", loading: deletingId.value === item.id, onClick: () => { confirmTarget.value = item; } }, () => "Suppr"),
+      ]);
+    },
+  },
+]);
 
 // Helpers
 function typeLabel(type: string): string {

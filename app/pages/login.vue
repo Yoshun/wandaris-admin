@@ -1,9 +1,12 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-default">
+  <div class="min-h-screen flex items-center justify-center bg-neutral-950">
     <div class="w-full max-w-sm space-y-6 p-8 bg-elevated rounded-xl border border-default">
-      <div class="text-center">
-        <h1 class="text-2xl font-bold text-primary">Wandaris Admin</h1>
-        <p class="text-muted mt-1">Connexion requise</p>
+      <div class="text-center space-y-2">
+        <div class="flex items-center justify-center gap-2">
+          <UIcon name="i-lucide-compass" class="text-primary text-2xl" />
+          <h1 class="text-2xl font-bold text-primary">Wandaris</h1>
+        </div>
+        <p class="text-muted">Connexion requise</p>
       </div>
 
       <form class="space-y-4" @submit.prevent="handleLogin">
