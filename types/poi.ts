@@ -41,7 +41,6 @@ export interface GameSettingRecord {
 export interface MonsterTemplateRecord {
   id: number;
   type: string;
-  emoji: string;
   name: string;
   baseHp: number;
   baseAttack: number;

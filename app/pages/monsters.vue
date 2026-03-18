@@ -8,14 +8,15 @@
     <div v-else>
       <!-- Header -->
       <div class="grid grid-cols-9 gap-2 text-muted font-semibold px-3 mb-1">
+        <span>Icône</span>
         <span>Type</span>
-        <span>Emoji</span>
         <span>Nom</span>
         <span>HP</span>
         <span>Attaque</span>
         <span>Intervalle (ms)</span>
         <span>Couleur</span>
-        <span class="col-span-2">Actions</span>
+        <span>Boss</span>
+        <span>Actions</span>
       </div>
 
       <!-- Existing rows -->
@@ -24,8 +25,15 @@
         :key="t.id"
         class="grid grid-cols-9 gap-2 items-center bg-elevated border border-default rounded px-3 py-2 mb-1"
       >
+        <div>
+          <img
+            :src="`https://api.wandaris.com/static/monster-icons/monster-${t.type}.png`"
+            :alt="t.name"
+            class="w-8 h-8 object-contain"
+            @error="($event.target as HTMLImageElement).style.display = 'none'"
+          />
+        </div>
         <UInput v-model="t.type" size="sm" />
-        <UInput v-model="t.emoji" size="sm" />
         <UInput v-model="t.name" size="sm" />
         <UInput type="number" v-model.number="t.baseHp" size="sm" />
         <UInput type="number" v-model.number="t.baseAttack" size="sm" />
@@ -34,7 +42,10 @@
           <input type="color" v-model="t.color" class="w-6 h-6 rounded cursor-pointer" />
           <span class="text-muted">{{ t.color }}</span>
         </div>
-        <div class="col-span-2 flex gap-1">
+        <span class="text-xs" :class="t.bossOnly ? 'text-warning' : 'text-muted'">
+          {{ t.bossOnly ? 'Boss' : '—' }}
+        </span>
+        <div class="flex gap-1">
           <UButton size="sm" @click="save(t)" :loading="savingId === t.id">Sauver</UButton>
           <UButton size="sm" color="error" variant="soft" @click="confirmTarget = t" :loading="deletingId === t.id">Suppr</UButton>
         </div>
@@ -42,8 +53,8 @@
 
       <!-- New row -->
       <div class="grid grid-cols-9 gap-2 items-center bg-elevated border border-dashed border-default rounded px-3 py-2 mt-3">
+        <div />
         <UInput v-model="newTemplate.type" size="sm" placeholder="type" />
-        <UInput v-model="newTemplate.emoji" size="sm" placeholder="emoji" />
         <UInput v-model="newTemplate.name" size="sm" placeholder="Nom" />
         <UInput type="number" v-model.number="newTemplate.baseHp" size="sm" placeholder="HP" />
         <UInput type="number" v-model.number="newTemplate.baseAttack" size="sm" placeholder="ATK" />
@@ -52,7 +63,8 @@
           <input type="color" v-model="newTemplate.color" class="w-6 h-6 rounded cursor-pointer" />
           <span class="text-muted">{{ newTemplate.color }}</span>
         </div>
-        <div class="col-span-2">
+        <div />
+        <div>
           <UButton size="sm" @click="create" :loading="creating" :disabled="!newTemplate.type?.trim()">Ajouter</UButton>
         </div>
       </div>
@@ -83,7 +95,6 @@ const templates = ref<MonsterTemplateRecord[]>([]);
 
 const newTemplate = ref({
   type: "",
-  emoji: "",
   name: "",
   baseHp: 30,
   baseAttack: 5,
@@ -117,7 +128,6 @@ async function save(t: MonsterTemplateRecord) {
   try {
     await updateMonsterTemplate(t.id, {
       type: t.type,
-      emoji: t.emoji,
       name: t.name,
       baseHp: t.baseHp,
       baseAttack: t.baseAttack,
@@ -158,7 +168,6 @@ async function create() {
   try {
     const created = await createMonsterTemplate({
       type: newTemplate.value.type,
-      emoji: newTemplate.value.emoji,
       name: newTemplate.value.name,
       baseHp: newTemplate.value.baseHp,
       baseAttack: newTemplate.value.baseAttack,
@@ -166,7 +175,7 @@ async function create() {
       color: newTemplate.value.color,
     });
     templates.value.push(created);
-    newTemplate.value = { type: "", emoji: "", name: "", baseHp: 30, baseAttack: 5, attackIntervalMs: 2000, color: "#888888" };
+    newTemplate.value = { type: "", name: "", baseHp: 30, baseAttack: 5, attackIntervalMs: 2000, color: "#888888" };
   } catch (e: any) {
     errorMsg.value = e.message;
   } finally {
