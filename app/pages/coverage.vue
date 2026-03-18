@@ -147,11 +147,13 @@ function copyForDiscord() {
   const all = [...d.departments].sort((a, b) => a.code.localeCompare(b.code));
   const maxNameLen = Math.max(...all.map((dept) => dept.name.length));
 
+  lines.push("```");
   for (const dept of all) {
-    const padded = dept.name.padEnd(maxNameLen, "\u2002");
-    const pctStr = String(dept.coverage).padStart(3, "\u2002");
-    lines.push(`\`${dept.code}\` ${padded} \`${makeProgressBar(dept.coverage)}\` **${pctStr}%**`);
+    const padded = dept.name.padEnd(maxNameLen);
+    const pctStr = String(dept.coverage).padStart(3);
+    lines.push(`${dept.code} ${padded} ${makeProgressBar(dept.coverage)} ${pctStr}%`);
   }
+  lines.push("```");
 
   const text = lines.join("\n");
   navigator.clipboard.writeText(text);
