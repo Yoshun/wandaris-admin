@@ -1,7 +1,7 @@
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="Couverture par departement" icon="i-lucide-map-pin" />
+      <UDashboardNavbar title="Couverture par département" icon="i-lucide-map-pin" />
     </template>
 
     <template #body>
@@ -22,7 +22,7 @@
           <div class="bg-elevated border border-default rounded-lg p-4">
             <span class="text-3xl font-bold text-primary">{{ coverageData.departmentsStarted }}</span>
             <span class="text-muted text-lg"> / {{ coverageData.totalDepartments }}</span>
-            <p class="text-muted text-sm mt-1">Departements commences</p>
+            <p class="text-muted text-sm mt-1">Départements commencés</p>
           </div>
         </div>
 
@@ -63,7 +63,7 @@
 
         <!-- Footer -->
         <p class="text-dimmed text-xs mt-4 text-center">
-          Mis a jour le {{ formatDate(coverageData.updatedAt) }}
+          Mis à jour le {{ formatDate(coverageData.updatedAt) }}
         </p>
       </div>
     </template>
@@ -185,7 +185,10 @@ onMounted(async () => {
     ]);
     coverageData.value = coverage;
     await nextTick();
+    await nextTick();
     initMap(geo);
+    // Leaflet needs the container to be fully rendered and sized
+    if (map) setTimeout(() => map!.invalidateSize(), 200);
   } catch (e: any) {
     errorMsg.value = e.message;
   } finally {

@@ -52,7 +52,7 @@
               <div v-if="formError" class="text-error">{{ formError }}</div>
               <div class="flex gap-2 justify-end">
                 <UButton variant="soft" color="neutral" @click="showUserModal = false">Annuler</UButton>
-                <UButton type="submit" :loading="formLoading">{{ editingUser ? 'Enregistrer' : 'Creer' }}</UButton>
+                <UButton type="submit" :loading="formLoading">{{ editingUser ? 'Enregistrer' : 'Créer' }}</UButton>
               </div>
             </form>
           </div>

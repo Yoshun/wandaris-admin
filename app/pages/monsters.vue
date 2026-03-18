@@ -19,7 +19,7 @@
       <div v-else class="p-4">
         <!-- Header -->
         <div class="grid grid-cols-9 gap-2 text-muted font-semibold px-3 mb-1">
-          <span>Icone</span>
+          <span>Icône</span>
           <span>Type</span>
           <span>Nom</span>
           <span>HP</span>

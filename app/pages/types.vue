@@ -1,7 +1,7 @@
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="Types & Difficultes" icon="i-lucide-tags" />
+      <UDashboardNavbar title="Types & Difficultés" icon="i-lucide-tags" />
     </template>
 
     <template #body>
@@ -50,7 +50,7 @@
           <!-- POI Difficulties -->
           <div class="bg-elevated border border-default rounded-lg overflow-hidden">
             <div class="px-4 py-3 border-b border-default">
-              <h2 class="text-lg font-bold text-primary">Difficultes</h2>
+              <h2 class="text-lg font-bold text-primary">Difficultés</h2>
             </div>
             <div class="p-4">
               <!-- Add form -->

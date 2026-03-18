@@ -82,16 +82,16 @@
               <UFormField label="Slot">
                 <USelect :model-value="form.slot ?? undefined" @update:model-value="form.slot = $event ?? null" :items="slotOptions" placeholder="Aucun" />
               </UFormField>
-              <UFormField label="Rarete">
+              <UFormField label="Rareté">
                 <USelect v-model="form.rarity" :items="rarityOptions" />
               </UFormField>
-              <UFormField label="Metier">
+              <UFormField label="Métier">
                 <USelect v-model="form.professionSlug" :items="professionOptions" />
               </UFormField>
               <UFormField label="Niv. joueur requis">
                 <UInput type="number" v-model.number="form.requiredLevel" />
               </UFormField>
-              <UFormField label="Niv. metier requis">
+              <UFormField label="Niv. métier requis">
                 <UInput type="number" v-model.number="form.professionLevel" />
               </UFormField>
               <UFormField label="Valeur de vente (or)">
@@ -100,7 +100,7 @@
               <UFormField v-if="form.type === 'potion_heal'" label="Soin (HP)">
                 <UInput type="number" v-model.number="form.healAmount" />
               </UFormField>
-              <UFormField v-if="form.type === 'potion_buff'" label="Duree (min)">
+              <UFormField v-if="form.type === 'potion_buff'" label="Durée (min)">
                 <UInput type="number" v-model.number="form.duration" />
               </UFormField>
             </div>
@@ -130,7 +130,7 @@
 
             <div class="flex gap-2 justify-end">
               <UButton variant="soft" @click="modalOpen = false">Annuler</UButton>
-              <UButton @click="saveItem" :loading="saving">{{ editingItem ? 'Sauver' : 'Creer' }}</UButton>
+              <UButton @click="saveItem" :loading="saving">{{ editingItem ? 'Sauver' : 'Créer' }}</UButton>
             </div>
           </div>
         </template>
@@ -211,8 +211,8 @@ const rarityOptions = [
   { label: "Commun", value: "common" },
   { label: "Peu commun", value: "uncommon" },
   { label: "Rare", value: "rare" },
-  { label: "Epique", value: "epic" },
-  { label: "Legendaire", value: "legendary" },
+  { label: "Épique", value: "epic" },
+  { label: "Légendaire", value: "legendary" },
 ];
 
 const professionOptions = computed(() =>
@@ -276,14 +276,14 @@ const tableColumns = computed(() => [
   { accessorKey: "slot", header: "Slot", cell: ({ row }: any) => row.original.slot ?? "-" },
   {
     accessorKey: "rarity",
-    header: "Rarete",
+    header: "Rareté",
     cell: ({ row }: any) => {
       const item = row.original;
       return h(resolveComponent("UBadge"), { color: rarityColor(item.rarity) }, () => item.rarity);
     },
   },
   { accessorKey: "requiredLevel", header: "Niv. joueur" },
-  { accessorKey: "professionLevel", header: "Niv. metier" },
+  { accessorKey: "professionLevel", header: "Niv. métier" },
   {
     id: "stats",
     header: "Stats / Effets",

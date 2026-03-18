@@ -1,11 +1,11 @@
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="Logs d'activite" icon="i-lucide-scroll-text" />
+      <UDashboardNavbar title="Logs d'activité" icon="i-lucide-scroll-text" />
       <UDashboardToolbar>
         <template #left>
           <div class="flex flex-wrap gap-3 items-end">
-            <UFormField label="Evenement">
+            <UFormField label="Événement">
               <USelect
                 v-model="filterEvent"
                 :items="eventItems"

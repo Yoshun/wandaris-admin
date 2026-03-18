@@ -119,7 +119,7 @@
                     size="sm"
                   />
                   <UButton size="sm" :loading="actionLoading === r.id" @click="resolveReport(r.id)">
-                    Resoudre
+                    Résoudre
                   </UButton>
                   <UButton size="sm" variant="soft" color="neutral" :loading="actionLoading === r.id" @click="dismissReport(r.id)">
                     Rejeter
@@ -127,12 +127,12 @@
                   <UButton size="sm" variant="outline" @click="respondingId = null">Annuler</UButton>
                 </div>
 
-                <p v-if="r.adminResponse" class="text-warning text-sm mt-1 italic">Reponse : {{ r.adminResponse }}</p>
+                <p v-if="r.adminResponse" class="text-warning text-sm mt-1 italic">Réponse : {{ r.adminResponse }}</p>
               </div>
 
               <div v-if="r.status === 'pending'" class="shrink-0">
                 <UButton size="sm" variant="outline" @click="startRespondReport(r.id)">
-                  Repondre
+                  Répondre
                 </UButton>
               </div>
             </div>
@@ -173,10 +173,10 @@ const adminResponse = ref('')
 function statusLabel(status: string) {
   const labels: Record<string, string> = {
     pending: 'En attente',
-    approved: 'Approuve',
-    rejected: 'Refuse',
-    resolved: 'Resolu',
-    dismissed: 'Rejete',
+    approved: 'Approuvé',
+    rejected: 'Refusé',
+    resolved: 'Résolu',
+    dismissed: 'Rejeté',
   }
   return labels[status] ?? status
 }

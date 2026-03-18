@@ -55,7 +55,7 @@
             <PoiForm
               ref="formRef"
               title="Nouveau POI"
-              submit-label="Creer"
+              submit-label="Créer"
               :poi-types="poiTypesData"
               :poi-difficulties="poiDifficultiesData"
               :loading="saving"
