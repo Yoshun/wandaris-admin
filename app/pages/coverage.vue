@@ -144,22 +144,13 @@ function copyForDiscord() {
   lines.push(`\`${makeProgressBar(d.overall, 20)}\` ${d.overall}%`);
   lines.push("");
 
-  // Only show departments that have coverage > 0, sorted by code
-  const active = [...d.departments]
-    .filter((dept) => dept.coverage > 0)
-    .sort((a, b) => a.code.localeCompare(b.code));
+  const all = [...d.departments].sort((a, b) => a.code.localeCompare(b.code));
+  const maxNameLen = Math.max(...all.map((dept) => dept.name.length));
 
-  if (active.length > 0) {
-    lines.push("**Départements actifs :**");
-    for (const dept of active) {
-      lines.push(`\`${dept.code}\` ${dept.name} \u2014 \`${makeProgressBar(dept.coverage)}\` **${dept.coverage}%**`);
-    }
-  }
-
-  const remaining = d.totalDepartments - d.departmentsStarted;
-  if (remaining > 0) {
-    lines.push("");
-    lines.push(`*${remaining} départements restants à explorer...*`);
+  for (const dept of all) {
+    const padded = dept.name.padEnd(maxNameLen, "\u2002");
+    const pctStr = String(dept.coverage).padStart(3, "\u2002");
+    lines.push(`\`${dept.code}\` ${padded} \`${makeProgressBar(dept.coverage)}\` **${pctStr}%**`);
   }
 
   const text = lines.join("\n");
