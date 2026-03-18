@@ -26,26 +26,10 @@
               </div>
               <div v-else class="space-y-1">
                 <div
-                  v-for="(t, idx) in types"
+                  v-for="t in types"
                   :key="t.id"
                   class="flex items-center gap-2 border border-default rounded-lg px-3 py-2"
                 >
-                  <div class="flex flex-col gap-0.5">
-                    <UButton
-                      size="sm"
-                      variant="ghost"
-                      color="neutral"
-                      :disabled="idx === 0"
-                      @click="moveType(t, idx, -1)"
-                    >↑</UButton>
-                    <UButton
-                      size="sm"
-                      variant="ghost"
-                      color="neutral"
-                      :disabled="idx === types.length - 1"
-                      @click="moveType(t, idx, 1)"
-                    >↓</UButton>
-                  </div>
                   <template v-if="editingTypeId === t.id">
                     <UInput v-model="editingTypeSlug" size="sm" class="flex-1" @keyup.enter="saveType(t)" />
                     <USelect v-model="editingTypeBiome" :items="biomeItems" size="sm" class="w-36" />
@@ -81,27 +65,11 @@
               </div>
               <div v-else class="space-y-1">
                 <div
-                  v-for="(d, idx) in difficulties"
+                  v-for="d in difficulties"
                   :key="d.id"
                   class="border border-default rounded-lg px-3 py-2"
                 >
                   <div class="flex items-center gap-2">
-                    <div class="flex flex-col gap-0.5">
-                      <UButton
-                        size="sm"
-                        variant="ghost"
-                        color="neutral"
-                        :disabled="idx === 0"
-                        @click="moveDifficulty(d, idx, -1)"
-                      >↑</UButton>
-                      <UButton
-                        size="sm"
-                        variant="ghost"
-                        color="neutral"
-                        :disabled="idx === difficulties.length - 1"
-                        @click="moveDifficulty(d, idx, 1)"
-                      >↓</UButton>
-                    </div>
                     <template v-if="editingDiffId === d.id">
                       <UInput v-model="editingDiffSlug" size="sm" class="flex-1" @keyup.enter="saveDifficulty(d)" />
                       <UButton size="sm" @click="saveDifficulty(d)">OK</UButton>
@@ -275,8 +243,7 @@ async function addType() {
   if (!slug) return;
   errorMsg.value = "";
   try {
-    const maxPos = types.value.length > 0 ? Math.max(...types.value.map((t) => t.position)) + 1 : 0;
-    const created = await createPoiType({ slug, position: maxPos, biome: newTypeBiome.value });
+    const created = await createPoiType({ slug, biome: newTypeBiome.value });
     types.value.push(created);
     newTypeSlug.value = "";
   } catch (e: any) {
@@ -306,22 +273,6 @@ async function saveType(t: PoiTypeRecord) {
   }
 }
 
-async function moveType(t: PoiTypeRecord, idx: number, dir: -1 | 1) {
-  const neighbor = types.value[idx + dir];
-  if (!neighbor) return;
-  errorMsg.value = "";
-  try {
-    const [u1, u2] = await Promise.all([
-      updatePoiType(t.id, { position: neighbor.position }),
-      updatePoiType(neighbor.id, { position: t.position }),
-    ]);
-    types.value[idx] = u2;
-    types.value[idx + dir] = u1;
-  } catch (e: any) {
-    errorMsg.value = e.message;
-  }
-}
-
 function confirmDeleteType(t: PoiTypeRecord) {
   deleteTarget.value = { kind: "type", id: t.id, slug: t.slug };
 }
@@ -333,8 +284,7 @@ async function addDifficulty() {
   if (!slug) return;
   errorMsg.value = "";
   try {
-    const maxPos = difficulties.value.length > 0 ? Math.max(...difficulties.value.map((d) => d.position)) + 1 : 0;
-    const created = await createPoiDifficulty({ slug, position: maxPos });
+    const created = await createPoiDifficulty({ slug });
     difficulties.value.push(created);
     newDiffSlug.value = "";
   } catch (e: any) {
@@ -387,22 +337,6 @@ async function updateLootField(d: PoiDifficultyRecord, resource: string, field: 
     const updated = await updatePoiDifficulty(d.id, { lootTable: newLootTable });
     const idx = difficulties.value.findIndex((x) => x.id === d.id);
     if (idx >= 0) difficulties.value[idx] = updated;
-  } catch (e: any) {
-    errorMsg.value = e.message;
-  }
-}
-
-async function moveDifficulty(d: PoiDifficultyRecord, idx: number, dir: -1 | 1) {
-  const neighbor = difficulties.value[idx + dir];
-  if (!neighbor) return;
-  errorMsg.value = "";
-  try {
-    const [u1, u2] = await Promise.all([
-      updatePoiDifficulty(d.id, { position: neighbor.position }),
-      updatePoiDifficulty(neighbor.id, { position: d.position }),
-    ]);
-    difficulties.value[idx] = u2;
-    difficulties.value[idx + dir] = u1;
   } catch (e: any) {
     errorMsg.value = e.message;
   }
