@@ -56,7 +56,7 @@
                     <span class="flex-1">{{ typeLabel(t.slug) }} <span class="text-dimmed">({{ t.slug }})</span></span>
                     <span class="text-muted bg-default px-2 py-0.5 rounded">{{ t.biome }}</span>
                     <UButton size="sm" variant="soft" @click="startEditType(t)">Modifier</UButton>
-                    <UButton size="sm" variant="solid" color="error" @click="confirmDeleteType(t)">Supprimer</UButton>
+                    <UButton size="sm" variant="outline" color="neutral" @click="confirmDeleteType(t)">Supprimer</UButton>
                   </template>
                 </div>
               </div>
@@ -113,7 +113,7 @@
                       <UButton size="sm" variant="ghost" @click="toggleDiffExpand(d.id)">
                         {{ expandedDiffId === d.id ? '▲' : '▼' }}
                       </UButton>
-                      <UButton size="sm" variant="solid" color="error" @click="confirmDeleteDiff(d)">Supprimer</UButton>
+                      <UButton size="sm" variant="outline" color="neutral" @click="confirmDeleteDiff(d)">Supprimer</UButton>
                     </template>
                   </div>
 

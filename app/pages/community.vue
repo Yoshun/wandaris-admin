@@ -62,7 +62,7 @@
                     class="flex-1"
                     size="sm"
                   />
-                  <UButton size="sm" color="error" :loading="actionLoading === s.id" @click="doRejectSubmission(s.id)">
+                  <UButton size="sm" color="error" variant="soft" :loading="actionLoading === s.id" @click="doRejectSubmission(s.id)">
                     Confirmer
                   </UButton>
                   <UButton size="sm" variant="outline" @click="rejectingId = null">Annuler</UButton>
@@ -70,10 +70,10 @@
               </div>
 
               <div v-if="s.status === 'pending'" class="flex gap-2 shrink-0">
-                <UButton size="sm" color="success" :loading="actionLoading === s.id" @click="approveSubmission(s.id)">
+                <UButton size="sm" :loading="actionLoading === s.id" @click="approveSubmission(s.id)">
                   Approuver
                 </UButton>
-                <UButton size="sm" color="error" variant="outline" @click="startRejectSubmission(s.id)">
+                <UButton size="sm" variant="outline" color="neutral" @click="startRejectSubmission(s.id)">
                   Refuser
                 </UButton>
               </div>
@@ -118,10 +118,10 @@
                     class="flex-1"
                     size="sm"
                   />
-                  <UButton size="sm" color="success" :loading="actionLoading === r.id" @click="resolveReport(r.id)">
+                  <UButton size="sm" :loading="actionLoading === r.id" @click="resolveReport(r.id)">
                     Resoudre
                   </UButton>
-                  <UButton size="sm" color="error" :loading="actionLoading === r.id" @click="dismissReport(r.id)">
+                  <UButton size="sm" variant="soft" color="neutral" :loading="actionLoading === r.id" @click="dismissReport(r.id)">
                     Rejeter
                   </UButton>
                   <UButton size="sm" variant="outline" @click="respondingId = null">Annuler</UButton>

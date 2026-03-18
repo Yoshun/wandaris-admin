@@ -301,7 +301,7 @@ const tableColumns = computed(() => [
       const item = row.original;
       return h("div", { class: "flex gap-2" }, [
         h(resolveComponent("UButton"), { size: "sm", variant: "soft", onClick: () => editItem(item) }, () => "Edit"),
-        h(resolveComponent("UButton"), { size: "sm", color: "error", variant: "soft", loading: deletingId.value === item.id, onClick: () => { confirmTarget.value = item; } }, () => "Suppr"),
+        h(resolveComponent("UButton"), { size: "sm", variant: "outline", color: "neutral", loading: deletingId.value === item.id, onClick: () => { confirmTarget.value = item; } }, () => "Suppr"),
       ]);
     },
   },

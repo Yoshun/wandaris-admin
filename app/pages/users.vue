@@ -165,26 +165,26 @@ const tableColumns = computed(() => {
         const u = row.original as UserRow;
         const buttons = [
           h(resolveComponent("UButton"), { size: "sm", onClick: () => openEditModal(u) }, () => "Modifier"),
-          h(resolveComponent("UButton"), { size: "sm", color: "warning", variant: "solid", onClick: () => openPermsModal(u) }, () => "Permissions"),
+          h(resolveComponent("UButton"), { size: "sm", variant: "soft", onClick: () => openPermsModal(u) }, () => "Permissions"),
         ];
         if (u.id !== currentUser.value?.id) {
           buttons.push(
             h(resolveComponent("UButton"), {
               size: "sm",
-              color: u.suspended ? "success" : "error",
               variant: "outline",
+              color: "neutral",
               onClick: () => toggleSuspend(u),
             }, () => u.suspended ? "Réactiver" : "Suspendre"),
             h(resolveComponent("UButton"), {
               size: "sm",
-              color: u.communityBanned ? "success" : "warning",
               variant: "outline",
+              color: "neutral",
               onClick: () => toggleCommunityBan(u),
             }, () => u.communityBanned ? "Débannir communauté" : "Ban communauté"),
             h(resolveComponent("UButton"), {
               size: "sm",
               color: "error",
-              variant: "solid",
+              variant: "soft",
               onClick: () => onDeleteRequest(u),
             }, () => "Supprimer"),
           );

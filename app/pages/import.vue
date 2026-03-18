@@ -52,7 +52,7 @@
             <!-- Staged POIs -->
             <div v-if="staged.length > 0" class="flex items-center justify-between">
               <span class="text-muted">{{ staged.length }} POI(s) en attente</span>
-              <UButton color="success" variant="solid" @click="approveAll">Tout valider</UButton>
+              <UButton @click="approveAll">Tout valider</UButton>
             </div>
 
             <div v-if="loadingStaged" class="space-y-2">
@@ -93,8 +93,8 @@
                     class="text-primary hover:underline pt-2"
                   >Google Maps</a>
                   <div class="flex gap-1">
-                    <UButton size="sm" color="success" variant="solid" :disabled="busyPoiId === poi.id" :loading="busyPoiId === poi.id" @click="approve(poi)">Valider</UButton>
-                    <UButton size="sm" color="error" variant="solid" :disabled="busyPoiId === poi.id" :loading="busyPoiId === poi.id" @click="reject(poi)">Refuser</UButton>
+                    <UButton size="sm" :disabled="busyPoiId === poi.id" :loading="busyPoiId === poi.id" @click="approve(poi)">Valider</UButton>
+                    <UButton size="sm" variant="outline" color="neutral" :disabled="busyPoiId === poi.id" :loading="busyPoiId === poi.id" @click="reject(poi)">Refuser</UButton>
                   </div>
                 </div>
               </div>
