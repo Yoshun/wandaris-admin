@@ -71,7 +71,7 @@
                 :key="poi.id"
                 class="bg-elevated border border-default rounded-lg p-3"
               >
-                <div class="flex flex-wrap gap-2 items-start">
+                <div class="flex flex-wrap gap-2 items-center">
                   <div class="flex-1 min-w-[150px]">
                     <UInput v-model="poi.name" class="w-full" @blur="saveStaged(poi)" />
                   </div>
@@ -90,7 +90,7 @@
                   <a
                     :href="`https://www.google.com/maps/search/?api=1&query=${poi.lat},${poi.lon}`"
                     target="_blank"
-                    class="text-primary hover:underline pt-2"
+                    class="text-primary hover:underline"
                   >Google Maps</a>
                   <div class="flex gap-1">
                     <UButton size="sm" :disabled="busyPoiId === poi.id" :loading="busyPoiId === poi.id" @click="approve(poi)">Valider</UButton>
