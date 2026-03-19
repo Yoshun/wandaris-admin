@@ -5,11 +5,11 @@
     </template>
 
     <template #body>
-      <div class="p-4">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Left: Map -->
-          <div>
-            <div class="h-[calc(100vh-10rem)] min-h-[400px] rounded-lg overflow-hidden">
+      <div class="p-4 space-y-4">
+        <!-- Top: Leaflet map (full width, compact height) + import controls -->
+        <div class="flex flex-wrap gap-4 items-start">
+          <div class="flex-1 min-w-[300px]">
+            <div class="h-[250px] rounded-lg overflow-hidden">
               <ClientOnly>
                 <ImportMap
                   :zones="zones"
@@ -18,95 +18,86 @@
                 />
               </ClientOnly>
             </div>
-            <p class="text-dimmed mt-2">
-              Cliquez sur la carte pour choisir le centre de l'import.
-              Les zones grises sont deja couvertes.
+          </div>
+          <div class="bg-elevated border border-default rounded-lg p-4 w-full sm:w-auto">
+            <div class="flex flex-wrap gap-3 items-end">
+              <UFormField label="Coordonnees" class="flex-1 min-w-[120px]">
+                <div>
+                  <template v-if="clickedLat !== null">
+                    {{ clickedLat.toFixed(5) }}, {{ clickedLon!.toFixed(5) }}
+                  </template>
+                  <span v-else class="text-dimmed">Cliquez sur la carte</span>
+                </div>
+              </UFormField>
+              <UFormField label="Rayon (km)">
+                <UInput v-model.number="radiusKm" type="number" :min="1" :max="50" class="w-full sm:w-20" />
+              </UFormField>
+              <UButton :disabled="importing || clickedLat === null" :loading="importing" @click="runImport">
+                Importer cette zone
+              </UButton>
+            </div>
+            <p v-if="importMessage" class="mt-2" :class="importError ? 'text-error' : 'text-success'">
+              {{ importMessage }}
             </p>
           </div>
+        </div>
 
-          <!-- Right: Controls + Staged list -->
-          <div class="h-[calc(100vh-10rem)] min-h-[400px] overflow-y-auto space-y-4">
-            <!-- Import controls -->
-            <div class="bg-elevated border border-default rounded-lg p-4">
-              <div class="flex flex-wrap gap-3 items-end">
-                <UFormField label="Coordonnees" class="flex-1 min-w-[120px]">
-                  <div>
-                    <template v-if="clickedLat !== null">
-                      {{ clickedLat.toFixed(5) }}, {{ clickedLon!.toFixed(5) }}
-                    </template>
-                    <span v-else class="text-dimmed">Cliquez sur la carte</span>
-                  </div>
-                </UFormField>
-                <UFormField label="Rayon (km)">
-                  <UInput v-model.number="radiusKm" type="number" :min="1" :max="50" class="w-full sm:w-20" />
-                </UFormField>
-                <UButton :disabled="importing || clickedLat === null" :loading="importing" @click="runImport">
-                  Importer cette zone
+        <!-- Bottom: Staged POI review -->
+        <div v-if="staged.length > 0" class="flex items-center justify-between">
+          <span class="text-muted">{{ currentIndex + 1 }} / {{ staged.length }} POI(s) en attente</span>
+          <UButton @click="approveAll">Tout valider</UButton>
+        </div>
+
+        <div v-if="loadingStaged" class="space-y-2">
+          <USkeleton class="h-14 w-full" />
+          <USkeleton class="h-[400px] w-full" />
+        </div>
+
+        <div v-else-if="staged.length === 0 && !loadingStaged" class="flex flex-col items-center justify-center py-12">
+          <UIcon name="i-lucide-inbox" class="text-4xl text-muted mb-2" />
+          <p class="text-muted">Aucun POI en attente. Cliquez sur la carte pour importer une zone.</p>
+        </div>
+
+        <template v-else-if="currentPoi">
+          <div class="bg-elevated border border-default rounded-lg p-3 space-y-3">
+            <div class="flex flex-wrap gap-2 items-center">
+              <div class="flex-1 min-w-[150px]">
+                <UInput v-model="currentPoi.name" class="w-full" @blur="saveStaged(currentPoi)" />
+              </div>
+              <USelect
+                v-model="currentPoi.type"
+                :items="typeOptions"
+                class="w-full sm:w-32"
+                @update:model-value="saveStaged(currentPoi)"
+              />
+              <USelect
+                v-model="currentPoi.difficulty"
+                :items="difficultyOptions"
+                class="w-full sm:w-28"
+                @update:model-value="saveStaged(currentPoi)"
+              />
+              <div class="flex gap-2">
+                <UButton color="error" :disabled="busyPoiId === currentPoi.id" :loading="busyPoiId === currentPoi.id" @click="reject(currentPoi)">
+                  Refuser
+                </UButton>
+                <UButton :disabled="busyPoiId === currentPoi.id" :loading="busyPoiId === currentPoi.id" @click="approve(currentPoi)">
+                  Valider
                 </UButton>
               </div>
-              <p v-if="importMessage" class="mt-2" :class="importError ? 'text-error' : 'text-success'">
-                {{ importMessage }}
-              </p>
             </div>
 
-            <!-- Staged POIs — one at a time -->
-            <div v-if="staged.length > 0" class="flex items-center justify-between">
-              <span class="text-muted">{{ currentIndex + 1 }} / {{ staged.length }} POI(s) en attente</span>
-              <UButton @click="approveAll">Tout valider</UButton>
-            </div>
-
-            <div v-if="loadingStaged" class="space-y-2">
-              <USkeleton class="h-14 w-full" />
-              <USkeleton class="h-[300px] w-full" />
-            </div>
-
-            <div v-else-if="staged.length === 0 && !loadingStaged" class="flex flex-col items-center justify-center py-12">
-              <UIcon name="i-lucide-inbox" class="text-4xl text-muted mb-2" />
-              <p class="text-muted">Aucun POI en attente. Cliquez sur la carte pour importer une zone.</p>
-            </div>
-
-            <template v-else-if="currentPoi">
-              <div class="bg-elevated border border-default rounded-lg p-3 space-y-3">
-                <div class="flex flex-wrap gap-2 items-center">
-                  <div class="flex-1 min-w-[150px]">
-                    <UInput v-model="currentPoi.name" class="w-full" @blur="saveStaged(currentPoi)" />
-                  </div>
-                  <USelect
-                    v-model="currentPoi.type"
-                    :items="typeOptions"
-                    class="w-full sm:w-32"
-                    @update:model-value="saveStaged(currentPoi)"
-                  />
-                  <USelect
-                    v-model="currentPoi.difficulty"
-                    :items="difficultyOptions"
-                    class="w-full sm:w-28"
-                    @update:model-value="saveStaged(currentPoi)"
-                  />
-                </div>
-
-                <!-- Embedded Google Maps -->
-                <iframe
-                  :key="currentPoi.id"
-                  :src="`https://maps.google.com/maps?q=${currentPoi.lat},${currentPoi.lon}&z=17&output=embed`"
-                  class="w-full h-[300px] rounded-lg border border-default"
-                  frameborder="0"
-                  allowfullscreen
-                  loading="lazy"
-                />
-
-                <div class="flex gap-2 justify-center">
-                  <UButton color="error" :disabled="busyPoiId === currentPoi.id" :loading="busyPoiId === currentPoi.id" @click="reject(currentPoi)">
-                    Refuser
-                  </UButton>
-                  <UButton :disabled="busyPoiId === currentPoi.id" :loading="busyPoiId === currentPoi.id" @click="approve(currentPoi)">
-                    Valider
-                  </UButton>
-                </div>
-              </div>
-            </template>
+            <!-- Embedded Google Maps (satellite, zoom 19) -->
+            <iframe
+              :key="currentPoi.id"
+              :src="`https://maps.google.com/maps?q=${currentPoi.lat},${currentPoi.lon}&z=19&t=k&output=embed`"
+              class="w-full rounded-lg border border-default"
+              style="height: calc(100vh - 28rem)"
+              frameborder="0"
+              allowfullscreen
+              loading="lazy"
+            />
           </div>
-        </div>
+        </template>
       </div>
     </template>
   </UDashboardPanel>
