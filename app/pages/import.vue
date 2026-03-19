@@ -49,15 +49,15 @@
               </p>
             </div>
 
-            <!-- Staged POIs -->
+            <!-- Staged POIs — one at a time -->
             <div v-if="staged.length > 0" class="flex items-center justify-between">
-              <span class="text-muted">{{ staged.length }} POI(s) en attente</span>
+              <span class="text-muted">{{ currentIndex + 1 }} / {{ staged.length }} POI(s) en attente</span>
               <UButton @click="approveAll">Tout valider</UButton>
             </div>
 
             <div v-if="loadingStaged" class="space-y-2">
               <USkeleton class="h-14 w-full" />
-              <USkeleton class="h-14 w-full" />
+              <USkeleton class="h-[300px] w-full" />
             </div>
 
             <div v-else-if="staged.length === 0 && !loadingStaged" class="flex flex-col items-center justify-center py-12">
@@ -65,40 +65,46 @@
               <p class="text-muted">Aucun POI en attente. Cliquez sur la carte pour importer une zone.</p>
             </div>
 
-            <div v-else class="space-y-2">
-              <div
-                v-for="poi in staged"
-                :key="poi.id"
-                class="bg-elevated border border-default rounded-lg p-3"
-              >
+            <template v-else-if="currentPoi">
+              <div class="bg-elevated border border-default rounded-lg p-3 space-y-3">
                 <div class="flex flex-wrap gap-2 items-center">
                   <div class="flex-1 min-w-[150px]">
-                    <UInput v-model="poi.name" class="w-full" @blur="saveStaged(poi)" />
+                    <UInput v-model="currentPoi.name" class="w-full" @blur="saveStaged(currentPoi)" />
                   </div>
                   <USelect
-                    v-model="poi.type"
+                    v-model="currentPoi.type"
                     :items="typeOptions"
                     class="w-full sm:w-32"
-                    @update:model-value="saveStaged(poi)"
+                    @update:model-value="saveStaged(currentPoi)"
                   />
                   <USelect
-                    v-model="poi.difficulty"
+                    v-model="currentPoi.difficulty"
                     :items="difficultyOptions"
                     class="w-full sm:w-28"
-                    @update:model-value="saveStaged(poi)"
+                    @update:model-value="saveStaged(currentPoi)"
                   />
-                  <a
-                    :href="`https://www.google.com/maps/search/?api=1&query=${poi.lat},${poi.lon}`"
-                    target="_blank"
-                    class="text-primary hover:underline"
-                  >Google Maps</a>
-                  <div class="flex gap-1">
-                    <UButton size="sm" :disabled="busyPoiId === poi.id" :loading="busyPoiId === poi.id" @click="approve(poi)">Valider</UButton>
-                    <UButton size="sm" variant="outline" color="neutral" :disabled="busyPoiId === poi.id" :loading="busyPoiId === poi.id" @click="reject(poi)">Refuser</UButton>
-                  </div>
+                </div>
+
+                <!-- Embedded Google Maps -->
+                <iframe
+                  :key="currentPoi.id"
+                  :src="`https://maps.google.com/maps?q=${currentPoi.lat},${currentPoi.lon}&z=17&output=embed`"
+                  class="w-full h-[300px] rounded-lg border border-default"
+                  frameborder="0"
+                  allowfullscreen
+                  loading="lazy"
+                />
+
+                <div class="flex gap-2 justify-center">
+                  <UButton color="error" :disabled="busyPoiId === currentPoi.id" :loading="busyPoiId === currentPoi.id" @click="reject(currentPoi)">
+                    Refuser
+                  </UButton>
+                  <UButton :disabled="busyPoiId === currentPoi.id" :loading="busyPoiId === currentPoi.id" @click="approve(currentPoi)">
+                    Valider
+                  </UButton>
                 </div>
               </div>
-            </div>
+            </template>
           </div>
         </div>
       </div>
@@ -130,6 +136,8 @@ const importing = ref(false);
 const importMessage = ref("");
 const importError = ref(false);
 const busyPoiId = ref<number | null>(null);
+const currentIndex = ref(0);
+const currentPoi = computed(() => staged.value[currentIndex.value] ?? null);
 
 const poiTypesData = ref<PoiTypeRecord[]>([]);
 const poiDifficultiesData = ref<PoiDifficultyRecord[]>([]);
@@ -176,6 +184,7 @@ async function runImport() {
     const [z, s] = await Promise.all([listImportZones(), listStaging()]);
     zones.value = z;
     staged.value = s;
+    currentIndex.value = 0;
   } catch (e: any) {
     importMessage.value = e.message;
     importError.value = true;
@@ -193,12 +202,19 @@ async function saveStaged(poi: StagedPoi) {
   }
 }
 
+function removeFromStaged(poiId: number) {
+  staged.value = staged.value.filter((p) => p.id !== poiId);
+  if (currentIndex.value >= staged.value.length && staged.value.length > 0) {
+    currentIndex.value = staged.value.length - 1;
+  }
+}
+
 async function approve(poi: StagedPoi) {
   if (busyPoiId.value !== null) return;
   busyPoiId.value = poi.id;
   try {
     await approveStaged(poi.id);
-    staged.value = staged.value.filter((p) => p.id !== poi.id);
+    removeFromStaged(poi.id);
   } catch (e: any) {
     importMessage.value = e.message;
     importError.value = true;
@@ -212,7 +228,7 @@ async function reject(poi: StagedPoi) {
   busyPoiId.value = poi.id;
   try {
     await rejectStaged(poi.id);
-    staged.value = staged.value.filter((p) => p.id !== poi.id);
+    removeFromStaged(poi.id);
   } catch (e: any) {
     importMessage.value = e.message;
     importError.value = true;
