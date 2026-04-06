@@ -86,16 +86,50 @@
               </div>
             </div>
 
-            <!-- Embedded Google Maps (satellite, zoom 19) -->
-            <iframe
-              :key="currentPoi.id"
-              :src="`https://maps.google.com/maps?q=${currentPoi.lat},${currentPoi.lon}&z=19&t=k&output=embed`"
-              class="w-full rounded-lg border border-default"
-              style="height: calc(100vh - 28rem)"
-              frameborder="0"
-              allowfullscreen
-              loading="lazy"
-            />
+            <!-- Maps: Google Maps (2/3) + Leaflet position editor (1/3) -->
+            <div class="flex gap-3" style="height: calc(100vh - 28rem)">
+              <iframe
+                :key="currentPoi.id"
+                :src="`https://maps.google.com/maps?q=${currentPoi.lat},${currentPoi.lon}&z=19&t=k&output=embed`"
+                class="rounded-lg border border-default"
+                style="flex: 2; min-width: 0"
+                frameborder="0"
+                allowfullscreen
+                loading="lazy"
+              />
+              <div class="rounded-lg border border-default overflow-hidden relative" style="flex: 1; min-width: 0">
+                <ClientOnly>
+                  <StagedPoiMap
+                    :key="currentPoi.id"
+                    :lat="adjustedLat ?? currentPoi.lat"
+                    :lon="adjustedLon ?? currentPoi.lon"
+                    @update:position="onPositionUpdate"
+                  />
+                </ClientOnly>
+                <div v-if="adjustedLat !== null" class="absolute top-2 left-2 z-[1000] bg-elevated/90 border border-default rounded px-2 py-1 text-xs text-success">
+                  Position ajustée
+                </div>
+              </div>
+            </div>
+
+            <!-- Liste des POI en attente -->
+            <div class="border border-default rounded-lg overflow-hidden">
+              <div class="bg-elevated px-3 py-2 text-xs text-muted font-medium border-b border-default">
+                POI en attente ({{ staged.length }})
+              </div>
+              <div class="divide-y divide-default">
+                <div
+                  v-for="(poi, idx) in staged"
+                  :key="poi.id"
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-elevated/50 transition-colors"
+                  :class="idx === currentIndex ? 'bg-elevated' : ''"
+                  @click="currentIndex = idx"
+                >
+                  <span class="flex-1 truncate" :class="idx === currentIndex ? 'text-primary font-medium' : ''">{{ poi.name }}</span>
+                  <span class="text-xs text-muted shrink-0">{{ typeLabel(poi.type) }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </template>
       </div>
@@ -129,6 +163,24 @@ const importError = ref(false);
 const busyPoiId = ref<number | null>(null);
 const currentIndex = ref(0);
 const currentPoi = computed(() => staged.value[currentIndex.value] ?? null);
+
+const adjustedLat = ref<number | null>(null);
+const adjustedLon = ref<number | null>(null);
+
+watch(currentIndex, () => {
+  adjustedLat.value = null;
+  adjustedLon.value = null;
+});
+
+async function onPositionUpdate(pos: { lat: number; lon: number }) {
+  adjustedLat.value = pos.lat;
+  adjustedLon.value = pos.lon;
+  if (currentPoi.value) {
+    await updateStaging(currentPoi.value.id, { lat: pos.lat, lon: pos.lon });
+    currentPoi.value.lat = pos.lat;
+    currentPoi.value.lon = pos.lon;
+  }
+}
 
 const poiTypesData = ref<PoiTypeRecord[]>([]);
 const poiDifficultiesData = ref<PoiDifficultyRecord[]>([]);

@@ -68,7 +68,7 @@ export function useApi() {
     return apiFetch<StagedPoi[]>("/api/import/staging");
   }
 
-  async function updateStaging(id: number, data: { name?: string; type?: string; difficulty?: string }): Promise<StagedPoi> {
+  async function updateStaging(id: number, data: { name?: string; type?: string; difficulty?: string; lat?: number; lon?: number }): Promise<StagedPoi> {
     return apiFetch<StagedPoi>(`/api/import/staging/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
