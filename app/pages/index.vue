@@ -1,9 +1,13 @@
 <template>
   <UDashboardPanel>
     <template #header>
-      <UDashboardNavbar title="Dashboard" icon="i-lucide-map">
+      <UDashboardNavbar title="POI valides" icon="i-lucide-map-pin">
         <template #right>
-          <UButton v-if="panel === 'list' && can('pois.manage')" icon="i-lucide-plus" @click="startCreate">
+          <UButton
+            v-if="can('pois.manage')"
+            icon="i-lucide-plus"
+            @click="navigateTo('/pois/new')"
+          >
             Nouveau POI
           </UButton>
         </template>
@@ -11,78 +15,69 @@
     </template>
 
     <template #body>
-      <div v-if="loading" class="flex items-center justify-center py-12">
-        <div class="space-y-3 w-full max-w-md">
-          <USkeleton class="h-4 w-3/4" />
-          <USkeleton class="h-4 w-1/2" />
-          <USkeleton class="h-4 w-5/6" />
+      <div class="p-4 space-y-4">
+        <!-- Filters -->
+        <div class="flex flex-wrap gap-3 items-center">
+          <UInput
+            v-model="searchInput"
+            placeholder="Rechercher par nom..."
+            icon="i-lucide-search"
+            size="sm"
+            class="w-full sm:w-64"
+          />
+          <USelect
+            v-model="filterType"
+            :items="typeOptions"
+            placeholder="Tous les types"
+            size="sm"
+            class="w-full sm:w-48"
+          />
+          <USelect
+            v-model="filterDifficulty"
+            :items="difficultyOptions"
+            placeholder="Toutes difficultes"
+            size="sm"
+            class="w-full sm:w-48"
+          />
+          <UButton
+            v-if="hasActiveFilter"
+            variant="soft"
+            color="neutral"
+            size="sm"
+            icon="i-lucide-x"
+            @click="clearFilters"
+          >
+            Effacer
+          </UButton>
+          <span class="text-sm text-dimmed ml-auto">
+            {{ total }} POI{{ total > 1 ? "s" : "" }}<span v-if="hasActiveFilter"> (filtre)</span>
+          </span>
         </div>
-      </div>
-      <div v-else-if="fetchError" class="text-error p-4">{{ fetchError }}</div>
 
-      <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full p-4">
-        <!-- Map -->
-        <div class="h-[calc(100vh-8rem)] min-h-[400px] rounded-lg overflow-hidden">
-          <ClientOnly>
-            <PoiMap
-              ref="mapRef"
-              :pois="pois"
-              :selected-id="selectedId"
-              :clickable="panel !== 'list'"
-              @poi-click="onMapPoiClick"
-              @map-click="onMapClick"
-            />
-          </ClientOnly>
+        <!-- Table -->
+        <div v-if="loading" class="space-y-3">
+          <USkeleton class="h-10 w-full" />
+          <USkeleton class="h-10 w-full" />
+          <USkeleton class="h-10 w-full" />
         </div>
+        <div v-else-if="fetchError" class="text-error p-4">{{ fetchError }}</div>
+        <PoiList
+          v-else
+          :pois="pois"
+          :readonly="!can('pois.manage')"
+          @edit="onEdit"
+          @delete="onDeleteRequest"
+        />
 
-        <!-- Right panel: list OR form -->
-        <div class="h-[calc(100vh-8rem)] min-h-[400px] overflow-y-auto">
-          <!-- List mode -->
-          <template v-if="panel === 'list'">
-            <PoiList
-              :pois="pois"
-              :poi-types="poiTypesData"
-              :poi-difficulties="poiDifficultiesData"
-              :readonly="!can('pois.manage')"
-              @select="onListSelect"
-              @edit="startEdit"
-              @delete="onDeleteRequest"
-            />
-          </template>
-
-          <!-- Create mode -->
-          <template v-else-if="panel === 'create'">
-            <PoiForm
-              ref="formRef"
-              title="Nouveau POI"
-              submit-label="Créer"
-              :poi-types="poiTypesData"
-              :poi-difficulties="poiDifficultiesData"
-              :loading="saving"
-              :error="saveError"
-              @submit="handleCreate"
-              @cancel="closePanel"
-              @coords-changed="onFormCoordsChanged"
-            />
-          </template>
-
-          <!-- Edit mode -->
-          <template v-else-if="panel === 'edit'">
-            <PoiForm
-              ref="formRef"
-              :key="formKey"
-              title="Modifier le POI"
-              submit-label="Enregistrer"
-              :initial-data="editData!"
-              :poi-types="poiTypesData"
-              :poi-difficulties="poiDifficultiesData"
-              :loading="saving"
-              :error="saveError"
-              @submit="handleUpdate"
-              @cancel="closePanel"
-              @coords-changed="onFormCoordsChanged"
-            />
-          </template>
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="flex justify-center pt-2">
+          <UPagination
+            v-model:page="page"
+            :total="total"
+            :items-per-page="pageSize"
+            :sibling-count="1"
+            show-edges
+          />
         </div>
       </div>
 
@@ -97,44 +92,65 @@
 </template>
 
 <script setup lang="ts">
-import type { PoiDefinition, CreatePoiInput, PoiTypeRecord, PoiDifficultyRecord } from "~~/types/poi";
+import type { PoiDefinition, PoiTypeRecord, PoiDifficultyRecord } from "~~/types/poi";
+import { typeLabel, difficultyLabel } from "~/utils/i18n";
 
 const { can } = useAuth();
-const { listPois, createPoi, updatePoi, deletePoi, listPoiTypes, listPoiDifficulties } = useApi();
+const { listPois, deletePoi, listPoiTypes, listPoiDifficulties } = useApi();
 
 const pois = ref<PoiDefinition[]>([]);
+const total = ref(0);
 const poiTypesData = ref<PoiTypeRecord[]>([]);
 const poiDifficultiesData = ref<PoiDifficultyRecord[]>([]);
 const loading = ref(true);
 const fetchError = ref("");
-const saving = ref(false);
-const saveError = ref("");
-const selectedId = ref<number | null>(null);
 const poiToDelete = ref<PoiDefinition | null>(null);
 
-type PanelMode = "list" | "create" | "edit";
-const panel = ref<PanelMode>("list");
-const editPoiId = ref<number | null>(null);
-const formKey = ref(0);
+// Pagination
+const pageSize = 50;
+const page = ref(1);
 
-const mapRef = ref<{ setClickPosition: (lat: number, lon: number) => void; panTo: (lat: number, lon: number) => void }>();
-const formRef = ref<{ setCoords: (lat: number, lon: number) => void }>();
+// Filters
+const searchInput = ref("");
+const search = ref("");
+const filterType = ref<string | undefined>(undefined);
+const filterDifficulty = ref<string | undefined>(undefined);
 
-const editData = computed(() => {
-  if (!editPoiId.value) return null;
-  const poi = pois.value.find((p) => p.id === editPoiId.value);
-  if (!poi) return null;
-  return { id: poi.id, name: poi.name, type: poi.type, difficulty: poi.difficulty, lat: poi.lat, lon: poi.lon };
+// Debounce search input → search
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
+watch(searchInput, (val) => {
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    search.value = val.trim();
+  }, 300);
 });
+
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
+
+const hasActiveFilter = computed(
+  () => !!search.value || !!filterType.value || !!filterDifficulty.value
+);
+
+const typeOptions = computed(() =>
+  poiTypesData.value.map((t) => ({ label: typeLabel(t.slug), value: t.slug }))
+);
+const difficultyOptions = computed(() =>
+  poiDifficultiesData.value.map((d) => ({ label: difficultyLabel(d.slug), value: d.slug }))
+);
 
 async function fetchPois() {
   loading.value = true;
   fetchError.value = "";
   try {
-    const [p, t, d] = await Promise.all([listPois(), listPoiTypes(), listPoiDifficulties()]);
-    pois.value = p;
-    poiTypesData.value = t;
-    poiDifficultiesData.value = d;
+    const res = await listPois({
+      limit: pageSize,
+      offset: (page.value - 1) * pageSize,
+      search: search.value || undefined,
+      type: filterType.value || undefined,
+      difficulty: filterDifficulty.value || undefined,
+    });
+    pois.value = res.pois;
+    total.value = res.total;
   } catch (e: any) {
     fetchError.value = e.message;
   } finally {
@@ -142,81 +158,39 @@ async function fetchPois() {
   }
 }
 
-// --- Panel navigation ---
-
-function startCreate() {
-  panel.value = "create";
-  editPoiId.value = null;
-  selectedId.value = null;
-  saveError.value = "";
-  formKey.value++;
-}
-
-function startEdit(poi: PoiDefinition) {
-  editPoiId.value = poi.id;
-  selectedId.value = poi.id;
-  saveError.value = "";
-  panel.value = "edit";
-  formKey.value++;
-}
-
-function closePanel() {
-  panel.value = "list";
-  editPoiId.value = null;
-  saveError.value = "";
-}
-
-// --- Map interactions ---
-
-function onMapPoiClick(poi: PoiDefinition) {
-  startEdit(poi);
-}
-
-function onMapClick(latlng: { lat: number; lon: number }) {
-  if (panel.value !== "list" && formRef.value) {
-    formRef.value.setCoords(latlng.lat, latlng.lon);
-  }
-}
-
-function onFormCoordsChanged(coords: { lat: number; lon: number }) {
-  mapRef.value?.setClickPosition(coords.lat, coords.lon);
-}
-
-function onListSelect(poi: PoiDefinition) {
-  selectedId.value = poi.id;
-  mapRef.value?.panTo(poi.lat, poi.lon);
-}
-
-// --- CRUD ---
-
-async function handleCreate(data: CreatePoiInput) {
-  saving.value = true;
-  saveError.value = "";
+async function fetchMeta() {
   try {
-    const created = await createPoi(data);
-    pois.value.push(created);
-    closePanel();
+    const [t, d] = await Promise.all([listPoiTypes(), listPoiDifficulties()]);
+    poiTypesData.value = t;
+    poiDifficultiesData.value = d;
   } catch (e: any) {
-    saveError.value = e.message;
-  } finally {
-    saving.value = false;
+    fetchError.value = e.message;
   }
 }
 
-async function handleUpdate(data: CreatePoiInput) {
-  if (!editPoiId.value) return;
-  saving.value = true;
-  saveError.value = "";
-  try {
-    const updated = await updatePoi(editPoiId.value, data);
-    const idx = pois.value.findIndex((p) => p.id === editPoiId.value);
-    if (idx >= 0) pois.value[idx] = updated;
-    closePanel();
-  } catch (e: any) {
-    saveError.value = e.message;
-  } finally {
-    saving.value = false;
+// Refetch on page / filter change
+watch([page, search, filterType, filterDifficulty], (newVals, oldVals) => {
+  // If a filter changed (not the page itself), reset to page 1
+  const filterChanged =
+    newVals[1] !== oldVals[1] ||
+    newVals[2] !== oldVals[2] ||
+    newVals[3] !== oldVals[3];
+  if (filterChanged && page.value !== 1) {
+    page.value = 1;
+    return; // watcher will retrigger because of page change
   }
+  fetchPois();
+});
+
+function clearFilters() {
+  searchInput.value = "";
+  search.value = "";
+  filterType.value = undefined;
+  filterDifficulty.value = undefined;
+}
+
+function onEdit(poi: PoiDefinition) {
+  navigateTo(`/pois/${poi.id}`);
 }
 
 function onDeleteRequest(poi: PoiDefinition) {
@@ -227,13 +201,15 @@ async function confirmDelete() {
   if (!poiToDelete.value) return;
   try {
     await deletePoi(poiToDelete.value.id);
-    pois.value = pois.value.filter((p) => p.id !== poiToDelete.value!.id);
-    if (editPoiId.value === poiToDelete.value.id) closePanel();
+    await fetchPois();
   } catch (e: any) {
     fetchError.value = e.message;
   }
   poiToDelete.value = null;
 }
 
-onMounted(fetchPois);
+onMounted(async () => {
+  await fetchMeta();
+  await fetchPois();
+});
 </script>

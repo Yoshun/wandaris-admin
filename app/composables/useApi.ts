@@ -1,4 +1,4 @@
-import type { PoiDefinition, CreatePoiInput, UpdatePoiInput, StagedPoi, ImportResult, ImportZone, PoiTypeRecord, PoiDifficultyRecord, BiomeResourceWeightRecord, BiomeMonsterWeightRecord, MonsterTemplateRecord, GameSettingRecord, ItemTemplateRecord, RecipeRecord, ProfessionRecord, PoiReportRecord, PoiSubmissionRecord } from "~~/types/poi";
+import type { PoiDefinition, CreatePoiInput, UpdatePoiInput, PoiListParams, PoiListResponse, StagedPoi, ImportResult, ImportZone, PoiTypeRecord, PoiDifficultyRecord, BiomeResourceWeightRecord, BiomeMonsterWeightRecord, MonsterTemplateRecord, GameSettingRecord, ItemTemplateRecord, RecipeRecord, ProfessionRecord, PoiReportRecord, PoiSubmissionRecord } from "~~/types/poi";
 
 export function useApi() {
   const config = useRuntimeConfig();
@@ -30,8 +30,15 @@ export function useApi() {
   }
 
   // --- POIs ---
-  async function listPois(): Promise<PoiDefinition[]> {
-    return apiFetch<PoiDefinition[]>("/api/pois");
+  async function listPois(params: PoiListParams = {}): Promise<PoiListResponse> {
+    const qs = new URLSearchParams();
+    if (params.limit !== undefined) qs.set("limit", String(params.limit));
+    if (params.offset !== undefined) qs.set("offset", String(params.offset));
+    if (params.search) qs.set("search", params.search);
+    if (params.type) qs.set("type", params.type);
+    if (params.difficulty) qs.set("difficulty", params.difficulty);
+    const query = qs.toString();
+    return apiFetch<PoiListResponse>(`/api/pois${query ? `?${query}` : ""}`);
   }
 
   async function getPoi(id: number): Promise<PoiDefinition> {

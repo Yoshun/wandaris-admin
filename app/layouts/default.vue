@@ -55,7 +55,7 @@ const navItems = computed(() => {
       label: 'Dashboard',
       icon: 'i-lucide-map',
       to: '/',
-      active: route.path === '/'
+      active: route.path === '/' || route.path.startsWith('/pois')
     })
   }
   if (can('pois.manage')) {

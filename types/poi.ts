@@ -59,6 +59,19 @@ export interface PoiDefinition {
   updatedAt?: string;
 }
 
+export interface PoiListParams {
+  limit?: number;
+  offset?: number;
+  search?: string;
+  type?: string;
+  difficulty?: string;
+}
+
+export interface PoiListResponse {
+  pois: PoiDefinition[];
+  total: number;
+}
+
 export interface CreatePoiInput {
   name: string;
   type: PoiType;
