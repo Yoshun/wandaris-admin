@@ -53,9 +53,7 @@
             <input type="color" v-model="t.color" class="w-6 h-6 rounded cursor-pointer" />
             <span class="text-muted text-xs">{{ t.color }}</span>
           </div>
-          <span class="text-xs" :class="t.bossOnly ? 'text-warning' : 'text-muted'">
-            {{ t.bossOnly ? 'Boss' : '—' }}
-          </span>
+          <USwitch v-model="t.bossOnly" size="sm" />
           <div class="flex gap-1">
             <UButton size="sm" @click="save(t)" :loading="savingId === t.id">Sauver</UButton>
             <UButton size="sm" variant="outline" color="neutral" @click="confirmTarget = t" :loading="deletingId === t.id">Suppr</UButton>
@@ -74,7 +72,7 @@
             <input type="color" v-model="newTemplate.color" class="w-6 h-6 rounded cursor-pointer" />
             <span class="text-muted text-xs">{{ newTemplate.color }}</span>
           </div>
-          <div />
+          <USwitch v-model="newTemplate.bossOnly" size="sm" />
           <div>
             <UButton size="sm" @click="create" :loading="creating" :disabled="!newTemplate.type?.trim()">Ajouter</UButton>
           </div>
@@ -113,6 +111,7 @@ const newTemplate = ref({
   baseAttack: 5,
   attackIntervalMs: 2000,
   color: "#888888",
+  bossOnly: false,
 });
 
 function scrollToNew() {
@@ -150,6 +149,7 @@ async function save(t: MonsterTemplateRecord) {
       baseAttack: t.baseAttack,
       attackIntervalMs: t.attackIntervalMs,
       color: t.color,
+      bossOnly: t.bossOnly,
     });
   } catch (e: any) {
     errorMsg.value = e.message;
@@ -190,10 +190,10 @@ async function create() {
       baseAttack: newTemplate.value.baseAttack,
       attackIntervalMs: newTemplate.value.attackIntervalMs,
       color: newTemplate.value.color,
-      bossOnly: false,
+      bossOnly: newTemplate.value.bossOnly,
     });
     templates.value.push(created);
-    newTemplate.value = { type: "", name: "", baseHp: 30, baseAttack: 5, attackIntervalMs: 2000, color: "#888888" };
+    newTemplate.value = { type: "", name: "", baseHp: 30, baseAttack: 5, attackIntervalMs: 2000, color: "#888888", bossOnly: false };
   } catch (e: any) {
     errorMsg.value = e.message;
   } finally {
