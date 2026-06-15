@@ -190,6 +190,7 @@ async function create() {
       baseAttack: newTemplate.value.baseAttack,
       attackIntervalMs: newTemplate.value.attackIntervalMs,
       color: newTemplate.value.color,
+      bossOnly: false,
     });
     templates.value.push(created);
     newTemplate.value = { type: "", name: "", baseHp: 30, baseAttack: 5, attackIntervalMs: 2000, color: "#888888" };

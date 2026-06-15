@@ -46,6 +46,7 @@ export interface MonsterTemplateRecord {
   baseAttack: number;
   attackIntervalMs: number;
   color: string;
+  bossOnly: boolean;
 }
 
 export interface PoiDefinition {
