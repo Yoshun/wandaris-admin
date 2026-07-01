@@ -204,8 +204,6 @@ export function useApi() {
     event: string;
     data: Record<string, unknown>;
     deviceInfo: Record<string, unknown>;
-    lat: number | null;
-    lon: number | null;
     createdAt: string;
   }
 

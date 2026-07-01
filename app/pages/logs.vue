@@ -77,8 +77,6 @@ interface LogRow {
   event: string;
   data: Record<string, unknown>;
   deviceInfo: Record<string, unknown>;
-  lat: number | null;
-  lon: number | null;
   createdAt: string;
 }
 
@@ -181,15 +179,6 @@ const tableColumns = [
       return deviceSummary(info);
     },
     meta: { class: { td: "max-w-48" } },
-  },
-  {
-    id: "position",
-    header: "Position",
-    cell: ({ row }: any) => {
-      const { lat, lon } = row.original;
-      if (lat != null && lon != null) return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-      return "—";
-    },
   },
 ];
 
