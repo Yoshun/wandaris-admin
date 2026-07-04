@@ -56,7 +56,7 @@
           <USwitch v-model="t.bossOnly" size="sm" />
           <div class="flex gap-1">
             <UButton size="sm" @click="save(t)" :loading="savingId === t.id">Sauver</UButton>
-            <UButton size="sm" variant="outline" color="neutral" @click="confirmTarget = t" :loading="deletingId === t.id">Suppr</UButton>
+            <UButton size="sm" variant="outline" color="neutral" @click="() => { confirmTarget = t }" :loading="deletingId === t.id">Suppr</UButton>
           </div>
         </div>
 

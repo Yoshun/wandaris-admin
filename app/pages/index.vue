@@ -6,7 +6,7 @@
           <UButton
             v-if="can('pois.manage')"
             icon="i-lucide-plus"
-            @click="navigateTo('/pois/new')"
+            @click="() => { navigateTo('/pois/new') }"
           >
             Nouveau POI
           </UButton>

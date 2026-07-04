@@ -130,7 +130,7 @@ const navItems = computed(() => {
       active: route.path === '/coverage'
     })
   }
-  if (can('pois.view')) {
+  if (can('pois.manage')) {
     items.push({
       label: 'Logs',
       icon: 'i-lucide-scroll-text',

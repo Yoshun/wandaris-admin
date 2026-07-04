@@ -7,7 +7,7 @@
             variant="ghost"
             color="neutral"
             icon="i-lucide-arrow-left"
-            @click="navigateTo('/')"
+            @click="() => { navigateTo('/') }"
           >
             Retour
           </UButton>

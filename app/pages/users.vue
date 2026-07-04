@@ -51,7 +51,7 @@
               </div>
               <div v-if="formError" class="text-error">{{ formError }}</div>
               <div class="flex gap-2 justify-end">
-                <UButton variant="soft" color="neutral" @click="showUserModal = false">Annuler</UButton>
+                <UButton variant="soft" color="neutral" @click="() => { showUserModal = false }">Annuler</UButton>
                 <UButton type="submit" :loading="formLoading">{{ editingUser ? 'Enregistrer' : 'Créer' }}</UButton>
               </div>
             </form>
@@ -72,7 +72,7 @@
             </div>
             <div v-if="permsError" class="text-error mt-2">{{ permsError }}</div>
             <div class="flex gap-2 justify-end mt-4">
-              <UButton variant="soft" color="neutral" @click="showPermsModal = false">Annuler</UButton>
+              <UButton variant="soft" color="neutral" @click="() => { showPermsModal = false }">Annuler</UButton>
               <UButton :loading="permsLoading" @click="savePerms">Enregistrer</UButton>
             </div>
           </div>

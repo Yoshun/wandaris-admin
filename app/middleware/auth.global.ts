@@ -6,7 +6,7 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   "/crafting": "pois.manage",
   "/settings": "pois.manage",
   "/types": "pois.manage",
-  "/logs": "pois.view",
+  "/logs": "pois.manage",
 };
 
 export default defineNuxtRouteMiddleware(async (to) => {

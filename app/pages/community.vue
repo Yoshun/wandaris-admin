@@ -65,7 +65,7 @@
                   <UButton size="sm" color="error" variant="soft" :loading="actionLoading === s.id" @click="doRejectSubmission(s.id)">
                     Confirmer
                   </UButton>
-                  <UButton size="sm" variant="outline" @click="rejectingId = null">Annuler</UButton>
+                  <UButton size="sm" variant="outline" @click="() => { rejectingId = null }">Annuler</UButton>
                 </div>
               </div>
 
@@ -124,7 +124,7 @@
                   <UButton size="sm" variant="soft" color="neutral" :loading="actionLoading === r.id" @click="dismissReport(r.id)">
                     Rejeter
                   </UButton>
-                  <UButton size="sm" variant="outline" @click="respondingId = null">Annuler</UButton>
+                  <UButton size="sm" variant="outline" @click="() => { respondingId = null }">Annuler</UButton>
                 </div>
 
                 <p v-if="r.adminResponse" class="text-warning text-sm mt-1 italic">Réponse : {{ r.adminResponse }}</p>

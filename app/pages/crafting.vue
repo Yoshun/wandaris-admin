@@ -17,7 +17,7 @@
               :key="t.value"
               size="xs"
               :variant="typeFilter === t.value ? 'solid' : 'soft'"
-              @click="typeFilter = t.value"
+              @click="() => { typeFilter = t.value }"
             >
               {{ t.label }}
             </UButton>
@@ -129,7 +129,7 @@
             </div>
 
             <div class="flex gap-2 justify-end">
-              <UButton variant="soft" @click="modalOpen = false">Annuler</UButton>
+              <UButton variant="soft" @click="() => { modalOpen = false }">Annuler</UButton>
               <UButton @click="saveItem" :loading="saving">{{ editingItem ? 'Sauver' : 'Créer' }}</UButton>
             </div>
           </div>
