@@ -3,14 +3,16 @@ import type { PoiDefinition, CreatePoiInput, UpdatePoiInput, PoiListParams, PoiL
 export function useApi() {
   const config = useRuntimeConfig();
   const apiBase = config.public.apiBase as string;
-  const { token, logout } = useAuth();
+  const { logout } = useAuth();
 
   async function apiFetch<T>(path: string, fetchOptions?: RequestInit): Promise<T> {
     const headers: Record<string, string> = {};
     if (fetchOptions?.body) headers["Content-Type"] = "application/json";
-    if (token.value) headers["Authorization"] = `Bearer ${token.value}`;
+    // No Authorization header: the session travels as an httpOnly cookie the browser
+    // attaches itself (see useAuth). `credentials` is what opts this cross-origin call in.
     const res = await fetch(`${apiBase}${path}`, {
       ...fetchOptions,
+      credentials: "include",
       headers: { ...headers, ...(fetchOptions?.headers as Record<string, string> ?? {}) },
     });
     if (res.status === 401) {
@@ -305,8 +307,19 @@ export function useApi() {
   }
 
   // --- Item Templates ---
-  async function listItemTemplates(): Promise<ItemTemplateRecord[]> {
-    return apiFetch<ItemTemplateRecord[]>("/api/item-templates");
+  async function listItemTemplates(
+    params: { limit?: number; offset?: number; profession?: string; type?: string; search?: string } = {},
+  ): Promise<{ items: ItemTemplateRecord[]; total: number }> {
+    const qs = new URLSearchParams();
+    if (params.limit !== undefined) qs.set("limit", String(params.limit));
+    if (params.offset !== undefined) qs.set("offset", String(params.offset));
+    if (params.profession) qs.set("profession", params.profession);
+    if (params.type) qs.set("type", params.type);
+    if (params.search) qs.set("search", params.search);
+    const query = qs.toString();
+    return apiFetch<{ items: ItemTemplateRecord[]; total: number }>(
+      `/api/item-templates${query ? `?${query}` : ""}`,
+    );
   }
 
   async function createItemTemplate(data: Omit<ItemTemplateRecord, "id">): Promise<ItemTemplateRecord> {
@@ -328,8 +341,10 @@ export function useApi() {
   }
 
   // --- Recipes ---
-  async function listRecipes(): Promise<RecipeRecord[]> {
-    return apiFetch<RecipeRecord[]>("/api/recipes/all");
+  /** `itemTemplateIds` limits the fetch to the templates currently on screen. */
+  async function listRecipes(itemTemplateIds?: number[]): Promise<RecipeRecord[]> {
+    const query = itemTemplateIds?.length ? `?itemTemplateIds=${itemTemplateIds.join(",")}` : "";
+    return apiFetch<RecipeRecord[]>(`/api/recipes/all${query}`);
   }
 
   async function createRecipe(data: { itemTemplateId: number; ingredients: Record<string, number>; quantity?: number; known?: boolean }): Promise<RecipeRecord> {

@@ -38,7 +38,7 @@
       <div v-else class="p-4">
         <!-- Stats -->
         <div class="flex gap-4 mb-4 text-muted">
-          <span>{{ filteredItems.length }} items</span>
+          <span>{{ totalItems }} items</span>
           <span>{{ filteredRecipes.length }} recettes</span>
         </div>
 
@@ -46,10 +46,10 @@
         <UTable :data="paginatedItems" :columns="tableColumns" class="w-full" />
 
         <!-- Pagination -->
-        <div v-if="filteredItems.length > pageSize" class="flex justify-center mt-4">
+        <div v-if="totalItems > pageSize" class="flex justify-center mt-4">
           <UPagination
             v-model:page="page"
-            :total="filteredItems.length"
+            :total="totalItems"
             :items-per-page="pageSize"
             show-edges
           />
@@ -235,31 +235,19 @@ const typeFilters = [
   { label: "Potions buff", value: "potion_buff" },
 ];
 
-const filteredItems = computed(() => {
-  let result = items.value;
-  if (activeTab.value !== "all") {
-    result = result.filter((i) => i.professionSlug === activeTab.value);
-  }
-  if (typeFilter.value !== "all") {
-    result = result.filter((i) => i.type === typeFilter.value);
-  }
-  return result;
-});
+// `items` now holds ONLY the current page — the server filters and paginates. The page
+// used to download the ~3635 templates and slice them in the browser.
+const totalItems = ref(0);
+const filteredItems = computed(() => items.value);
+const paginatedItems = computed(() => items.value);
+const filteredRecipes = computed(() => allRecipes.value);
 
-const paginatedItems = computed(() => {
-  const start = (page.value - 1) * pageSize;
-  return filteredItems.value.slice(start, start + pageSize);
-});
-
-const filteredRecipes = computed(() => {
-  const itemIds = new Set(filteredItems.value.map((i) => i.id));
-  return allRecipes.value.filter((r) => itemIds.has(r.itemTemplateId));
-});
-
-// Reset page when filters change
+// Reset to the first page when filters change, then refetch.
 watch([() => activeTab.value, () => typeFilter.value], () => {
   page.value = 1;
+  fetchAll();
 });
+watch(() => page.value, () => { fetchAll(); });
 
 // Table columns
 const tableColumns = computed(() => [
@@ -470,14 +458,22 @@ async function removeItem(item: ItemTemplateRecord) {
 async function fetchAll() {
   loading.value = true;
   try {
-    const [i, r, p] = await Promise.all([
-      listItemTemplates(),
-      listRecipes(),
+    const [itemsPage, p] = await Promise.all([
+      listItemTemplates({
+        limit: pageSize,
+        offset: (page.value - 1) * pageSize,
+        profession: activeTab.value !== "all" ? activeTab.value : undefined,
+        type: typeFilter.value !== "all" ? typeFilter.value : undefined,
+      }),
       listProfessions(),
     ]);
-    items.value = i;
-    allRecipes.value = r;
+    items.value = itemsPage.items;
+    totalItems.value = itemsPage.total;
     professionsList.value = p;
+    // Only the recipes of the templates actually displayed.
+    allRecipes.value = itemsPage.items.length
+      ? await listRecipes(itemsPage.items.map((i) => i.id))
+      : [];
   } catch (e: any) {
     errorMsg.value = e.message;
   } finally {

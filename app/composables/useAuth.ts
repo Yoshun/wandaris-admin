@@ -10,21 +10,28 @@ const IMPLIES: Record<string, string[]> = {
   "users.manage": ["users.view"],
 };
 
+/**
+ * Session handling for the admin panel.
+ *
+ * The JWT is no longer held by this app. It used to be written to `localStorage`, where
+ * any script running on the page could read and exfiltrate a token valid for seven days.
+ * It now lives in an httpOnly cookie set by the API at login: the browser attaches it
+ * automatically (`credentials: "include"`) and no JavaScript — ours or injected — can read
+ * it. "Being logged in" is therefore derived from `/api/auth/me` answering, not from a
+ * token we can inspect.
+ *
+ * CSRF is covered by the cookie's `SameSite=lax`: admin.wandaris.com and api.wandaris.com
+ * share a registrable domain, so our own calls count as same-site and carry the cookie,
+ * while a request issued by any third-party page does not.
+ */
 export function useAuth() {
   const config = useRuntimeConfig();
   const apiBase = config.public.apiBase as string;
 
-  const token = useState<string | null>("auth-token", () => {
-    if (import.meta.client) {
-      return localStorage.getItem("auth-token");
-    }
-    return null;
-  });
-
   const user = useState<AuthUser | null>("auth-user", () => null);
   const permissions = useState<string[]>("auth-permissions", () => []);
 
-  const isAuthenticated = computed(() => !!token.value && !!user.value);
+  const isAuthenticated = computed(() => !!user.value);
 
   function can(perm: string): boolean {
     const perms = permissions.value;
@@ -39,6 +46,7 @@ export function useAuth() {
   async function login(email: string, password: string) {
     const res = await fetch(`${apiBase}/api/auth/login`, {
       method: "POST",
+      credentials: "include", // receive the httpOnly session cookie
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
@@ -49,27 +57,18 @@ export function useAuth() {
     }
 
     const data = await res.json();
-    token.value = data.token;
+    // `data.token` is deliberately ignored here — it exists for the mobile client.
     user.value = data.user;
     permissions.value = data.permissions ?? [];
-    if (import.meta.client) {
-      localStorage.setItem("auth-token", data.token);
-    }
   }
 
   async function fetchMe(): Promise<boolean> {
-    if (!token.value) return false;
-
     try {
-      const res = await fetch(`${apiBase}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token.value}` },
-      });
-
+      const res = await fetch(`${apiBase}/api/auth/me`, { credentials: "include" });
       if (!res.ok) {
         clearAuth();
         return false;
       }
-
       const data = await res.json();
       user.value = data.user;
       permissions.value = data.permissions ?? [];
@@ -80,19 +79,17 @@ export function useAuth() {
     }
   }
 
-  function logout() {
+  async function logout() {
+    // Clearing local state matters more than the round-trip succeeding.
+    await fetch(`${apiBase}/api/auth/logout`, { method: "POST", credentials: "include" }).catch(() => {});
     clearAuth();
     navigateTo("/login");
   }
 
   function clearAuth() {
-    token.value = null;
     user.value = null;
     permissions.value = [];
-    if (import.meta.client) {
-      localStorage.removeItem("auth-token");
-    }
   }
 
-  return { token, user, permissions, isAuthenticated, login, fetchMe, logout, can };
+  return { user, permissions, isAuthenticated, login, fetchMe, logout, can };
 }
