@@ -67,6 +67,7 @@ const categoryLabels: Record<string, string> = {
   player_formulas: "Formules joueur",
   combat_rewards: "Récompenses combat",
   progression: "Progression",
+  poi: "Points d'intérêt",
 };
 
 const categories = computed(() => {
