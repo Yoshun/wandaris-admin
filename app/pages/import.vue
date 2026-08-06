@@ -224,6 +224,18 @@ async function runImport() {
   try {
     const result = await importOverpass(clickedLat.value, clickedLon.value, radius.value);
     importMessage.value = `${result.inserted} nouveaux POIs (${result.skipped} ignores sur ${result.total} elements)`;
+    // Le detail par source rend visible une source qui ne rapporte plus rien alors meme
+    // qu'elle repond : un zero cote Merimee sur une zone riche en monuments est un signal
+    // que la reponse `errors` ne donne pas, puisqu'il n'y a pas eu d'erreur.
+    if (result.sources) {
+      importMessage.value += ` — Merimee ${result.sources.merimee}, OSM ${result.sources.osm}`;
+    }
+    // Import reussi mais une des deux sources est tombee : sans cet affichage, la zone
+    // parait entierement couverte alors qu'il lui manque tous les POI de la source morte.
+    if (result.errors?.length) {
+      importMessage.value += ` — source indisponible : ${result.errors.join(" ; ")}`;
+      importError.value = true;
+    }
     const [z, s] = await Promise.all([listImportZones(), listStaging()]);
     zones.value = z;
     staged.value = s;

@@ -105,6 +105,10 @@ export interface ImportResult {
   total: number;
   inserted: number;
   skipped: number;
+  /** Nombre de candidats par source. Une source tombee compte 0 — c'est `errors` qui la nomme. */
+  sources?: { merimee: number; osm: number };
+  /** Sources tombees alors que l'import a tout de meme abouti grace a l'autre. */
+  errors?: string[];
 }
 
 export interface ImportZone {
