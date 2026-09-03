@@ -184,3 +184,41 @@ export interface PoiSubmissionRecord {
   createdAt: string;
   resolvedAt: string | null;
 }
+
+// --- Depot d'icones (page /graphiste) ---
+export type IconStatus = "integrated" | "delivered" | "placeholder" | "missing" | "generated";
+
+export interface IconItem {
+  category: string;
+  slug: string;
+  label: string;
+  /** Chemin du fichier dans le repo mobile. */
+  file: string;
+  format: string;
+  note?: string;
+  generated?: boolean;
+  status: IconStatus;
+  url: string | null;
+  sha256: string | null;
+  width: number | null;
+  height: number | null;
+  bytes: number | null;
+  uploadedAt: string | null;
+  uploadedBy: string | null;
+  integratedAt: string | null;
+}
+
+export interface IconCategory {
+  id: string;
+  title: string;
+  note: string;
+  format: string;
+  items: IconItem[];
+}
+
+export interface IconsResponse {
+  categories: IconCategory[];
+  counts: Record<IconStatus, number>;
+  formats: Record<string, string>;
+  viewer: { kind: "admin" | "graphiste"; canIntegrate: boolean };
+}

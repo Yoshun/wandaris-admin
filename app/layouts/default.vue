@@ -132,6 +132,14 @@ const navItems = computed(() => {
   }
   if (can('pois.manage')) {
     items.push({
+      label: 'Icones',
+      icon: 'i-lucide-image',
+      to: '/graphiste',
+      active: route.path === '/graphiste'
+    })
+  }
+  if (can('pois.manage')) {
+    items.push({
       label: 'Logs',
       icon: 'i-lucide-scroll-text',
       to: '/logs',

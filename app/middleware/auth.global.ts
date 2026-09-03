@@ -10,7 +10,8 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
 };
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (to.path === "/login") return;
+  // /graphiste a sa propre porte (mot de passe, cookie dedie) : hors session du panel
+  if (to.path === "/login" || to.path === "/graphiste") return;
 
   const { isAuthenticated, fetchMe, can } = useAuth();
 
