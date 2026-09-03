@@ -14,7 +14,7 @@
         :src="`${apiBase}${item.url}`"
         :alt="item.label"
         class="w-20 h-20 object-contain"
-        :class="{ pixelated: item.status !== 'placeholder' }"
+        :class="{ pixelated: item.generated || item.status !== 'placeholder' }"
       />
       <span v-else class="text-dimmed text-xs">Aucun visuel</span>
     </div>
@@ -81,14 +81,14 @@ const BADGES: Record<IconItem["status"], { label: string; color: "success" | "wa
   delivered: { label: "Déposée, à intégrer", color: "warning", stripe: "bg-warning" },
   placeholder: { label: "Provisoire, à refaire", color: "error", stripe: "bg-error" },
   missing: { label: "À créer", color: "neutral", stripe: "bg-neutral-600" },
-  generated: { label: "Générée", color: "info", stripe: "bg-info" },
+  generated: { label: "Générée, à valider", color: "error", stripe: "bg-error" },
 };
 
 const badge = computed(() => {
   const b = BADGES[props.item.status];
-  // Un glyphe généré puis poussé dans le dépôt reste « généré » : c'est de la géométrie,
-  // pas une livraison — le graphiste peut le reprendre mais n'y est pas tenu.
-  if (props.item.generated && props.item.status === "integrated") return { ...b, label: "Générée, dans l'app" };
+  // Un glyphe généré par script n'est pas validé : tant que le graphiste ne l'a pas
+  // remplacé (statut « integrated » après pull), il reste rouge, à refaire.
+  if (props.item.generated && props.item.status === "placeholder") return { ...b, label: "Générée, à valider" };
   return b;
 });
 const stripeClass = computed(() => BADGES[props.item.status].stripe);

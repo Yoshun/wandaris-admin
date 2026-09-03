@@ -155,9 +155,9 @@ const filter = ref<Filter>("all");
 
 function matches(item: IconItem): boolean {
   switch (filter.value) {
-    case "todo": return item.status === "placeholder" || item.status === "missing";
+    case "todo": return item.status === "placeholder" || item.status === "missing" || item.status === "generated";
     case "delivered": return item.status === "delivered";
-    case "done": return item.status === "integrated" || item.status === "generated";
+    case "done": return item.status === "integrated";
     default: return true;
   }
 }
@@ -167,7 +167,7 @@ const visibleCategories = computed(() => {
   return data.value.categories
     .map((cat) => ({
       ...cat,
-      todo: cat.items.filter((i) => i.status === "placeholder" || i.status === "missing").length,
+      todo: cat.items.filter((i) => i.status === "placeholder" || i.status === "missing" || i.status === "generated").length,
       shown: cat.items.filter(matches),
     }))
     .filter((cat) => cat.shown.length > 0);
@@ -177,9 +177,9 @@ const tally = computed(() => {
   const c = data.value?.counts;
   if (!c) return [];
   return [
-    { label: "Dans l'app", value: c.integrated + c.generated, class: "text-success" },
+    { label: "Dans l'app", value: c.integrated, class: "text-success" },
     { label: "Déposées, à intégrer", value: c.delivered, class: "text-warning" },
-    { label: "Provisoires, à refaire", value: c.placeholder, class: "text-error" },
+    { label: "Provisoires, à refaire", value: c.placeholder + c.generated, class: "text-error" },
     { label: "À créer", value: c.missing, class: "text-muted" },
   ];
 });
