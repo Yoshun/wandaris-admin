@@ -68,6 +68,12 @@ const categoryLabels: Record<string, string> = {
   combat_rewards: "Récompenses combat",
   progression: "Progression",
   poi: "Points d'intérêt",
+  hp: "Points de vie",
+  field_items: "Objets de terrain",
+  peddler: "Marchand itinérant",
+  dungeon: "Donjons",
+  crafting: "Artisanat",
+  security: "Anti-triche",
 };
 
 const categories = computed(() => {
