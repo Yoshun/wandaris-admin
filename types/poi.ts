@@ -14,7 +14,8 @@ export interface PoiDifficultyRecord {
   position: number;
   cooldownHours: number;
   rewardXp: number;
-  rewardGold: number;
+  /** Or d'une visite en unités G (voir api/src/lib/economy.ts), pas un montant absolu. */
+  goldMult: number;
   lootTable: Record<string, { chance: number; min: number; max: number }>;
 }
 

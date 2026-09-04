@@ -128,14 +128,14 @@ export function useApi() {
     return apiFetch<PoiDifficultyRecord[]>("/api/poi-difficulties");
   }
 
-  async function createPoiDifficulty(data: { slug: string; position?: number; cooldownHours?: number; rewardXp?: number; rewardGold?: number; lootTable?: Record<string, { chance: number; min: number; max: number }> }): Promise<PoiDifficultyRecord> {
+  async function createPoiDifficulty(data: { slug: string; position?: number; cooldownHours?: number; rewardXp?: number; goldMult?: number; lootTable?: Record<string, { chance: number; min: number; max: number }> }): Promise<PoiDifficultyRecord> {
     return apiFetch<PoiDifficultyRecord>("/api/poi-difficulties", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async function updatePoiDifficulty(id: number, data: { slug?: string; position?: number; cooldownHours?: number; rewardXp?: number; rewardGold?: number; lootTable?: Record<string, { chance: number; min: number; max: number }> }): Promise<PoiDifficultyRecord> {
+  async function updatePoiDifficulty(id: number, data: { slug?: string; position?: number; cooldownHours?: number; rewardXp?: number; goldMult?: number; lootTable?: Record<string, { chance: number; min: number; max: number }> }): Promise<PoiDifficultyRecord> {
     return apiFetch<PoiDifficultyRecord>(`/api/poi-difficulties/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),

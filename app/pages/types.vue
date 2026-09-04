@@ -103,12 +103,14 @@
                         @change="updateDiffField(d, 'rewardXp', Number(($event.target as HTMLInputElement).value))"
                       />
                     </UFormField>
-                    <UFormField label="Gold">
+                    <UFormField label="Or (× G)" help="G = or de base + or par niveau × niveau du joueur (réglages combat_rewards)">
                       <UInput
                         type="number"
-                        :model-value="d.rewardGold"
+                        step="0.5"
+                        min="0"
+                        :model-value="d.goldMult"
                         size="sm"
-                        @change="updateDiffField(d, 'rewardGold', Number(($event.target as HTMLInputElement).value))"
+                        @change="updateDiffField(d, 'goldMult', Number(($event.target as HTMLInputElement).value))"
                       />
                     </UFormField>
                   </div>
@@ -313,7 +315,7 @@ async function saveDifficulty(d: PoiDifficultyRecord) {
   }
 }
 
-async function updateDiffField(d: PoiDifficultyRecord, field: 'cooldownHours' | 'rewardXp' | 'rewardGold', value: number) {
+async function updateDiffField(d: PoiDifficultyRecord, field: 'cooldownHours' | 'rewardXp' | 'goldMult', value: number) {
   errorMsg.value = "";
   try {
     const updated = await updatePoiDifficulty(d.id, { [field]: value });
