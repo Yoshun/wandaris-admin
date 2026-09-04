@@ -29,7 +29,20 @@
             <span class="font-bold text-primary">Wandaris</span>
             <span class="text-muted">— Icônes de l'app</span>
           </div>
-          <div class="flex gap-1 ml-auto">
+          <div class="flex gap-1">
+            <UButton
+              v-for="t in TABS"
+              :key="t.id"
+              size="xs"
+              :variant="tab === t.id ? 'solid' : 'outline'"
+              :color="tab === t.id ? 'primary' : 'neutral'"
+              :icon="t.icon"
+              @click="tab = t.id"
+            >
+              {{ t.label }}
+            </UButton>
+          </div>
+          <div v-if="tab === 'icons'" class="flex gap-1 ml-auto">
             <UButton
               v-for="f in FILTERS"
               :key="f.id"
@@ -43,6 +56,7 @@
           </div>
           <UButton
             v-if="data?.viewer.kind === 'graphiste'"
+            class="ml-auto"
             icon="i-lucide-log-out"
             variant="ghost"
             color="neutral"
@@ -50,7 +64,7 @@
             aria-label="Se déconnecter"
             @click="leave"
           />
-          <UButton v-else to="/" icon="i-lucide-arrow-left" variant="ghost" color="neutral" size="sm">Panel</UButton>
+          <UButton v-else to="/" class="ml-auto" icon="i-lucide-arrow-left" variant="ghost" color="neutral" size="sm">Panel</UButton>
         </div>
       </header>
 
@@ -61,6 +75,8 @@
           <USkeleton class="h-20 w-full" />
           <USkeleton class="h-40 w-full" />
         </div>
+
+        <MockScreens v-else-if="data && tab === 'screens'" :data="data" :api-base="apiBase" />
 
         <template v-else-if="data">
           <!-- Compteurs -->
@@ -126,9 +142,19 @@
 import type { IconItem, IconsResponse } from "~~/types/poi";
 
 definePageMeta({ layout: false });
-useHead({ title: "Icônes — Wandaris" });
+useHead({
+  title: "Icônes — Wandaris",
+  // VT323, la police de l'app, pour les maquettes d'écrans
+  link: [{ rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=VT323&display=swap" }],
+});
 
 const { apiBase, locked, login, logout, list } = useIconsApi();
+
+const TABS = [
+  { id: "icons", label: "Icônes", icon: "i-lucide-layout-grid" },
+  { id: "screens", label: "Écrans", icon: "i-lucide-smartphone" },
+] as const;
+type Tab = (typeof TABS)[number]["id"];
 
 const FILTERS = [
   { id: "all", label: "Tout" },
@@ -152,6 +178,7 @@ const loading = ref(false);
 const errorMsg = ref("");
 const data = ref<IconsResponse | null>(null);
 const filter = ref<Filter>("all");
+const tab = ref<Tab>("icons");
 
 function matches(item: IconItem): boolean {
   switch (filter.value) {
