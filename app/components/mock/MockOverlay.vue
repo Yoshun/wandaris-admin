@@ -2,7 +2,7 @@
   <div class="ov-screen">
     <div class="ov-dim" />
     <div class="ov-center">
-      <MockFrame :padding="28" :style="{ width: `${widthPct}%`, height: heightPct ? `${heightPct}%` : undefined }">
+      <MockFrame :padding="28" :ornament="ornament" :style="{ width: `${widthPct}%`, height: heightPct ? `${heightPct}%` : undefined }">
         <div class="ov-panel">
           <template v-if="title">
             <div class="ov-band">
@@ -26,10 +26,11 @@
  * Fond d'écran assombri + cadre bois + bande de titre (`OverlayHeader`) : le squelette de
  * toutes les fenêtres de l'app. Le fond reproduit la teinte de la carte sous le voile.
  */
-withDefaults(defineProps<{ title?: string; closeSrc: string | null; widthPct?: number; heightPct?: number; scroll?: boolean }>(), {
+withDefaults(defineProps<{ title?: string; closeSrc: string | null; widthPct?: number; heightPct?: number; scroll?: boolean; ornament?: string | null }>(), {
   title: "",
   widthPct: 92,
   heightPct: 0,
+  ornament: null,
   // Fenêtre à hauteur fixe dont la liste défile dans l'app : le contenu est rogné et la
   // scrollbar carrée du socle (8 DP, bord 2, curseur 4) est dessinée à droite.
   scroll: false,

@@ -12,6 +12,7 @@
     <div class="wf-content">
       <slot />
     </div>
+    <img v-if="ornament" :src="ornament" alt="" class="wf-ornament" />
   </div>
 </template>
 
@@ -21,7 +22,7 @@
  * transparente de 2 DP, fond en dégradé diagonal, ombre portée dure de 10 DP.
  * Mêmes découpes 9-slice que l'app (`public/mock/`).
  */
-withDefaults(defineProps<{ padding?: number }>(), { padding: 28 });
+withDefaults(defineProps<{ padding?: number; ornament?: string | null }>(), { padding: 28, ornament: null });
 </script>
 
 <style scoped>
@@ -69,5 +70,15 @@ withDefaults(defineProps<{ padding?: number }>(), { padding: 28 });
   z-index: 3;
   flex: 1;
   min-height: 0;
+}
+/* Ornement (bannière VS) : pend de la planche — top = RIM (2 DP) — par-dessus la bordure, art 1x */
+.wf-ornament {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 </style>
