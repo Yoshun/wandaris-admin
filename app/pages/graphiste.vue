@@ -170,6 +170,7 @@ const FORMAT_NAMES: Record<string, string> = {
   appicon: "Icône d'app",
   splash: "Splash",
   logo: "Logo",
+  art: "Pièce d'interface",
 };
 
 const password = ref("");
