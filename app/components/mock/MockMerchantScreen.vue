@@ -1,6 +1,6 @@
 <template>
   <MockPhone caption="Marchand">
-    <MockOverlay title="Marchand" :close-src="icons.url('glyphs', 'close')" :height-pct="82">
+    <MockOverlay title="Marchand" :close-src="icons.url('glyphs', 'close')" :height-pct="82" scroll>
       <div class="mc">
         <div class="mc-gold">
           <img v-if="gold" :src="gold" alt="" class="mc-gold-icon" />

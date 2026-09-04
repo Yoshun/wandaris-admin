@@ -1,6 +1,6 @@
 <template>
   <MockPhone caption="Explorer — parcours">
-    <MockOverlay title="Explorer" :close-src="icons.url('glyphs', 'close')" :height-pct="86">
+    <MockOverlay title="Explorer" :close-src="icons.url('glyphs', 'close')" :height-pct="86" scroll>
       <div class="rt">
         <span class="rt-label">Rayon : 2 km</span>
         <MockStepper :minus="icons.url('map', 'zoom-out')" :plus="icons.url('map', 'zoom-in')">

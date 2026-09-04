@@ -1,6 +1,6 @@
 <template>
   <MockPhone caption="Artisanat">
-    <MockOverlay title="Artisanat" :close-src="icons.url('glyphs', 'close')" :height-pct="86">
+    <MockOverlay title="Artisanat" :close-src="icons.url('glyphs', 'close')" :height-pct="86" scroll>
       <div class="cr">
         <MockTabs :items="['Bûcheron', 'Mineur', 'Forgeron', 'Couturier', 'Alchimiste']" value="Forgeron" />
         <div class="cr-prof">

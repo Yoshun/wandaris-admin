@@ -1,6 +1,6 @@
 <template>
   <MockPhone caption="Quêtes et titres">
-    <MockOverlay title="Quêtes" :close-src="icons.url('glyphs', 'close')" :height-pct="84">
+    <MockOverlay title="Quêtes" :close-src="icons.url('glyphs', 'close')" :height-pct="84" scroll>
       <div class="qs">
         <MockTabs :items="['Quêtes', 'Titres']" value="Quêtes" />
         <span class="qs-section">En cours</span>

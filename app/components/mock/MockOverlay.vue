@@ -11,7 +11,10 @@
             </div>
             <div class="ov-rule" />
           </template>
-          <slot />
+          <div class="ov-body">
+            <div class="ov-body-inner"><slot /></div>
+            <div v-if="scroll" class="ov-sb"><div class="ov-sb-thumb" /></div>
+          </div>
         </div>
       </MockFrame>
     </div>
@@ -23,10 +26,13 @@
  * Fond d'écran assombri + cadre bois + bande de titre (`OverlayHeader`) : le squelette de
  * toutes les fenêtres de l'app. Le fond reproduit la teinte de la carte sous le voile.
  */
-withDefaults(defineProps<{ title?: string; closeSrc: string | null; widthPct?: number; heightPct?: number }>(), {
+withDefaults(defineProps<{ title?: string; closeSrc: string | null; widthPct?: number; heightPct?: number; scroll?: boolean }>(), {
   title: "",
   widthPct: 92,
   heightPct: 0,
+  // Fenêtre à hauteur fixe dont la liste défile dans l'app : le contenu est rogné et la
+  // scrollbar carrée du socle (8 DP, bord 2, curseur 4) est dessinée à droite.
+  scroll: false,
 });
 </script>
 
@@ -58,6 +64,33 @@ withDefaults(defineProps<{ title?: string; closeSrc: string | null; widthPct?: n
   flex-direction: column;
   align-items: center;
   height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+.ov-body {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  gap: 6px;
+  overflow: hidden;
+}
+.ov-body-inner {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.ov-sb {
+  flex: none;
+  width: 8px;
+  box-sizing: border-box;
+  border: 2px solid #0d0906;
+  background: #2a2218;
+}
+.ov-sb-thumb {
+  width: 4px;
+  height: 38%;
+  background: #c4a882;
 }
 .ov-band {
   position: relative;

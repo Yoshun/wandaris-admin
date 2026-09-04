@@ -27,6 +27,9 @@ withDefaults(defineProps<{ padding?: number }>(), { padding: 28 });
 <style scoped>
 .wf {
   position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   filter: drop-shadow(10px 10px 0 #000);
 }
 .wf-fill {
@@ -64,5 +67,7 @@ withDefaults(defineProps<{ padding?: number }>(), { padding: 28 });
 .wf-content {
   position: relative;
   z-index: 3;
+  flex: 1;
+  min-height: 0;
 }
 </style>
