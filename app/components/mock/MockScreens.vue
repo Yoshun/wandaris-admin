@@ -1,10 +1,5 @@
 <template>
-  <div class="space-y-4">
-    <p class="text-muted text-sm max-w-3xl">
-      Les écrans de l'app tels qu'ils se présentent avec les icônes du dépôt : ce que vous déposez apparaît ici
-      immédiatement, en contexte et à taille réelle. La carte est la vraie carte du jeu (zoom par les boutons,
-      déplacement à la souris). <strong>Simuler un spawn</strong> sème des lieux, ressources, monstres et une porte de donjon.
-    </p>
+  <div>
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
       <div v-for="screen in SCREENS" :key="screen" class="h-[calc(100vh-6.5rem)] min-h-[520px]">
         <component :is="screen" :icons="icons" />
