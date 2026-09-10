@@ -12,12 +12,12 @@ withDefaults(defineProps<{ highlighted?: boolean }>(), { highlighted: false });
 <style scoped>
 .pc {
   width: 100%;
-  background: #46341f;
-  border: 2px solid #1e140c;
+  background: var(--card-fill);
+  border: 2px solid var(--card-edge);
   padding: 10px;
   margin-bottom: 6px;
 }
 .hi {
-  border-color: #c4a882;
+  border-color: var(--accent);
 }
 </style>

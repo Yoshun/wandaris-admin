@@ -32,13 +32,13 @@ defineProps<{ icons: MockIcons }>();
   flex-direction: column;
   gap: 8px;
 }
-.sp-label { font-size: 14px; color: #c8b898; }
+.sp-label { font-size: 14px; color: var(--text); }
 .sp-thumbs { display: flex; gap: 8px; }
 .sp-thumb {
   position: relative;
   width: 64px;
   height: 64px;
-  border: 2px solid #352818;
+  border: 2px solid var(--frame-bevel-dark);
   background: linear-gradient(135deg, #5c7064, #2d3c47);
 }
 .sp-thumb-x {
@@ -47,9 +47,9 @@ defineProps<{ icons: MockIcons }>();
   right: -6px;
   width: 18px;
   height: 18px;
-  background: #7a2222;
-  border: 2px solid #352818;
-  color: #fff;
+  background: var(--danger-bg);
+  border: 2px solid var(--frame-bevel-dark);
+  color: var(--contrast-text);
   font-size: 12px;
   display: flex;
   align-items: center;

@@ -14,7 +14,7 @@
         <MockIconButton :src="icons.url('map', 'settings')" title="Réglages" />
       </div>
       <div class="hud ms-zoom">
-        <button type="button" class="ms-tap" @click="recenter"><MockIconButton :src="icons.url('map', 'recenter')" glyph="⊕" glyph-color="#c4a882" title="Recentrer" /></button>
+        <button type="button" class="ms-tap" @click="recenter"><MockIconButton :src="icons.url('map', 'recenter')" glyph="⊕" glyph-color="var(--accent)" title="Recentrer" /></button>
         <button type="button" class="ms-tap" @click="zoomBy(1)"><MockIconButton :src="icons.url('map', 'zoom-in')" glyph="+" title="Zoomer" /></button>
         <button type="button" class="ms-tap" @click="zoomBy(-1)"><MockIconButton :src="icons.url('map', 'zoom-out')" glyph="−" title="Dézoomer" /></button>
       </div>
@@ -49,7 +49,7 @@
 <script setup lang="ts">
 import maplibregl, { Marker, type Map as MlMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { MockIcons } from "~/utils/mockIcons";
+import type { MockIcons, MockTheme } from "~/utils/mockIcons";
 
 /**
  * L'écran de jeu : la carte MapTiler recolorée comme dans l'app (zoom 17, rotation et
@@ -58,6 +58,11 @@ import type { MockIcons } from "~/utils/mockIcons";
  * une porte de donjon aux tailles réelles de l'app, avec les icônes courantes du dépôt.
  */
 const props = defineProps<{ icons: MockIcons }>();
+
+// Fourni par MockScreens, qui remonte cet écran à chaque changement (clé) : lu une fois suffit.
+// MapLibre ne lit pas les variables CSS, d'où la palette en clair pour ses calques.
+const theme = inject(MOCK_THEME_KEY, ref<MockTheme>("light"));
+const pal = MOCK_PALETTES[theme.value];
 
 const config = useRuntimeConfig();
 const maptilerKey = config.public.maptilerKey as string;
@@ -105,7 +110,7 @@ function circlePolygon(center: [number, number], radiusM: number, steps = 48): G
 
 onMounted(async () => {
   try {
-    const style = await loadThemedMapStyle(maptilerKey, DARK_MAP);
+    const style = await loadThemedMapStyle(maptilerKey, theme.value === "dark" ? DARK_MAP : LIGHT_MAP);
     map = new maplibregl.Map({
       container: mapEl.value!,
       style,
@@ -122,14 +127,14 @@ onMounted(async () => {
     map.on("load", () => {
       const m = map!;
       m.addSource("radius", { type: "geojson", data: circlePolygon(CENTER, 60) });
-      m.addLayer({ id: "radius-fill", type: "fill", source: "radius", paint: { "fill-color": MOCK_UI.mapRadius, "fill-opacity": 0.08 } });
-      m.addLayer({ id: "radius-line", type: "line", source: "radius", paint: { "line-color": MOCK_UI.mapRadius, "line-width": 3 } });
+      m.addLayer({ id: "radius-fill", type: "fill", source: "radius", paint: { "fill-color": pal.mapRadius, "fill-opacity": 0.08 } });
+      m.addLayer({ id: "radius-line", type: "line", source: "radius", paint: { "line-color": pal.mapRadius, "line-width": 3 } });
       m.addSource("player", { type: "geojson", data: { type: "Feature", geometry: { type: "Point", coordinates: CENTER }, properties: {} } });
       m.addLayer({
         id: "player-dot",
         type: "circle",
         source: "player",
-        paint: { "circle-radius": 6, "circle-color": MOCK_UI.playerDot, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 },
+        paint: { "circle-radius": 6, "circle-color": pal.playerDot, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 },
       });
       ready.value = true;
     });
@@ -234,7 +239,7 @@ function spawn() {
 .ms {
   position: absolute;
   inset: 0;
-  background: #1e1a14;
+  background: var(--map-bg);
 }
 .ms-map {
   position: absolute;
@@ -246,7 +251,7 @@ function spawn() {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #a08868;
+  color: var(--subtitle-text);
   font-size: 18px;
   text-align: center;
   padding: 0 24px;

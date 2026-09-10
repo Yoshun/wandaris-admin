@@ -51,15 +51,15 @@ const STATS = [
   flex-direction: column;
   min-width: 0;
 }
-.sa-name { font-size: 18px; color: #c8b898; }
-.sa-desc { font-size: 13px; color: #aaaaaa; }
-.sa-value { font-size: 20px; color: #f0e6d2; }
-.sa-added { color: #6abf6a; font-size: 16px; }
+.sa-name { font-size: 18px; color: var(--text); }
+.sa-desc { font-size: 13px; color: var(--subtitle-text); }
+.sa-value { font-size: 20px; color: var(--text-strong); }
+.sa-added { color: var(--stat-text); font-size: 16px; }
 .sa-remaining {
   text-align: center;
   font-size: 16px;
-  color: #c8b898;
+  color: var(--text);
   margin: 8px 0 4px;
 }
-.sa-remaining b { color: #c4a882; }
+.sa-remaining b { color: var(--accent); }
 </style>

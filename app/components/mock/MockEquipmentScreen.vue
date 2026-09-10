@@ -48,7 +48,7 @@ const RIGHT: Slot[] = [{ slug: "hands", label: "Mains", rarity: "common" }, { sl
 const WEAPON: Slot = { slug: "weapon", label: "Arme", rarity: "epic" };
 
 function slotStyle(s: Slot) {
-  return { borderColor: s.rarity ? MOCK_UI.rarity[s.rarity] : "#2a2218" };
+  return { borderColor: s.rarity ? MOCK_UI.rarity[s.rarity] : "var(--close-btn-bg)" };
 }
 </script>
 
@@ -74,20 +74,20 @@ function slotStyle(s: Slot) {
 .eq-slot {
   width: 54px;
   height: 54px;
-  border: 2px solid #2a2218;
-  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid var(--close-btn-bg);
+  background: var(--card-bg);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .eq-icon { width: 34px; height: 34px; }
-.eq-slot-label { font-size: 13px; color: #c8b898; }
+.eq-slot-label { font-size: 13px; color: var(--text); }
 .eq-center { flex: 1; display: flex; justify-content: center; }
 .eq-player {
   width: 80px;
   height: 110px;
-  border: 1px dashed #2a2218;
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed var(--close-btn-bg);
+  background: var(--card-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -96,7 +96,7 @@ function slotStyle(s: Slot) {
 .eq-bottom { margin-top: 4px; }
 .eq-detail {
   width: 100%;
-  border-top: 1px solid #2a2218;
+  border-top: 1px solid var(--close-btn-bg);
   margin-top: 8px;
   padding-top: 10px;
   display: flex;
@@ -105,6 +105,6 @@ function slotStyle(s: Slot) {
   align-items: center;
 }
 .eq-detail-name { font-size: 18px; font-weight: bold; }
-.eq-detail-stat { font-size: 15px; color: #6abf6a; }
-.eq-detail-affix { font-size: 15px; color: #b89adf; }
+.eq-detail-stat { font-size: 15px; color: var(--stat-text); }
+.eq-detail-affix { font-size: 15px; color: var(--affix-text); }
 </style>

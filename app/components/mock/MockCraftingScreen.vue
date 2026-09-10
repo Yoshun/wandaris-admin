@@ -70,7 +70,7 @@ const RECIPES = [
   flex-direction: column;
   gap: 4px;
 }
-.cr-level { font-size: 16px; color: #c8b898; }
+.cr-level { font-size: 16px; color: var(--text); }
 .cr-cats {
   display: flex;
   gap: 6px;
@@ -84,8 +84,8 @@ const RECIPES = [
   gap: 8px;
 }
 .cr-name { font-size: 18px; font-weight: bold; }
-.cr-slot { font-size: 13px; color: #c8b898; }
-.cr-stats { font-size: 14px; color: #6abf6a; display: block; margin-top: 2px; }
+.cr-slot { font-size: 13px; color: var(--text); }
+.cr-stats { font-size: 14px; color: var(--stat-text); display: block; margin-top: 2px; }
 .cr-ing {
   display: flex;
   flex-wrap: wrap;
@@ -97,9 +97,9 @@ const RECIPES = [
   align-items: center;
   gap: 4px;
   font-size: 14px;
-  color: #c8b898;
+  color: var(--text);
 }
-.cr-ing-item.short { color: #cf6a6a; }
+.cr-ing-item.short { color: var(--level-req-text); }
 .cr-ing-icon { width: 16px; height: 16px; }
 .cr-action {
   display: flex;
@@ -107,5 +107,5 @@ const RECIPES = [
   justify-content: space-between;
   margin-top: 8px;
 }
-.cr-qty { font-size: 18px; color: #c4a882; }
+.cr-qty { font-size: 18px; color: var(--accent); }
 </style>

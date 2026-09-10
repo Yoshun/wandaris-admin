@@ -16,7 +16,7 @@ withDefaults(defineProps<{ value: number; segments?: number; label?: string; hei
   segments: 0,
   label: "",
   height: 14,
-  fill: "#c4a882",
+  fill: "var(--bar-fill)",
 });
 </script>
 
@@ -24,21 +24,21 @@ withDefaults(defineProps<{ value: number; segments?: number; label?: string; hei
 .bar {
   position: relative;
   width: 100%;
-  border: 2px solid #0d0906;
-  background: #2a2218;
+  border: 2px solid var(--bar-border);
+  background: var(--bar-track);
   overflow: hidden;
   display: flex;
 }
 .bar-seg {
-  background: #0d0906;
+  background: var(--bar-border);
   gap: 2px;
 }
 .seg {
   flex: 1;
-  background: #2a2218;
+  background: var(--bar-track);
 }
 .seg.on {
-  background: #c4a882;
+  background: var(--bar-fill);
 }
 .fill {
   height: 100%;
@@ -50,7 +50,7 @@ withDefaults(defineProps<{ value: number; segments?: number; label?: string; hei
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: #f0e6d2;
-  text-shadow: 1px 1px 0 #000;
+  color: var(--contrast-text);
+  text-shadow: 1px 1px 0 var(--shadow);
 }
 </style>

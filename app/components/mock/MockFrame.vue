@@ -31,22 +31,22 @@ withDefaults(defineProps<{ padding?: number }>(), { padding: 20 });
   position: absolute;
   inset: 0;
   border: 2px solid;
-  border-color: #7d6448 #352818 #352818 #7d6448;
+  border-color: var(--frame-bevel-light) var(--frame-bevel-dark) var(--frame-bevel-dark) var(--frame-bevel-light);
   pointer-events: none;
 }
 .wf-surface {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  border: 4px solid #4d3015;
+  border: 4px solid var(--frame-surface);
 }
 .wf-inner {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
   border: 2px solid;
-  border-color: #352818 #7d6448 #7d6448 #352818;
-  background: #1a1410;
+  border-color: var(--frame-bevel-dark) var(--frame-bevel-light) var(--frame-bevel-light) var(--frame-bevel-dark);
+  background: var(--panel-bg);
 }
 .wf-content {
   position: relative;

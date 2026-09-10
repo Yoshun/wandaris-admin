@@ -49,7 +49,7 @@ const buff = computed(() => props.icons.url("consumables", "buff"));
 }
 .inv-section {
   font-size: 19px;
-  color: #c4a882;
+  color: var(--accent);
   margin-bottom: 8px;
 }
 .inv-row {
@@ -59,10 +59,10 @@ const buff = computed(() => props.icons.url("consumables", "buff"));
   padding: 6px 0;
 }
 .inv-icon { width: 20px; height: 20px; }
-.inv-label { font-size: 18px; color: #c8b898; }
+.inv-label { font-size: 18px; color: var(--text); }
 .inv-divider {
   height: 1px;
-  background: #352818;
+  background: var(--frame-bevel-dark);
   margin: 10px 0;
 }
 .inv-buff {
@@ -72,5 +72,5 @@ const buff = computed(() => props.icons.url("consumables", "buff"));
   gap: 8px;
   padding-left: 28px;
 }
-.inv-effect { font-size: 14px; color: #6abf6a; }
+.inv-effect { font-size: 14px; color: var(--stat-text); }
 </style>

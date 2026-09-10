@@ -8,7 +8,7 @@
       <span
         v-else-if="glyph"
         class="ib-glyph"
-        :style="{ fontSize: `${Math.round(size * 0.62)}px`, color: glyphColor ?? '#c8b898' }"
+        :style="{ fontSize: `${Math.round(size * 0.62)}px`, color: glyphColor ?? 'var(--text)' }"
       >{{ glyph }}</span>
       <span v-else class="ib-missing">?</span>
       <span v-if="badge" class="ib-badge">{{ typeof badge === "number" ? badge : "" }}</span>
@@ -59,7 +59,7 @@ withDefaults(
   font-family: "VT323", monospace;
   font-weight: bold;
   line-height: 1;
-  text-shadow: 2px 2px 0 #000;
+  text-shadow: 2px 2px 0 var(--shadow);
 }
 .ib-missing {
   position: absolute;
@@ -67,8 +67,8 @@ withDefaults(
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed #a08868;
-  color: #a08868;
+  border: 2px dashed var(--subtitle-text);
+  color: var(--subtitle-text);
   font-family: "VT323", monospace;
   font-size: 20px;
 }
@@ -79,9 +79,9 @@ withDefaults(
   min-width: 12px;
   height: 12px;
   padding: 0 3px;
-  background: #c4a882;
-  border: 2px solid #000;
-  color: #1a1410;
+  background: var(--accent);
+  border: 2px solid var(--shadow);
+  color: var(--accent-text);
   font-family: "VT323", monospace;
   font-size: 11px;
   line-height: 8px;

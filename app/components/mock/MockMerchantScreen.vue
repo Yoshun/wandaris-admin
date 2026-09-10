@@ -52,7 +52,7 @@ const rows = computed(() =>
   justify-content: center;
   gap: 6px;
   font-size: 20px;
-  color: #c4a882;
+  color: var(--accent);
 }
 .mc-gold-icon { width: 20px; height: 20px; }
 .mc-list {
@@ -73,6 +73,6 @@ const rows = computed(() =>
   display: flex;
   flex-direction: column;
 }
-.mc-name { font-size: 17px; color: #c8b898; }
-.mc-price { font-size: 14px; color: #c4a882; }
+.mc-name { font-size: 17px; color: var(--text); }
+.mc-price { font-size: 14px; color: var(--accent); }
 </style>

@@ -27,7 +27,7 @@ const logo = computed(() => props.icons.url("identity", "logo"));
 .au {
   position: absolute;
   inset: 0;
-  background: #1a1410;
+  background: var(--panel-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -40,8 +40,8 @@ const logo = computed(() => props.icons.url("identity", "logo"));
   object-fit: contain;
 }
 .au-logo-missing {
-  border: 2px dashed #c4a882;
-  color: #aaaaaa;
+  border: 2px dashed var(--accent);
+  color: var(--subtitle-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,7 +58,7 @@ const logo = computed(() => props.icons.url("identity", "logo"));
 .au-title {
   font-size: 22px;
   font-weight: bold;
-  color: #c4a882;
+  color: var(--accent);
   text-align: center;
   margin-bottom: 6px;
 }
@@ -67,15 +67,15 @@ const logo = computed(() => props.icons.url("identity", "logo"));
   padding: 0 10px;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--input-bg);
   border: 2px solid;
-  border-color: #0d0906 #7d6448 #7d6448 #0d0906;
-  color: #888888;
+  border-color: var(--frame-bevel-dark) var(--frame-bevel-light) var(--frame-bevel-light) var(--frame-bevel-dark);
+  color: var(--placeholder-text);
   font-size: 18px;
 }
 .au-link {
   font-size: 16px;
-  color: #c4a882;
+  color: var(--accent);
   text-align: center;
   text-decoration: underline;
   margin-top: 4px;

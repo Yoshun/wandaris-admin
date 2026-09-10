@@ -24,15 +24,15 @@ defineProps<{ label: string; checked: boolean }>();
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--input-bg);
   border: 2px solid;
-  border-color: #0d0906 #7d6448 #7d6448 #0d0906;
-  color: #c4a882;
+  border-color: var(--frame-bevel-dark) var(--frame-bevel-light) var(--frame-bevel-light) var(--frame-bevel-dark);
+  color: var(--accent);
   font-size: 18px;
   line-height: 1;
 }
 .label {
   font-size: 16px;
-  color: #c8b898;
+  color: var(--text);
 }
 </style>

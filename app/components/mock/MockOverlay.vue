@@ -40,16 +40,16 @@ withDefaults(defineProps<{ title?: string; closeSrc: string | null; widthPct?: n
 .ov-screen {
   position: absolute;
   inset: 0;
-  background-color: #1e1a14;
+  background-color: var(--map-bg);
   background-image:
-    linear-gradient(#252018 1px, transparent 1px),
-    linear-gradient(90deg, #252018 1px, transparent 1px);
+    linear-gradient(var(--map-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--map-line) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 .ov-dim {
   position: absolute;
   inset: 0;
-  background: rgba(14, 10, 6, 0.7);
+  background: var(--backdrop-bg);
 }
 .ov-center {
   position: absolute;
@@ -84,13 +84,13 @@ withDefaults(defineProps<{ title?: string; closeSrc: string | null; widthPct?: n
   flex: none;
   width: 8px;
   box-sizing: border-box;
-  border: 2px solid #0d0906;
-  background: #2a2218;
+  border: 2px solid var(--bar-border);
+  background: var(--bar-track);
 }
 .ov-sb-thumb {
   width: 4px;
   height: 38%;
-  background: #c4a882;
+  background: var(--bar-fill);
 }
 .ov-band {
   position: relative;
@@ -103,7 +103,7 @@ withDefaults(defineProps<{ title?: string; closeSrc: string | null; widthPct?: n
 .ov-title {
   font-size: 22px;
   font-weight: bold;
-  color: #c4a882;
+  color: var(--accent);
   line-height: 22px;
   padding: 0 40px;
   white-space: nowrap;
@@ -116,7 +116,7 @@ withDefaults(defineProps<{ title?: string; closeSrc: string | null; widthPct?: n
 .ov-rule {
   width: 100%;
   height: 2px;
-  background: #352818;
+  background: var(--frame-bevel-dark);
   margin-bottom: 10px;
 }
 </style>

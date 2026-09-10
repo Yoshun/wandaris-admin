@@ -2,7 +2,7 @@
   <figure class="mp-card">
     <div ref="box" class="mp-fit">
       <div :style="{ width: `${OUTER_W * scale}px`, height: `${OUTER_H * scale}px`, position: 'relative' }">
-        <div class="phone" :style="{ width: `${OUTER_W}px`, height: `${OUTER_H}px`, transform: `scale(${scale})` }">
+        <div class="phone" :style="{ ...vars, width: `${OUTER_W}px`, height: `${OUTER_H}px`, transform: `scale(${scale})` }">
           <div class="statusbar" />
           <div class="screen">
             <slot />
@@ -18,14 +18,22 @@
 </template>
 
 <script setup lang="ts">
+import type { MockTheme } from "~/utils/mockIcons";
+
 /**
  * Gabarit de téléphone des maquettes : 360 DP de large, comme un Android courant, avec
  * la barre de statut de l'app. Le téléphone est dessiné à sa taille réelle puis mis à
  * l'échelle pour remplir la hauteur disponible de la carte — les DP du mobile restent
  * des px dans le code, seule la présentation change. Le texte est en VT323, la police de
  * l'app (chargée par la page /graphiste).
+ *
+ * Le thème (fourni par MockScreens) devient ici des variables CSS posées sur le
+ * téléphone : tout ce qui est dessiné dedans lit `var(--…)`, rien d'autre.
  */
 defineProps<{ caption: string }>();
+
+const theme = inject(MOCK_THEME_KEY, ref<MockTheme>("light"));
+const vars = computed(() => paletteVars(theme.value));
 
 const BORDER = 8;
 const OUTER_W = 360 + 2 * BORDER;
@@ -83,13 +91,13 @@ onBeforeUnmount(() => observer?.disconnect());
   border: 8px solid #0e0a06;
   border-radius: 28px;
   overflow: hidden;
-  background: #1a1410;
+  background: var(--panel-bg);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
 }
 .statusbar {
   height: 24px;
   flex: none;
-  background: #1a1410;
+  background: var(--status-bar-bg);
 }
 .screen {
   position: relative;
@@ -97,7 +105,7 @@ onBeforeUnmount(() => observer?.disconnect());
   min-height: 0;
   overflow: hidden;
   font-family: "VT323", "Courier New", monospace;
-  color: #c8b898;
+  color: var(--text);
   user-select: none;
 }
 .mp-caption {

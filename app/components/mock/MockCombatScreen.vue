@@ -116,18 +116,18 @@ const lootIcon = computed(() => {
   gap: 6px;
   min-width: 0;
 }
-.cb-vs { flex: none; width: 46px; text-align: center; font-size: 22px; font-weight: bold; color: #c4a882; margin-top: 30px; }
+.cb-vs { flex: none; width: 46px; text-align: center; font-size: 22px; font-weight: bold; color: var(--accent); margin-top: 30px; }
 .cb-sprite { width: 40px; height: 40px; }
 .cb-missing {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed #a08868;
-  color: #a08868;
+  border: 2px dashed var(--subtitle-text);
+  color: var(--subtitle-text);
 }
 .cb-name {
   font-size: 15px;
-  color: #c8b898;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -137,30 +137,30 @@ const lootIcon = computed(() => {
   position: relative;
   width: 100%;
   height: 5px;
-  background: #2a2218;
+  background: var(--close-btn-bg);
   margin-top: 14px;
 }
 .cb-fill {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: #c4a882;
+  background: var(--accent);
 }
 .cb-fill-me { left: 0; animation: fill 2.2s linear infinite; }
 .cb-fill-mob { right: 0; animation: filldanger 3s linear infinite; }
 @keyframes fill { from { width: 0; } to { width: 100%; } }
 @keyframes filldanger {
-  0% { width: 0; background: #c4a882; }
-  74% { background: #c4a882; }
-  75% { background: #e74c3c; }
-  100% { width: 100%; background: #e74c3c; }
+  0% { width: 0; background: var(--accent); }
+  74% { background: var(--accent); }
+  75% { background: var(--error-text); }
+  100% { width: 100%; background: var(--error-text); }
 }
 .cb-chev {
   position: absolute;
   top: -9px;
   font-size: 16px;
   line-height: 1;
-  color: #c4a882;
+  color: var(--accent);
 }
 .cb-chev-r { right: -8px; }
 .cb-chev-l { left: -8px; }
@@ -179,11 +179,11 @@ const lootIcon = computed(() => {
 .cb-hp {
   width: 100%;
   height: 14px;
-  background: #2a2218;
+  background: var(--close-btn-bg);
   overflow: hidden;
 }
 .cb-hp-fill { height: 100%; }
-.cb-hp-text { font-size: 12px; color: #aaaaaa; }
+.cb-hp-text { font-size: 12px; color: var(--subtitle-text); }
 
 .cb-belt {
   width: 100%;
@@ -196,8 +196,8 @@ const lootIcon = computed(() => {
   position: relative;
   flex: 1;
   height: 48px;
-  border: 2px solid #2a2218;
-  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid var(--close-btn-bg);
+  background: var(--card-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -205,10 +205,10 @@ const lootIcon = computed(() => {
   gap: 1px;
 }
 .cb-slot img { width: 22px; height: 22px; }
-.cb-slot .cb-heal { font-size: 12px; line-height: 12px; color: #c8b898; }
+.cb-slot .cb-heal { font-size: 12px; line-height: 12px; color: var(--text); }
 .cb-slot.empty { opacity: 0.35; }
-.cb-slot.reco { border-color: #c4a882; background: rgba(196, 168, 130, 0.1); }
-.cb-slot.reco .cb-heal { color: #c4a882; }
+.cb-slot.reco { border-color: var(--accent); background: var(--accent-wash); }
+.cb-slot.reco .cb-heal { color: var(--accent); }
 .cb-badge {
   position: absolute;
   top: -6px;
@@ -216,9 +216,9 @@ const lootIcon = computed(() => {
   min-width: 16px;
   height: 16px;
   padding: 0 3px;
-  background: #c4a882;
-  border: 2px solid #000;
-  color: #1a1410;
+  background: var(--accent);
+  border: 2px solid var(--shadow);
+  color: var(--accent-text);
   font-size: 11px;
   line-height: 12px;
   text-align: center;
@@ -234,17 +234,17 @@ const lootIcon = computed(() => {
   justify-content: center;
   gap: 6px;
 }
-.cb-hint { font-size: 16px; color: #c4a882; font-weight: bold; }
-.cb-phase { font-size: 26px; line-height: 26px; color: #2ecc71; font-weight: bold; }
+.cb-hint { font-size: 16px; color: var(--accent); font-weight: bold; }
+.cb-phase { font-size: 26px; line-height: 26px; color: var(--success-text); font-weight: bold; }
 .cb-loot { display: flex; gap: 8px; }
 .cb-plaque {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  background: #46341f;
-  border: 2px solid #1e140c;
-  color: #c8b898;
+  background: var(--card-fill);
+  border: 2px solid var(--card-edge);
+  color: var(--text);
   font-size: 17px;
   line-height: 17px;
   font-weight: bold;

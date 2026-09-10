@@ -62,24 +62,24 @@ const STATS = [
   align-items: center;
   padding: 5px 0;
 }
-.pf-label { font-size: 17px; color: #c8b898; }
+.pf-label { font-size: 17px; color: var(--text); }
 .pf-value {
   font-size: 18px;
-  color: #f0e6d2;
+  color: var(--text-strong);
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 .pf-gold { width: 18px; height: 18px; }
-.pf-accent { color: #c4a882; font-weight: bold; }
+.pf-accent { color: var(--accent); font-weight: bold; }
 .pf-divider {
   height: 1px;
-  background: #352818;
+  background: var(--frame-bevel-dark);
   margin: 10px 0;
 }
 .pf-section {
   font-size: 19px;
-  color: #c4a882;
+  color: var(--accent);
   text-align: center;
   margin-bottom: 6px;
 }

@@ -43,12 +43,12 @@ const QUESTS = [
 }
 .qs-section {
   font-size: 19px;
-  color: #c4a882;
+  color: var(--accent);
   margin-top: 4px;
 }
 .qs-title {
   font-size: 18px;
-  color: #c8b898;
+  color: var(--text);
   display: block;
   margin-bottom: 6px;
 }
@@ -58,7 +58,7 @@ const QUESTS = [
   align-items: center;
   margin-top: 6px;
   font-size: 14px;
-  color: #aaaaaa;
+  color: var(--subtitle-text);
 }
-.qs-done { color: #2ecc71; }
+.qs-done { color: var(--success-text); }
 </style>

@@ -13,9 +13,9 @@ withDefaults(defineProps<{ placeholder: string; value?: string; multi?: boolean 
 .in {
   width: 100%;
   padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--input-bg);
   border: 2px solid;
-  border-color: #0d0906 #7d6448 #7d6448 #0d0906;
+  border-color: var(--frame-bevel-dark) var(--frame-bevel-light) var(--frame-bevel-light) var(--frame-bevel-dark);
   font-size: 18px;
   display: flex;
   align-items: flex-start;
@@ -23,6 +23,6 @@ withDefaults(defineProps<{ placeholder: string; value?: string; multi?: boolean 
 .multi {
   min-height: 64px;
 }
-.ph { color: #888888; }
-.val { color: #f0e6d2; }
+.ph { color: var(--placeholder-text); }
+.val { color: var(--input-text); }
 </style>

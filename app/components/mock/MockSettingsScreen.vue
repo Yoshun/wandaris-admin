@@ -35,7 +35,7 @@ defineProps<{ icons: MockIcons }>();
 }
 .se-label {
   font-size: 17px;
-  color: #c4a882;
+  color: var(--accent);
   margin-top: 8px;
 }
 .se-actions {

@@ -63,23 +63,23 @@ const stops = computed(() => {
   flex-direction: column;
   gap: 8px;
 }
-.rt-label { font-size: 17px; color: #c8b898; }
+.rt-label { font-size: 17px; color: var(--text); }
 .rt-summary {
   display: flex;
   justify-content: space-around;
   padding: 6px 0;
-  border-top: 1px solid #352818;
-  border-bottom: 1px solid #352818;
+  border-top: 1px solid var(--frame-bevel-dark);
+  border-bottom: 1px solid var(--frame-bevel-dark);
 }
 .rt-sum { display: flex; flex-direction: column; align-items: center; }
-.rt-sum-value { font-size: 22px; color: #c4a882; }
-.rt-sum-label { font-size: 13px; color: #aaaaaa; }
+.rt-sum-value { font-size: 22px; color: var(--accent); }
+.rt-sum-label { font-size: 13px; color: var(--subtitle-text); }
 .rt-row {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 4px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid var(--input-border);
 }
 .rt-index {
   width: 26px;
@@ -88,14 +88,14 @@ const stops = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #c4a882;
-  border: 2px solid #0d0906;
-  color: #1a1410;
+  background: var(--accent);
+  border: 2px solid var(--bar-border);
+  color: var(--accent-text);
   font-size: 16px;
 }
-.rt-back { background: #aaaaaa; font-size: 14px; }
+.rt-back { background: var(--subtitle-text); font-size: 14px; }
 .rt-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.rt-name { font-size: 16px; color: #c8b898; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rt-detail { font-size: 13px; color: #aaaaaa; }
+.rt-name { font-size: 16px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rt-detail { font-size: 13px; color: var(--subtitle-text); }
 .rt-icon { width: 24px; height: 24px; flex: none; }
 </style>
