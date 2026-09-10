@@ -187,7 +187,7 @@ export interface PoiSubmissionRecord {
 }
 
 // --- Depot d'icones (page /graphiste) ---
-export type IconStatus = "integrated" | "delivered" | "placeholder" | "missing" | "generated";
+export type IconStatus = "integrated" | "delivered" | "placeholder" | "missing";
 
 export interface IconItem {
   category: string;
@@ -197,7 +197,6 @@ export interface IconItem {
   file: string;
   format: string;
   note?: string;
-  generated?: boolean;
   status: IconStatus;
   url: string | null;
   sha256: string | null;
@@ -220,6 +219,5 @@ export interface IconCategory {
 export interface IconsResponse {
   categories: IconCategory[];
   counts: Record<IconStatus, number>;
-  formats: Record<string, string>;
   viewer: { kind: "admin" | "graphiste"; canIntegrate: boolean };
 }

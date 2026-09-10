@@ -1,58 +1,54 @@
 <template>
   <figure
-    class="relative flex flex-col gap-2 bg-elevated border rounded-lg p-3 pt-4 transition-colors"
+    class="flex flex-col gap-2 bg-elevated border rounded-lg p-3 transition-colors"
     :class="dragging ? 'border-primary ring-2 ring-primary/40' : 'border-default'"
     @dragover.prevent="dragging = true"
     @dragleave="dragging = false"
     @drop.prevent="onDrop"
   >
-    <span class="absolute inset-x-0 top-0 h-1 rounded-t-lg" :class="stripeClass" />
-
-    <div class="h-28 flex items-center justify-center rounded checker">
+    <div class="h-24 flex items-center justify-center rounded checker">
       <img
         v-if="item.url"
         :src="`${apiBase}${item.url}`"
         :alt="item.label"
-        class="w-20 h-20 object-contain"
-        :class="{ pixelated: item.generated || item.status !== 'placeholder' }"
+        class="w-16 h-16 object-contain"
+        :class="{ pixelated: item.status !== 'placeholder' }"
       />
       <span v-else class="text-dimmed text-xs">Aucun visuel</span>
     </div>
 
     <figcaption class="min-w-0">
       <div class="font-medium leading-tight">{{ item.label }}</div>
-      <div class="text-xs text-dimmed font-mono truncate">{{ item.slug }}</div>
       <div v-if="item.note" class="text-xs text-muted mt-1">{{ item.note }}</div>
     </figcaption>
 
     <div class="flex items-center justify-between gap-2 mt-auto">
-      <UBadge :color="badge.color" variant="subtle" size="sm">{{ badge.label }}</UBadge>
-      <span v-if="item.width" class="text-xs text-dimmed tabular-nums">{{ item.width }}×{{ item.height }}</span>
-    </div>
-    <div v-if="item.uploadedAt" class="text-xs text-dimmed">{{ dateLabel }} · {{ item.uploadedBy }}</div>
-
-    <div class="flex gap-1">
-      <UButton
-        size="xs"
-        icon="i-lucide-upload"
-        :variant="item.status === 'integrated' ? 'outline' : 'solid'"
-        :color="item.status === 'integrated' ? 'neutral' : 'primary'"
-        :loading="busy"
-        @click="input?.click()"
-      >
-        {{ item.url ? "Remplacer" : "Déposer" }}
-      </UButton>
-      <UButton
-        v-if="canIntegrate && item.status === 'delivered'"
-        size="xs"
-        variant="outline"
-        color="success"
-        icon="i-lucide-check"
-        :loading="busy"
-        @click="markIntegrated"
-      >
-        Intégrée
-      </UButton>
+      <span class="text-xs flex items-center gap-1.5" :class="state.class">
+        <span class="inline-block w-1.5 h-1.5 rounded-full bg-current" />
+        {{ state.label }}
+      </span>
+      <div class="flex gap-1">
+        <UButton
+          v-if="canIntegrate && item.status === 'delivered'"
+          size="xs"
+          variant="outline"
+          color="success"
+          icon="i-lucide-check"
+          :loading="busy"
+          aria-label="Marquer comme intégrée"
+          @click="markIntegrated"
+        />
+        <UButton
+          size="xs"
+          icon="i-lucide-upload"
+          :variant="item.status === 'integrated' ? 'outline' : 'solid'"
+          :color="item.status === 'integrated' ? 'neutral' : 'primary'"
+          :loading="busy"
+          @click="input?.click()"
+        >
+          Déposer
+        </UButton>
+      </div>
     </div>
 
     <input ref="input" type="file" accept="image/png" class="hidden" @change="onChange" />
@@ -76,27 +72,14 @@ const input = ref<HTMLInputElement>();
 const busy = ref(false);
 const dragging = ref(false);
 
-const BADGES: Record<IconItem["status"], { label: string; color: "success" | "warning" | "error" | "info" | "neutral"; stripe: string }> = {
-  integrated: { label: "Dans l'app", color: "success", stripe: "bg-success" },
-  delivered: { label: "Déposée, à intégrer", color: "warning", stripe: "bg-warning" },
-  placeholder: { label: "Provisoire, à refaire", color: "error", stripe: "bg-error" },
-  missing: { label: "À créer", color: "neutral", stripe: "bg-neutral-600" },
-  generated: { label: "Générée, à valider", color: "error", stripe: "bg-error" },
+/** Un mot, une couleur : où en est cette icône. Le provisoire est le visuel qui tient la place, pas le style attendu. */
+const STATES: Record<IconItem["status"], { label: string; class: string }> = {
+  placeholder: { label: "Provisoire", class: "text-muted" },
+  missing: { label: "À créer", class: "text-muted" },
+  delivered: { label: "Déposée", class: "text-warning" },
+  integrated: { label: "Dans l'app", class: "text-success" },
 };
-
-const badge = computed(() => {
-  const b = BADGES[props.item.status];
-  // Un glyphe généré par script n'est pas validé : tant que le graphiste ne l'a pas
-  // remplacé (statut « integrated » après pull), il reste rouge, à refaire.
-  if (props.item.generated && props.item.status === "placeholder") return { ...b, label: "Générée, à valider" };
-  return b;
-});
-const stripeClass = computed(() => BADGES[props.item.status].stripe);
-
-const dateLabel = computed(() => {
-  if (!props.item.uploadedAt) return "";
-  return new Date(props.item.uploadedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
-});
+const state = computed(() => STATES[props.item.status]);
 
 function onChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0];

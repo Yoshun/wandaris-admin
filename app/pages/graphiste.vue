@@ -8,7 +8,7 @@
             <UIcon name="i-lucide-compass" class="text-primary text-2xl" />
             <h1 class="text-2xl font-bold text-primary">Wandaris</h1>
           </div>
-          <p class="text-muted">Dépôt des icônes</p>
+          <p class="text-muted">Icônes de l'app</p>
         </div>
 
         <form class="space-y-4" @submit.prevent="unlock">
@@ -42,18 +42,6 @@
               {{ t.label }}
             </UButton>
           </div>
-          <div v-if="tab === 'icons'" class="flex gap-1 ml-auto">
-            <UButton
-              v-for="f in FILTERS"
-              :key="f.id"
-              size="xs"
-              :variant="filter === f.id ? 'solid' : 'ghost'"
-              :color="filter === f.id ? 'primary' : 'neutral'"
-              @click="filter = f.id"
-            >
-              {{ f.label }}
-            </UButton>
-          </div>
           <UButton
             v-if="data?.viewer.kind === 'graphiste'"
             class="ml-auto"
@@ -79,49 +67,16 @@
         <MockScreens v-else-if="data && tab === 'screens'" :data="data" :api-base="apiBase" />
 
         <template v-else-if="data">
-          <!-- Compteurs -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div v-for="t in tally" :key="t.label" class="bg-elevated border border-default rounded-lg px-4 py-3">
-              <div class="text-3xl font-bold tabular-nums" :class="t.class">{{ t.value }}</div>
-              <div class="text-xs uppercase tracking-wide text-muted">{{ t.label }}</div>
-            </div>
-          </div>
-
-          <!-- Mode d'emploi -->
-          <div class="bg-elevated border border-default rounded-lg p-4 text-sm space-y-3">
-            <p>
-              Chaque case est une icône attendue par l'app. Glissez un PNG dessus, ou cliquez sur
-              <strong>Déposer</strong>. Le fichier remplace la version affichée et passe en
-              <UBadge color="warning" variant="subtle" size="sm">Déposée, à intégrer</UBadge> ;
-              il bascule en <UBadge color="success" variant="subtle" size="sm">Dans l'app</UBadge>
-              une fois embarqué dans la prochaine version mobile. Les cases
-              <UBadge color="error" variant="subtle" size="sm">Provisoire</UBadge> montrent le
-              vecteur qui tient la place aujourd'hui — le sujet, pas le style.
-            </p>
-            <dl class="grid sm:grid-cols-[max-content_1fr] gap-x-6 gap-y-1 text-muted">
-              <template v-for="(label, key) in data.formats" :key="key">
-                <dt class="font-medium text-default">{{ FORMAT_NAMES[key] ?? key }}</dt>
-                <dd>{{ label }}</dd>
-              </template>
-            </dl>
-            <p class="text-dimmed">
-              Priorité : identité, puis monstres, puis lieux, puis équipement et consommables, puis les petites icônes d'interface.
-            </p>
-          </div>
-
-          <!-- Catégories -->
-          <section v-for="cat in visibleCategories" :key="cat.id">
+          <!-- Une section par catégorie : le titre, l'avancement, la grille -->
+          <section v-for="cat in categories" :key="cat.id">
             <div class="flex items-baseline gap-3 flex-wrap">
               <h2 class="text-xl font-semibold">{{ cat.title }}</h2>
-              <UBadge :color="cat.todo === 0 ? 'success' : 'error'" variant="subtle" size="sm">
-                {{ cat.todo === 0 ? `${cat.items.length} · complet` : `${cat.todo} / ${cat.items.length} à faire` }}
-              </UBadge>
+              <span class="text-sm text-muted tabular-nums">{{ cat.done }} / {{ cat.items.length }}</span>
             </div>
-            <p class="text-muted text-sm max-w-3xl mt-1">{{ cat.note }}</p>
-            <p class="text-dimmed text-xs max-w-3xl mt-1">{{ data.formats[cat.format] }}</p>
-            <div class="grid gap-3 mt-4" style="grid-template-columns: repeat(auto-fill, minmax(170px, 1fr))">
+            <p v-if="cat.note" class="text-muted text-sm max-w-3xl mt-1">{{ cat.note }}</p>
+            <div class="grid gap-3 mt-4" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr))">
               <IconCard
-                v-for="item in cat.shown"
+                v-for="item in cat.items"
                 :key="`${item.category}/${item.slug}`"
                 :item="item"
                 :api-base="apiBase"
@@ -130,8 +85,6 @@
               />
             </div>
           </section>
-
-          <p v-if="visibleCategories.length === 0" class="text-muted">Rien dans ce filtre.</p>
         </template>
       </main>
     </template>
@@ -156,61 +109,20 @@ const TABS = [
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
 
-const FILTERS = [
-  { id: "all", label: "Tout" },
-  { id: "todo", label: "À faire" },
-  { id: "delivered", label: "Déposées" },
-  { id: "done", label: "Dans l'app" },
-] as const;
-type Filter = (typeof FILTERS)[number]["id"];
-
-const FORMAT_NAMES: Record<string, string> = {
-  icon: "Icône",
-  sprite: "Personnage",
-  appicon: "Icône d'app",
-  splash: "Splash",
-  logo: "Logo",
-  art: "Pièce d'interface",
-};
-
 const password = ref("");
 const loginError = ref("");
 const loading = ref(false);
 const errorMsg = ref("");
 const data = ref<IconsResponse | null>(null);
-const filter = ref<Filter>("all");
 const tab = ref<Tab>("icons");
 
-function matches(item: IconItem): boolean {
-  switch (filter.value) {
-    case "todo": return item.status === "placeholder" || item.status === "missing" || item.status === "generated";
-    case "delivered": return item.status === "delivered";
-    case "done": return item.status === "integrated";
-    default: return true;
-  }
-}
-
-const visibleCategories = computed(() => {
-  if (!data.value) return [];
-  return data.value.categories
-    .map((cat) => ({
-      ...cat,
-      todo: cat.items.filter((i) => i.status === "placeholder" || i.status === "missing" || i.status === "generated").length,
-      shown: cat.items.filter(matches),
-    }))
-    .filter((cat) => cat.shown.length > 0);
-});
-
-const tally = computed(() => {
-  const c = data.value?.counts;
-  if (!c) return [];
-  return [
-    { label: "Dans l'app", value: c.integrated, class: "text-success" },
-    { label: "Déposées, à intégrer", value: c.delivered, class: "text-warning" },
-    { label: "Provisoires, à refaire", value: c.placeholder + c.generated, class: "text-error" },
-    { label: "À créer", value: c.missing, class: "text-muted" },
-  ];
-});
+/** « Faite » = un fichier du graphiste existe, dans l'app ou pas encore. */
+const categories = computed(() =>
+  (data.value?.categories ?? []).map((cat) => ({
+    ...cat,
+    done: cat.items.filter((i) => i.status === "delivered" || i.status === "integrated").length,
+  })),
+);
 
 async function load() {
   loading.value = true;

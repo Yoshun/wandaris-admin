@@ -14,12 +14,17 @@
         <MockIconButton :src="icons.url('map', 'settings')" title="Réglages" />
       </div>
       <div class="hud ms-zoom">
-        <button type="button" class="ms-tap" @click="recenter"><MockIconButton :src="icons.url('map', 'recenter')" title="Recentrer" /></button>
-        <button type="button" class="ms-tap" @click="zoomBy(1)"><MockIconButton :src="icons.url('map', 'zoom-in')" title="Zoomer" /></button>
-        <button type="button" class="ms-tap" @click="zoomBy(-1)"><MockIconButton :src="icons.url('map', 'zoom-out')" title="Dézoomer" /></button>
+        <button type="button" class="ms-tap" @click="recenter"><MockIconButton :src="icons.url('map', 'recenter')" glyph="⊕" glyph-color="#c4a882" title="Recentrer" /></button>
+        <button type="button" class="ms-tap" @click="zoomBy(1)"><MockIconButton :src="icons.url('map', 'zoom-in')" glyph="+" title="Zoomer" /></button>
+        <button type="button" class="ms-tap" @click="zoomBy(-1)"><MockIconButton :src="icons.url('map', 'zoom-out')" glyph="−" title="Dézoomer" /></button>
       </div>
       <div class="hud ms-bar">
-        <MockFrame :padding="16">
+        <!-- PV à gauche, XP + niveau à droite : au-dessus du cadre, sur toute sa largeur -->
+        <div class="ms-gauges">
+          <MockBar :value="96 / 120" label="96 / 120 PV" :height="20" :fill="MOCK_UI.hpPlayer" />
+          <MockBar :value="340 / 500" label="Niv. 12   340 / 500 XP" :height="20" />
+        </div>
+        <MockFrame :padding="8">
           <div class="ms-bar-inner">
             <MockIconButton
               v-for="b in BAR"
@@ -49,7 +54,7 @@ import type { MockIcons } from "~/utils/mockIcons";
 /**
  * L'écran de jeu : la carte MapTiler recolorée comme dans l'app (zoom 17, rotation et
  * pinch désactivés, zoom par boutons), le joueur et son rayon de collecte, les boutons de
- * carte et la barre du bas. « Simuler un spawn » sème des lieux, ressources, monstres et
+ * carte, les jauges de PV et d'XP et la barre du bas. « Simuler un spawn » sème des lieux, ressources, monstres et
  * une porte de donjon aux tailles réelles de l'app, avec les icônes courantes du dépôt.
  */
 const props = defineProps<{ icons: MockIcons }>();
@@ -254,11 +259,17 @@ function spawn() {
 .ms-top-right { top: 8px; right: 6px; display: flex; }
 .ms-zoom { right: 6px; bottom: 116px; display: flex; flex-direction: column; }
 .ms-bar { left: 16px; right: 16px; bottom: 16px; }
+.ms-gauges {
+  display: flex;
+  gap: 8px;
+  height: 20px;
+  margin-bottom: 4px;
+}
 .ms-bar-inner {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 6px 4px;
+  padding: 2px 4px;
 }
 .ms-tap {
   all: unset;

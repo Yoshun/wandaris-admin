@@ -11,7 +11,7 @@
           </div>
           <div class="eq-center">
             <div class="eq-player">
-              <img :src="'/mock/knight.png'" alt="" class="eq-sprite" />
+              <img :src="'/mock/warrior.png'" alt="" class="eq-sprite" />
             </div>
           </div>
           <div class="eq-column">

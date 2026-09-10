@@ -46,8 +46,6 @@ export const MOCK_UI = {
   cardFill: "#46341F",
   cardEdge: "#1E140C",
   frameBevelDark: "#352818",
-  frameFillLight: "#2C2016",
-  frameFillDark: "#160F0A",
   hpPlayer: "#2ECC71",
   hpMonster: "#E74C3C",
   statText: "#6abf6a",

@@ -1,13 +1,13 @@
 <template>
   <div class="st" :class="{ compact }">
-    <MockIconButton :src="minus" :size="24" :box="32" title="−" />
+    <MockIconButton :src="minus" glyph="−" :size="26" :box="44" title="Diminuer" />
     <div class="st-content"><slot /></div>
-    <MockIconButton :src="plus" :size="24" :box="32" title="+" />
+    <MockIconButton :src="plus" glyph="+" :size="26" :box="44" title="Augmenter" />
   </div>
 </template>
 
 <script setup lang="ts">
-/** Portage de `Stepper` : `−` [ contenu ] `+`, avec les glyphes générés du dépôt. */
+/** Portage de `Stepper` : `−` [ contenu ] `+`. Glyphes texte tant que les icônes ne sont pas déposées. */
 withDefaults(defineProps<{ minus: string | null; plus: string | null; compact?: boolean }>(), { compact: false });
 </script>
 
@@ -15,7 +15,6 @@ withDefaults(defineProps<{ minus: string | null; plus: string | null; compact?: 
 .st {
   display: flex;
   align-items: center;
-  gap: 8px;
   width: 100%;
 }
 .compact {
@@ -30,6 +29,6 @@ withDefaults(defineProps<{ minus: string | null; plus: string | null; compact?: 
 }
 .compact .st-content {
   flex: none;
-  min-width: 40px;
+  min-width: 28px;
 }
 </style>

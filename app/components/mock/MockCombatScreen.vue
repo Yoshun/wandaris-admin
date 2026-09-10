@@ -1,9 +1,9 @@
 <template>
   <MockPhone caption="Combat">
-    <MockOverlay :close-src="icons.url('glyphs', 'close')" :ornament="icons.url('glyphs', 'vs')">
+    <MockOverlay :close-src="icons.url('glyphs', 'close')">
       <div class="cb-row">
         <div class="cb-col">
-          <img :src="'/mock/knight.png'" alt="" class="cb-sprite" />
+          <img :src="'/mock/warrior.png'" alt="" class="cb-sprite" />
           <span class="cb-name">Yoshun niv.12</span>
           <div class="cb-gauge">
             <div class="cb-fill cb-fill-me" />
@@ -12,7 +12,7 @@
           <div class="cb-hp"><div class="cb-hp-fill" :style="{ width: '42%', background: MOCK_UI.hpPlayer }" /></div>
           <span class="cb-hp-text">50/120</span>
         </div>
-        <span class="cb-gap" />
+        <span class="cb-vs">VS</span>
         <div class="cb-col">
           <img v-if="monster" :src="monster.src" alt="" class="cb-sprite cb-telegraph" />
           <span v-else class="cb-sprite cb-missing">?</span>
@@ -62,7 +62,7 @@ import type { MockIcons } from "~/utils/mockIcons";
 /**
  * L'écran de combat tel qu'il est dans l'app : colonne = personnage, chaque jauge se
  * remplit vers l'adversaire (celle du mob vire au rouge et son sprite tremble dans le
- * dernier quart), ceinture de potions à cinq crans, bannière VS accrochée au cadre.
+ * dernier quart), ceinture de potions à cinq crans, « VS » en lettres entre les deux.
  */
 const props = defineProps<{ icons: MockIcons }>();
 
@@ -116,7 +116,7 @@ const lootIcon = computed(() => {
   gap: 6px;
   min-width: 0;
 }
-.cb-gap { flex: none; width: 46px; }
+.cb-vs { flex: none; width: 46px; text-align: center; font-size: 22px; font-weight: bold; color: #c4a882; margin-top: 30px; }
 .cb-sprite { width: 40px; height: 40px; }
 .cb-missing {
   display: flex;

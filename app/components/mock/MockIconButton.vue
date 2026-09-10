@@ -5,6 +5,11 @@
         <img :src="src" alt="" class="ib-shadow" />
         <img :src="src" alt="" class="ib-icon" />
       </template>
+      <span
+        v-else-if="glyph"
+        class="ib-glyph"
+        :style="{ fontSize: `${Math.round(size * 0.62)}px`, color: glyphColor ?? '#c8b898' }"
+      >{{ glyph }}</span>
       <span v-else class="ib-missing">?</span>
       <span v-if="badge" class="ib-badge">{{ typeof badge === "number" ? badge : "" }}</span>
     </div>
@@ -14,14 +19,13 @@
 <script setup lang="ts">
 /**
  * Portage de `IconButton` : icône sans cadre, l'art porte son contour ; une silhouette
- * noire décalée de 2 DP fait l'ombre portée. Zone de tap de 44 DP.
+ * noire décalée de 2 DP fait l'ombre portée. Sans icône déposée, un glyphe texte avec une
+ * ombre dure tient la place (croix, +, −, recentrage). Zone de tap de 44 DP.
  */
-withDefaults(defineProps<{ src: string | null; size?: number; box?: number; badge?: boolean | number; title?: string }>(), {
-  size: 30,
-  box: 44,
-  badge: false,
-  title: "",
-});
+withDefaults(
+  defineProps<{ src: string | null; glyph?: string; glyphColor?: string; size?: number; box?: number; badge?: boolean | number; title?: string }>(),
+  { glyph: "", glyphColor: undefined, size: 30, box: 44, badge: false, title: "" },
+);
 </script>
 
 <style scoped>
@@ -45,6 +49,17 @@ withDefaults(defineProps<{ src: string | null; size?: number; box?: number; badg
   filter: brightness(0);
   opacity: 0.55;
   transform: translate(2px, 2px);
+}
+.ib-glyph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "VT323", monospace;
+  font-weight: bold;
+  line-height: 1;
+  text-shadow: 2px 2px 0 #000;
 }
 .ib-missing {
   position: absolute;

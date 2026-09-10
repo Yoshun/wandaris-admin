@@ -1,28 +1,23 @@
 <template>
   <div class="wf" :style="{ padding: `${padding}px` }">
-    <div class="wf-fill" />
-    <div class="wf-edge wf-top"><img :src="'/mock/edge-top@2x.png'" alt="" /></div>
-    <div class="wf-edge wf-bottom"><img :src="'/mock/edge-bottom@2x.png'" alt="" /></div>
-    <div class="wf-edge wf-left"><img :src="'/mock/edge-left@2x.png'" alt="" /></div>
-    <div class="wf-edge wf-right"><img :src="'/mock/edge-right@2x.png'" alt="" /></div>
-    <img class="wf-corner wf-tl" :src="'/mock/corner-tl@2x.png'" alt="" />
-    <img class="wf-corner wf-tr" :src="'/mock/corner-tr@2x.png'" alt="" />
-    <img class="wf-corner wf-bl" :src="'/mock/corner-bl@2x.png'" alt="" />
-    <img class="wf-corner wf-br" :src="'/mock/corner-br@2x.png'" alt="" />
+    <div class="wf-outer">
+      <div class="wf-surface">
+        <div class="wf-inner" />
+      </div>
+    </div>
     <div class="wf-content">
       <slot />
     </div>
-    <img v-if="ornament" :src="ornament" alt="" class="wf-ornament" />
   </div>
 </template>
 
 <script setup lang="ts">
 /**
- * Portage CSS de `WoodenFrame` (mobile) : coins 36 DP, planches 14 DP, marge
- * transparente de 2 DP, fond en dégradé diagonal, ombre portée dure de 10 DP.
- * Mêmes découpes 9-slice que l'app (`public/mock/`).
+ * Portage CSS de `WoodenFrame` (mobile) : biseau extérieur 2 DP, surface plate 4 DP,
+ * biseau intérieur inversé 2 DP — 8 DP de bordure, contenu inséré à `padding` (20 par
+ * défaut, 8 pour la barre du bas). Le placeholder de l'app, en attendant l'art du cadre.
  */
-withDefaults(defineProps<{ padding?: number; ornament?: string | null }>(), { padding: 28, ornament: null });
+withDefaults(defineProps<{ padding?: number }>(), { padding: 20 });
 </script>
 
 <style scoped>
@@ -31,54 +26,32 @@ withDefaults(defineProps<{ padding?: number; ornament?: string | null }>(), { pa
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  filter: drop-shadow(10px 10px 0 #000);
 }
-.wf-fill {
+.wf-outer {
   position: absolute;
-  inset: 4px;
-  background: linear-gradient(160deg, #2c2016 0%, #160f0a 100%);
-}
-.wf-corner {
-  position: absolute;
-  width: 36px;
-  height: 36px;
-  image-rendering: pixelated;
+  inset: 0;
+  border: 2px solid;
+  border-color: #7d6448 #352818 #352818 #7d6448;
   pointer-events: none;
-  z-index: 2;
 }
-.wf-tl { top: 0; left: 0; }
-.wf-tr { top: 0; right: 0; }
-.wf-bl { bottom: 0; left: 0; }
-.wf-br { bottom: 0; right: 0; }
-.wf-edge {
-  position: absolute;
-  pointer-events: none;
-  z-index: 1;
-}
-.wf-edge img {
+.wf-surface {
   width: 100%;
   height: 100%;
-  display: block;
-  image-rendering: pixelated;
+  box-sizing: border-box;
+  border: 4px solid #4d3015;
 }
-.wf-top { top: 0; left: 35px; right: 35px; height: 14px; }
-.wf-bottom { bottom: 0; left: 35px; right: 35px; height: 14px; }
-.wf-left { left: 0; top: 35px; bottom: 35px; width: 14px; }
-.wf-right { right: 0; top: 35px; bottom: 35px; width: 14px; }
+.wf-inner {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 2px solid;
+  border-color: #352818 #7d6448 #7d6448 #352818;
+  background: #1a1410;
+}
 .wf-content {
   position: relative;
   z-index: 3;
   flex: 1;
   min-height: 0;
-}
-/* Ornement (bannière VS) : pend de la planche — top = RIM (2 DP) — par-dessus la bordure, art 1x */
-.wf-ornament {
-  position: absolute;
-  top: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 5;
-  image-rendering: pixelated;
-  pointer-events: none;
 }
 </style>
