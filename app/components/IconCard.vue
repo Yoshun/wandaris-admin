@@ -22,12 +22,15 @@
       <div v-if="item.note" class="text-xs text-muted mt-1">{{ item.note }}</div>
     </figcaption>
 
-    <div class="flex items-center justify-between gap-2 mt-auto">
-      <span class="text-xs flex items-center gap-1.5" :class="state.class">
-        <span class="inline-block w-1.5 h-1.5 rounded-full bg-current" />
-        {{ state.label }}
-      </span>
-      <div class="flex gap-1">
+    <!-- Deux lignes, pas une : la carte fait 150 px au plus étroit, l'état + ✓ + « Déposer »
+         n'y tiennent pas côte à côte. La ligne d'état a la hauteur du bouton ✓, qu'il soit
+         là ou non : toutes les cartes gardent la même hauteur, quel que soit leur état. -->
+    <div class="mt-auto flex flex-col gap-2">
+      <div class="h-6 flex items-center justify-between gap-2">
+        <span class="text-xs flex items-center gap-1.5" :class="state.class">
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-current" />
+          {{ state.label }}
+        </span>
         <UButton
           v-if="canIntegrate && item.status === 'delivered'"
           size="xs"
@@ -36,19 +39,21 @@
           icon="i-lucide-check"
           :loading="busy"
           aria-label="Marquer comme intégrée"
+          title="Marquer comme intégrée"
           @click="markIntegrated"
         />
-        <UButton
-          size="xs"
-          icon="i-lucide-upload"
-          :variant="item.status === 'integrated' ? 'outline' : 'solid'"
-          :color="item.status === 'integrated' ? 'neutral' : 'primary'"
-          :loading="busy"
-          @click="input?.click()"
-        >
-          Déposer
-        </UButton>
       </div>
+      <UButton
+        block
+        size="xs"
+        icon="i-lucide-upload"
+        :variant="item.status === 'integrated' ? 'outline' : 'solid'"
+        :color="item.status === 'integrated' ? 'neutral' : 'primary'"
+        :loading="busy"
+        @click="input?.click()"
+      >
+        Déposer
+      </UButton>
     </div>
 
     <input ref="input" type="file" accept="image/png" class="hidden" @change="onChange" />
