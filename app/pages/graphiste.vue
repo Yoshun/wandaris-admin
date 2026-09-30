@@ -37,7 +37,7 @@
               :variant="tab === t.id ? 'solid' : 'outline'"
               :color="tab === t.id ? 'primary' : 'neutral'"
               :icon="t.icon"
-              @click="tab = t.id"
+              @click="() => { tab = t.id }"
             >
               {{ t.label }}
             </UButton>

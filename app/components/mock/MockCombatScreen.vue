@@ -49,7 +49,7 @@
     </MockOverlay>
     <template #toolbar>
       <UButton size="sm" variant="outline" color="neutral" icon="i-lucide-dices" @click="reroll">Autre monstre</UButton>
-      <UButton size="sm" variant="outline" color="neutral" :icon="won ? 'i-lucide-swords' : 'i-lucide-trophy'" @click="won = !won">
+      <UButton size="sm" variant="outline" color="neutral" :icon="won ? 'i-lucide-swords' : 'i-lucide-trophy'" @click="() => { won = !won }">
         {{ won ? "En combat" : "Victoire" }}
       </UButton>
     </template>
