@@ -48,6 +48,10 @@ export interface MonsterTemplateRecord {
   attackIntervalMs: number;
   color: string;
   bossOnly: boolean;
+  /** Fenêtre d'apparition, comparée au niveau du monstre (specs/bestiaire-v1.md §4). */
+  minLevel: number;
+  /** null = pas de plafond. */
+  maxLevel: number | null;
 }
 
 export interface PoiDefinition {

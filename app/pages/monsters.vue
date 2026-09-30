@@ -18,13 +18,15 @@
       </div>
       <div v-else class="p-4">
         <!-- Header -->
-        <div class="grid grid-cols-9 gap-2 text-muted font-semibold px-3 mb-1">
+        <div class="grid grid-cols-11 gap-2 text-muted font-semibold px-3 mb-1">
           <span>Icône</span>
           <span>Type</span>
           <span>Nom</span>
           <span>HP</span>
           <span>Attaque</span>
           <span>Intervalle (ms)</span>
+          <span title="Niveau du monstre à partir duquel il apparaît">Niv. min</span>
+          <span title="Vide = pas de plafond">Niv. max</span>
           <span>Couleur</span>
           <span>Boss</span>
           <span>Actions</span>
@@ -34,7 +36,7 @@
         <div
           v-for="t in templates"
           :key="t.id"
-          class="grid grid-cols-9 gap-2 items-center bg-elevated border border-default rounded-lg px-3 py-2 mb-1"
+          class="grid grid-cols-11 gap-2 items-center bg-elevated border border-default rounded-lg px-3 py-2 mb-1"
         >
           <div>
             <img
@@ -49,6 +51,8 @@
           <UInput type="number" v-model.number="t.baseHp" size="sm" />
           <UInput type="number" v-model.number="t.baseAttack" size="sm" />
           <UInput type="number" v-model.number="t.attackIntervalMs" size="sm" />
+          <UInput type="number" v-model.number="t.minLevel" size="sm" />
+          <UInput type="number" v-model.number="t.maxLevel" size="sm" placeholder="—" />
           <div class="flex items-center gap-1">
             <input type="color" v-model="t.color" class="w-6 h-6 rounded cursor-pointer" />
             <span class="text-muted text-xs">{{ t.color }}</span>
@@ -61,13 +65,15 @@
         </div>
 
         <!-- New row -->
-        <div ref="newRowEl" class="grid grid-cols-9 gap-2 items-center bg-elevated border border-dashed border-default rounded-lg px-3 py-2 mt-3">
+        <div ref="newRowEl" class="grid grid-cols-11 gap-2 items-center bg-elevated border border-dashed border-default rounded-lg px-3 py-2 mt-3">
           <div />
           <UInput v-model="newTemplate.type" size="sm" placeholder="type" />
           <UInput v-model="newTemplate.name" size="sm" placeholder="Nom" />
           <UInput type="number" v-model.number="newTemplate.baseHp" size="sm" placeholder="HP" />
           <UInput type="number" v-model.number="newTemplate.baseAttack" size="sm" placeholder="ATK" />
           <UInput type="number" v-model.number="newTemplate.attackIntervalMs" size="sm" placeholder="ms" />
+          <UInput type="number" v-model.number="newTemplate.minLevel" size="sm" placeholder="1" />
+          <UInput type="number" v-model.number="newTemplate.maxLevel" size="sm" placeholder="—" />
           <div class="flex items-center gap-1">
             <input type="color" v-model="newTemplate.color" class="w-6 h-6 rounded cursor-pointer" />
             <span class="text-muted text-xs">{{ newTemplate.color }}</span>
@@ -104,7 +110,7 @@ const confirmTarget = ref<MonsterTemplateRecord | null>(null);
 const templates = ref<MonsterTemplateRecord[]>([]);
 const newRowEl = ref<HTMLElement>();
 
-const newTemplate = ref({
+const emptyTemplate = () => ({
   type: "",
   name: "",
   baseHp: 30,
@@ -112,7 +118,10 @@ const newTemplate = ref({
   attackIntervalMs: 2000,
   color: "#888888",
   bossOnly: false,
+  minLevel: 1,
+  maxLevel: undefined as number | "" | undefined,
 });
+const newTemplate = ref(emptyTemplate());
 
 function scrollToNew() {
   newRowEl.value?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -121,7 +130,9 @@ function scrollToNew() {
 async function fetchTemplates() {
   loading.value = true;
   try {
-    templates.value = await listMonsterTemplates();
+    // Lecture par palier : courants puis boss, chacun par niveau d'apparition
+    templates.value = (await listMonsterTemplates()).sort((a, b) =>
+      Number(a.bossOnly) - Number(b.bossOnly) || a.minLevel - b.minLevel || a.name.localeCompare(b.name, "fr"));
   } catch (e: any) {
     errorMsg.value = e.message;
   } finally {
@@ -136,9 +147,21 @@ function validateNumericFields(hp: number, atk: number, interval: number): strin
   return null;
 }
 
+/** Un champ vidé arrive en "" via v-model.number : c'est « pas de plafond ». */
+function toMaxLevel(v: number | null | "" | undefined): number | null {
+  return v === "" || v == null || isNaN(v) ? null : v;
+}
+
+function validateWindow(min: number, max: number | null): string | null {
+  if (min == null || isNaN(min) || min < 1) return "Niv. min doit etre >= 1";
+  if (max != null && max < min) return "Niv. max doit etre >= Niv. min (vide = pas de plafond)";
+  return null;
+}
+
 async function save(t: MonsterTemplateRecord) {
   errorMsg.value = "";
-  const err = validateNumericFields(t.baseHp, t.baseAttack, t.attackIntervalMs);
+  const maxLevel = toMaxLevel(t.maxLevel as number | null | "" | undefined);
+  const err = validateNumericFields(t.baseHp, t.baseAttack, t.attackIntervalMs) ?? validateWindow(t.minLevel, maxLevel);
   if (err) { errorMsg.value = err; return; }
   savingId.value = t.id;
   try {
@@ -150,6 +173,8 @@ async function save(t: MonsterTemplateRecord) {
       attackIntervalMs: t.attackIntervalMs,
       color: t.color,
       bossOnly: t.bossOnly,
+      minLevel: t.minLevel,
+      maxLevel,
     });
   } catch (e: any) {
     errorMsg.value = e.message;
@@ -179,7 +204,9 @@ async function confirmDelete() {
 
 async function create() {
   errorMsg.value = "";
-  const err = validateNumericFields(newTemplate.value.baseHp, newTemplate.value.baseAttack, newTemplate.value.attackIntervalMs);
+  const maxLevel = toMaxLevel(newTemplate.value.maxLevel);
+  const err = validateNumericFields(newTemplate.value.baseHp, newTemplate.value.baseAttack, newTemplate.value.attackIntervalMs)
+    ?? validateWindow(newTemplate.value.minLevel, maxLevel);
   if (err) { errorMsg.value = err; return; }
   creating.value = true;
   try {
@@ -191,9 +218,11 @@ async function create() {
       attackIntervalMs: newTemplate.value.attackIntervalMs,
       color: newTemplate.value.color,
       bossOnly: newTemplate.value.bossOnly,
+      minLevel: newTemplate.value.minLevel,
+      maxLevel,
     });
     templates.value.push(created);
-    newTemplate.value = { type: "", name: "", baseHp: 30, baseAttack: 5, attackIntervalMs: 2000, color: "#888888", bossOnly: false };
+    newTemplate.value = emptyTemplate();
   } catch (e: any) {
     errorMsg.value = e.message;
   } finally {
