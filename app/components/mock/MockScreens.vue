@@ -36,6 +36,10 @@ import {
 const props = defineProps<{ data: IconsResponse; apiBase: string }>();
 const icons = computed(() => buildMockIcons(props.data, props.apiBase));
 
+// Le cadre de la graphiste habille toutes les fenêtres des maquettes dès qu'il est complet
+const frame = computed(() => framePieces(props.data.categories.find((c) => c.id === "frame"), props.apiBase));
+provide(MOCK_FRAME_KEY, frame);
+
 const THEMES = [
   { id: "light", label: "Clair", icon: "i-lucide-sun" },
   { id: "dark", label: "Sombre", icon: "i-lucide-moon" },

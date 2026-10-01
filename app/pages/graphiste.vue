@@ -74,7 +74,16 @@
               <span class="text-sm text-muted tabular-nums">{{ cat.done }} / {{ cat.items.length }}</span>
             </div>
             <p v-if="cat.note" class="text-muted text-sm max-w-3xl mt-1">{{ cat.note }}</p>
-            <div class="grid gap-3 mt-4" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr))">
+            <!-- Le cadre se juge assemblé : ses morceaux à leur place autour de l'aperçu -->
+            <FrameSection
+              v-if="cat.id === 'frame'"
+              class="mt-4"
+              :category="cat"
+              :api-base="apiBase"
+              :can-integrate="data.viewer.canIntegrate"
+              @updated="replaceItem"
+            />
+            <div v-else class="grid gap-3 mt-4" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr))">
               <IconCard
                 v-for="item in cat.items"
                 :key="`${item.category}/${item.slug}`"
