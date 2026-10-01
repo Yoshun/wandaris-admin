@@ -37,8 +37,15 @@ const props = defineProps<{ data: IconsResponse; apiBase: string }>();
 const icons = computed(() => buildMockIcons(props.data, props.apiBase));
 
 // Le cadre de la graphiste habille toutes les fenêtres des maquettes dès qu'il est complet
-const frame = computed(() => framePieces(props.data.categories.find((c) => c.id === "frame"), props.apiBase));
+const byId = (id: string) => props.data.categories.find((c) => c.id === id);
+const frame = computed(() => framePieces(byId("frame"), props.apiBase));
 provide(MOCK_FRAME_KEY, frame);
+// Idem pour les boutons, chaque taille indépendamment de l'autre
+const buttons = computed(() => ({
+  big: framePieces(byId("button"), props.apiBase),
+  small: framePieces(byId("button-small"), props.apiBase),
+}));
+provide(MOCK_BUTTON_KEY, buttons);
 
 const THEMES = [
   { id: "light", label: "Clair", icon: "i-lucide-sun" },

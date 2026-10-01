@@ -1,17 +1,33 @@
 <template>
-  <div class="cb" :class="[`cb-${variant}`, { 'cb-small': small, 'cb-full': fullWidth, 'cb-disabled': disabled }]">
+  <!-- Le bouton de la graphiste dès que l'ensemble de sa taille est complet, à 1 DP par pixel de l'art -->
+  <ArtButton
+    v-if="art"
+    :pieces="pieces"
+    :label="label"
+    :variant="variant"
+    :small="small"
+    :disabled="disabled"
+    :full-width="fullWidth"
+    :icon="icon"
+  />
+  <div v-else class="cb" :class="[`cb-${variant}`, { 'cb-small': small, 'cb-full': fullWidth, 'cb-disabled': disabled }]">
     <img v-if="icon" :src="icon" alt="" class="cb-icon" />
     <span class="cb-label">{{ label }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { FramePieces } from "~/utils/frameArt";
+
 /**
  * Portage CSS de `CandyButton` : fond plein + bordure épaisse en bas et à droite qui fait
  * le relief, carré, sans asset. Même gabarit que l'app (20 DP de chrome vertical, 18 en
  * `small`). Le placeholder, en attendant l'art du bouton.
+ *
+ * Dès que les 8 morceaux du bouton de sa taille sont déposés (catégories « Gros bouton » /
+ * « Petit bouton » de la page graphiste), `ArtButton` les assemble à la place.
  */
-withDefaults(
+const props = withDefaults(
   defineProps<{
     label: string;
     variant?: "primary" | "secondary" | "danger";
@@ -22,6 +38,10 @@ withDefaults(
   }>(),
   { variant: "primary", small: false, fullWidth: false, disabled: false, icon: null },
 );
+
+const sets = inject(MOCK_BUTTON_KEY, ref({ big: {} as FramePieces, small: {} as FramePieces }));
+const pieces = computed(() => (props.small ? sets.value.small : sets.value.big));
+const art = computed(() => isFrameComplete(pieces.value));
 </script>
 
 <style scoped>

@@ -41,3 +41,6 @@ export function isFrameComplete(pieces: FramePieces): boolean {
 
 /** Les morceaux du cadre pour les maquettes : fournis par `MockScreens`, lus par `MockFrame`. */
 export const MOCK_FRAME_KEY: InjectionKey<Ref<FramePieces>> = Symbol("mock-frame");
+
+/** Les deux boutons (catégories « button » et « button-small ») : fournis par `MockScreens`, lus par `MockButton`. */
+export const MOCK_BUTTON_KEY: InjectionKey<Ref<{ big: FramePieces; small: FramePieces }>> = Symbol("mock-button");

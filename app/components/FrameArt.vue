@@ -2,14 +2,14 @@
   <!-- Remplit son parent (position: relative attendue) ; aucun événement : le contenu reste cliquable. -->
   <div class="fa" aria-hidden="true">
     <div v-if="fill" class="fa-fill" :style="fillStyle" />
-    <div v-for="e in edges" :key="e.slot" class="fa-piece" :style="e.style" />
+    <div v-for="e in edges" :key="e.slot" class="fa-piece" :style="[e.style, pieceStyle]" />
     <img
       v-for="c in corners"
       :key="c.slot"
       :src="c.url"
       alt=""
       class="fa-piece fa-corner"
-      :style="c.style"
+      :style="[c.style, pieceStyle]"
     />
   </div>
 </template>
@@ -24,9 +24,19 @@ import type { FramePieces, FrameSlot } from "~/utils/frameArt";
  * laisse un trou — c'est voulu dans l'aperçu de la page graphiste, qui montre l'assemblage
  * au fil des dépôts.
  */
-const props = withDefaults(defineProps<{ pieces: FramePieces; scale?: number; fill?: string }>(), { scale: 1 });
+const props = withDefaults(
+  defineProps<{
+    pieces: FramePieces;
+    scale?: number;
+    fill?: string;
+    /** Filtre CSS des morceaux seuls, pas du fond — le bouton grisé, en attendant que l'app le dérive. */
+    pieceFilter?: string;
+  }>(),
+  { scale: 1 },
+);
 
 const px = (n: number) => `${n * props.scale}px`;
+const pieceStyle = computed(() => (props.pieceFilter ? { filter: props.pieceFilter } : {}));
 
 /** Taille d'un morceau à l'écran, 0 s'il manque. */
 function size(slot: FrameSlot) {
