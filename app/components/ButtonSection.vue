@@ -27,6 +27,20 @@
           {{ t.label }}
         </UButton>
       </div>
+      <!-- Essai de texture du centre en code : admins seulement, tant que ce n'est pas une règle -->
+      <div v-if="isAdmin" class="flex items-center gap-2 flex-wrap">
+        <span class="text-sm text-muted">Essai — texture du centre en code (visible des admins seulement)</span>
+        <UButton
+          v-for="t in BUTTON_TEXTURES"
+          :key="t.id"
+          size="xs"
+          :variant="tex === t.id ? 'solid' : 'outline'"
+          :color="tex === t.id ? 'primary' : 'neutral'"
+          @click="() => { tex = t.id }"
+        >
+          {{ t.label }}
+        </UButton>
+      </div>
 
       <!-- Sur le fond d'une fenêtre de l'app, dans le thème choisi -->
       <div class="rounded-lg p-4 space-y-8" :style="{ background: palette.panelBg, color: palette.text }">
@@ -48,7 +62,7 @@
                 <tr v-for="v in SWATCH_VARIANTS" :key="v.caption">
                   <td class="pr-2" :style="{ color: palette.subtitleText }">{{ v.caption }}</td>
                   <td v-for="g in GRAYS" :key="g">
-                    <div class="swatch" :style="{ background: swatch(g, v.variant, v.disabled) }" />
+                    <div class="swatch" :style="swatch(g, v.variant, v.disabled)" />
                   </td>
                 </tr>
               </tbody>
@@ -71,6 +85,7 @@
                 :variant="v.variant"
                 :disabled="v.disabled"
                 :theme="theme"
+                :texture="tex"
                 :scale="2"
               />
               <figcaption class="text-xs" :style="{ color: palette.subtitleText }">{{ v.caption }}</figcaption>
@@ -89,7 +104,7 @@
 
 <script setup lang="ts">
 import type { IconCategory, IconItem } from "~~/types/poi";
-import type { ButtonArt, ButtonSize, ButtonVariant } from "~/utils/buttonArt";
+import type { ButtonArt, ButtonSize, ButtonTexture, ButtonVariant } from "~/utils/buttonArt";
 import type { MockTheme } from "~/utils/mockIcons";
 
 /**
@@ -98,7 +113,7 @@ import type { MockTheme } from "~/utils/mockIcons";
  * grisé — sur le fond d'une fenêtre, dans les deux thèmes de l'app. Avant les aperçus, le
  * nuancier : ce que devient chaque gris sur chaque couleur.
  */
-const props = defineProps<{ category: IconCategory; apiBase: string; canIntegrate: boolean }>();
+const props = defineProps<{ category: IconCategory; apiBase: string; canIntegrate: boolean; isAdmin: boolean }>();
 const emit = defineEmits<{ updated: [item: IconItem] }>();
 
 const THEMES = [
@@ -107,6 +122,7 @@ const THEMES = [
 ] as const;
 const theme = ref<MockTheme>("light");
 const palette = computed(() => MOCK_PALETTES[theme.value]);
+const tex = ref<ButtonTexture>("none");
 
 /** Du plus foncé au plus clair, le gris de référence au milieu. */
 const GRAYS = [32, 64, 96, REFERENCE_GRAY, 160, 192, 224];
@@ -121,9 +137,10 @@ const SWATCH_VARIANTS: Variant[] = [
   { caption: "Rouge grisé", variant: "danger", disabled: true },
 ];
 
+/** La case du nuancier : le gris recoloré, estompé comme le dessin d'un bouton grisé. */
 function swatch(g: number, variant: ButtonVariant, disabled: boolean) {
   const [r, gg, b] = tintGray(g, buttonColors(palette.value, variant, disabled).fill).map(Math.round);
-  return `rgb(${r}, ${gg}, ${b})`;
+  return { background: `rgb(${r}, ${gg}, ${b})`, opacity: disabled ? DISABLED_ART_OPACITY : 1 };
 }
 
 /**

@@ -11,7 +11,12 @@ import type { MockPalette } from "~/utils/mockIcons";
  * - un pixel est recoloré s'il est gris parfait (R = G = B), noir et blanc purs exceptés ;
  * - le gris de référence #808080 devient exactement la couleur du bouton ; plus foncé, il va
  *   vers le noir (ombre), plus clair vers le blanc (reflet), proportionnellement ;
- * - tout le reste, le contour, est gardé tel quel, y compris quand le bouton est grisé.
+ * - tout le reste, le contour, est gardé tel quel.
+ *
+ * Grisé (choix du 14 octobre 2026) : le centre prend les couleurs `*Disabled*` et tout le
+ * dessin, contour compris, est estompé (`DISABLED_ART_OPACITY`). Le libellé reste opaque : un
+ * bouton grisé porte parfois une information (« Prochaine visite dans 23h 59min »). Sans ça,
+ * un bouton grisé et un secondaire ne se distinguaient que par la couleur du texte.
  */
 export const BUTTON_SIZES = ["large", "medium", "small"] as const;
 export type ButtonSize = (typeof BUTTON_SIZES)[number];
@@ -21,6 +26,9 @@ export type ButtonVariant = "primary" | "secondary" | "danger";
 export const BUTTON_FONT: Record<ButtonSize, number> = { large: 17, medium: 17, small: 14 };
 
 export const REFERENCE_GRAY = 128;
+
+/** Opacité du dessin d'un bouton grisé, contour compris (le libellé reste opaque). */
+export const DISABLED_ART_OPACITY = 0.5;
 
 export interface ButtonArt {
   /** Le dessin tel que déposé, pour une balise <img>. */
@@ -98,6 +106,89 @@ export function tint(src: ImageData, color: string): ImageData {
   return new ImageData(d, src.width, src.height);
 }
 
+// ---------------------------------------------------------------------------------------
+// Texture du centre, en code (essai du 14 octobre 2026, visible des admins seulement)
+//
+// La texture module les pixels #808080 AVANT la recoloration : elle est faite de gris, elle
+// prend donc la couleur de chaque bouton, comme les reflets et les ombres de la graphiste
+// (ses autres gris ne sont pas touchés). Au pixel de l'art, déterministe : le même bouton a
+// toujours la même texture. Limite de la rampe : sur une couleur très sombre (le secondaire
+// du thème sombre), un gris plus foncé ne se voit presque plus.
+// ---------------------------------------------------------------------------------------
+
+export const BUTTON_TEXTURES = [
+  { id: "none", label: "Aucune" },
+  { id: "bombe", label: "Bombé" },
+  { id: "veinure", label: "Veinure" },
+  { id: "bombe-veinure", label: "Bombé + veinure" },
+  { id: "grain", label: "Grain" },
+] as const;
+export type ButtonTexture = (typeof BUTTON_TEXTURES)[number]["id"];
+
+/** Hachage entier déterministe d'un pixel, dans [0, 1[. */
+function noise(x: number, y: number, seed: number): number {
+  let n = (Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(seed, 2246822519)) >>> 0;
+  n = Math.imul(n ^ (n >>> 13), 1274126177) >>> 0;
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+}
+
+/** Relief : bande claire en haut, sombre en bas, tramée en damier à la jonction. `t` = hauteur relative dans le centre. */
+function bombe(x: number, y: number, t: number): number {
+  if (t < 0.25) return 10;
+  if (t < 0.35) return (x + y) % 2 === 0 ? 10 : 0;
+  if (t > 0.8) return -12;
+  if (t > 0.7) return (x + y) % 2 === 0 ? -12 : 0;
+  return 0;
+}
+
+/** Traits horizontaux de longueur variable, décalés d'une ligne à l'autre : bois peint, cuir. */
+function veinure(x: number, y: number, amp: number): number {
+  const seg = 6 + Math.floor(noise(0, y, 2) * 10);
+  const k = Math.floor((x + Math.floor(noise(1, y, 3) * 16)) / seg);
+  const r = noise(k, y, 4);
+  return r < 0.22 ? -amp : r > 0.9 ? Math.round(amp * 0.7) : 0;
+}
+
+function grain(x: number, y: number): number {
+  const r = noise(x, y, 1);
+  return r < 0.18 ? -12 : r > 0.92 ? 10 : 0;
+}
+
+/** Le dessin avec ses pixels #808080 modulés par la texture (toujours des gris parfaits). */
+export function texture(src: ImageData, kind: ButtonTexture): ImageData {
+  if (kind === "none") return src;
+  const { width: w, height: h } = src;
+  const d = new Uint8ClampedArray(src.data);
+  const isRef = (i: number) => d[i + 3]! > 0 && d[i] === REFERENCE_GRAY && d[i + 1] === REFERENCE_GRAY && d[i + 2] === REFERENCE_GRAY;
+  // Hauteur du centre gris, pour que le relief suive le centre et pas le dessin entier
+  let y0 = h;
+  let y1 = -1;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (isRef((y * w + x) * 4)) {
+        y0 = Math.min(y0, y);
+        y1 = Math.max(y1, y);
+      }
+    }
+  }
+  const span = Math.max(1, y1 - y0);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      if (!isRef(i)) continue;
+      const t = (y - y0) / span;
+      const delta =
+        kind === "bombe" ? bombe(x, y, t)
+        : kind === "veinure" ? veinure(x, y, 12)
+        : kind === "bombe-veinure" ? bombe(x, y, t) + veinure(x, y, 8)
+        : grain(x, y);
+      const v = Math.max(1, Math.min(254, REFERENCE_GRAY + delta));
+      d[i] = d[i + 1] = d[i + 2] = v;
+    }
+  }
+  return new ImageData(d, w, h);
+}
+
 /** Pixels comptés dans un dessin : ceux que l'app recolore, et le gris de référence parmi eux. */
 export function analyzeButton(px: ImageData): { fill: number; reference: number } {
   const d = px.data;
@@ -140,16 +231,16 @@ export function loadPixels(url: string): Promise<ImageData> {
 
 const tintCache = new Map<string, Promise<string>>();
 
-/** Le dessin recoloré, en data URL. */
-export function tintedUrl(pixelsUrl: string, color: string): Promise<string> {
-  const key = `${pixelsUrl}|${color}`;
+/** Le dessin recoloré (et texturé), en data URL. */
+export function tintedUrl(pixelsUrl: string, color: string, kind: ButtonTexture = "none"): Promise<string> {
+  const key = `${pixelsUrl}|${color}|${kind}`;
   let p = tintCache.get(key);
   if (!p) {
     p = loadPixels(pixelsUrl).then((px) => {
       const canvas = document.createElement("canvas");
       canvas.width = px.width;
       canvas.height = px.height;
-      canvas.getContext("2d")!.putImageData(tint(px, color), 0, 0);
+      canvas.getContext("2d")!.putImageData(tint(texture(px, kind), color), 0, 0);
       return canvas.toDataURL("image/png");
     });
     p.catch(() => tintCache.delete(key));

@@ -1,6 +1,6 @@
 <template>
   <div class="ab" :style="boxStyle">
-    <img :src="src" alt="" class="ab-art" draggable="false" />
+    <img :src="src" alt="" class="ab-art" draggable="false" :style="artStyle" />
     <span class="ab-content" :style="contentStyle">
       <img v-if="icon" :src="icon" alt="" class="ab-icon" :style="iconStyle" />
       <span class="ab-label" :style="labelStyle">{{ label }}</span>
@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ButtonArt, ButtonSize, ButtonVariant } from "~/utils/buttonArt";
+import type { ButtonArt, ButtonSize, ButtonTexture, ButtonVariant } from "~/utils/buttonArt";
 import type { MockTheme } from "~/utils/mockIcons";
 
 /**
@@ -18,6 +18,7 @@ import type { MockTheme } from "~/utils/mockIcons";
  * ligne. Un libellé trop long déborde : c'est voulu, l'aperçu doit le montrer.
  *
  * En attendant la lecture des pixels (ou si elle échoue), le dessin s'affiche tel quel, gris.
+ * Grisé : tout le dessin estompé, libellé opaque (voir `utils/buttonArt.ts`).
  */
 const props = withDefaults(
   defineProps<{
@@ -30,20 +31,22 @@ const props = withDefaults(
     icon?: string | null;
     /** Pixels CSS par pixel de l'art (et par DP pour le libellé). */
     scale?: number;
+    /** Texture du centre en code — essai, pas encore une règle. */
+    texture?: ButtonTexture;
   }>(),
-  { variant: "primary", disabled: false, icon: null, scale: 1 },
+  { variant: "primary", disabled: false, icon: null, scale: 1, texture: "none" },
 );
 
 const colors = computed(() => buttonColors(MOCK_PALETTES[props.theme], props.variant, props.disabled));
 
 const src = ref(props.art.url);
 watch(
-  () => [props.art.pixelsUrl, colors.value.fill] as const,
-  ([pixelsUrl, fill]) => {
-    tintedUrl(pixelsUrl, fill)
+  () => [props.art.pixelsUrl, colors.value.fill, props.texture] as const,
+  ([pixelsUrl, fill, kind]) => {
+    tintedUrl(pixelsUrl, fill, kind)
       .then((url) => {
-        // Une réponse arrivée après un changement de thème ou de dépôt ne doit pas écraser la bonne
-        if (pixelsUrl === props.art.pixelsUrl && fill === colors.value.fill) src.value = url;
+        // Une réponse arrivée après un changement de thème, de texture ou de dépôt ne doit pas écraser la bonne
+        if (pixelsUrl === props.art.pixelsUrl && fill === colors.value.fill && kind === props.texture) src.value = url;
       })
       .catch((err) => {
         src.value = props.art.url;
@@ -53,6 +56,7 @@ watch(
   { immediate: true },
 );
 
+const artStyle = computed(() => ({ opacity: props.disabled ? DISABLED_ART_OPACITY : 1 }));
 const boxStyle = computed(() => ({
   width: `${props.art.width * props.scale}px`,
   height: `${props.art.height * props.scale}px`,
