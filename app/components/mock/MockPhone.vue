@@ -105,6 +105,10 @@ onBeforeUnmount(() => observer?.disconnect());
   min-height: 0;
   overflow: hidden;
   font-family: "VT323", "Courier New", monospace;
+  /* VT323 n'a qu'une graisse : sur Android, `PixelText` retire le gras plutôt que de laisser
+     le système changer de police. Le navigateur, lui, fabriquerait un faux gras ; on le lui
+     interdit, pour que les `font-weight: bold` des maquettes s'affichent comme dans l'app. */
+  font-synthesis: none;
   color: var(--text);
   user-select: none;
 }

@@ -88,7 +88,9 @@ const iconStyle = computed(() => {
 }
 .ab-label {
   font-family: "VT323", monospace;
-  font-weight: bold;
+  /* Pas de gras : VT323 n'a qu'une graisse, et sur Android `PixelText` retire le gras du libellé de `CandyButton` */
+  font-weight: normal;
+  font-synthesis: none;
   line-height: 1;
   white-space: nowrap;
 }
