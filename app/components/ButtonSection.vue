@@ -27,9 +27,9 @@
           {{ t.label }}
         </UButton>
       </div>
-      <!-- Essai de texture du centre en code : admins seulement, tant que ce n'est pas une règle -->
+      <!-- Comparer avec une autre texture que celle de l'app : admins seulement -->
       <div v-if="isAdmin" class="flex items-center gap-2 flex-wrap">
-        <span class="text-sm text-muted">Essai — texture du centre en code (visible des admins seulement)</span>
+        <span class="text-sm text-muted">Texture du centre — comparer (visible des admins seulement)</span>
         <UButton
           v-for="t in BUTTON_TEXTURES"
           :key="t.id"
@@ -68,6 +68,11 @@
               </tbody>
             </table>
           </div>
+          <p class="text-xs max-w-3xl" :style="{ color: palette.subtitleText }">
+            Le #808080 uni reçoit en plus la texture de l'app : un relief (plus clair en haut, plus sombre en bas) et une
+            veinure de bois. Inutile de la peindre : laissez le centre en #808080 uni. Les autres gris (reflets, ombres,
+            liserés) restent exactement tels que vous les avez peints.
+          </p>
         </div>
 
         <div v-for="row in rows" :key="row.size" class="space-y-3">
@@ -122,7 +127,7 @@ const THEMES = [
 ] as const;
 const theme = ref<MockTheme>("light");
 const palette = computed(() => MOCK_PALETTES[theme.value]);
-const tex = ref<ButtonTexture>("none");
+const tex = ref<ButtonTexture>(BUTTON_TEXTURE);
 
 /** Du plus foncé au plus clair, le gris de référence au milieu. */
 const GRAYS = [32, 64, 96, REFERENCE_GRAY, 160, 192, 224];

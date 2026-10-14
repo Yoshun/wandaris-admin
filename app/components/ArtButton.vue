@@ -10,6 +10,8 @@
 
 <script setup lang="ts">
 import type { ButtonArt, ButtonSize, ButtonTexture, ButtonVariant } from "~/utils/buttonArt";
+// Import explicite : la valeur par défaut d'une prop est hissée hors de `setup`
+import { BUTTON_TEXTURE } from "~/utils/buttonArt";
 import type { MockTheme } from "~/utils/mockIcons";
 
 /**
@@ -31,10 +33,10 @@ const props = withDefaults(
     icon?: string | null;
     /** Pixels CSS par pixel de l'art (et par DP pour le libellé). */
     scale?: number;
-    /** Texture du centre en code — essai, pas encore une règle. */
+    /** Texture du centre en code : celle de l'app par défaut, une autre pour comparer. */
     texture?: ButtonTexture;
   }>(),
-  { variant: "primary", disabled: false, icon: null, scale: 1, texture: "none" },
+  { variant: "primary", disabled: false, icon: null, scale: 1, texture: BUTTON_TEXTURE },
 );
 
 const colors = computed(() => buttonColors(MOCK_PALETTES[props.theme], props.variant, props.disabled));

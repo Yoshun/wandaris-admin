@@ -107,13 +107,15 @@ export function tint(src: ImageData, color: string): ImageData {
 }
 
 // ---------------------------------------------------------------------------------------
-// Texture du centre, en code (essai du 14 octobre 2026, visible des admins seulement)
+// Texture du centre, en code (14 octobre 2026) : la règle est « bombé + veinure »
+// (`BUTTON_TEXTURE`), les autres restent pour comparer, dans un sélecteur réservé aux admins.
 //
 // La texture module les pixels #808080 AVANT la recoloration : elle est faite de gris, elle
 // prend donc la couleur de chaque bouton, comme les reflets et les ombres de la graphiste
 // (ses autres gris ne sont pas touchés). Au pixel de l'art, déterministe : le même bouton a
-// toujours la même texture. Limite de la rampe : sur une couleur très sombre (le secondaire
-// du thème sombre), un gris plus foncé ne se voit presque plus.
+// toujours la même texture. À l'intégration, `icons-sync` reprend `texture()` telle quelle
+// (même hachage) avant de découper les calques. Limite de la rampe : sur une couleur très
+// sombre (le secondaire du thème sombre), un gris plus foncé ne se voit presque plus.
 // ---------------------------------------------------------------------------------------
 
 export const BUTTON_TEXTURES = [
@@ -124,6 +126,9 @@ export const BUTTON_TEXTURES = [
   { id: "grain", label: "Grain" },
 ] as const;
 export type ButtonTexture = (typeof BUTTON_TEXTURES)[number]["id"];
+
+/** La texture des boutons de l'app. */
+export const BUTTON_TEXTURE: ButtonTexture = "bombe-veinure";
 
 /** Hachage entier déterministe d'un pixel, dans [0, 1[. */
 function noise(x: number, y: number, seed: number): number {
@@ -232,7 +237,7 @@ export function loadPixels(url: string): Promise<ImageData> {
 const tintCache = new Map<string, Promise<string>>();
 
 /** Le dessin recoloré (et texturé), en data URL. */
-export function tintedUrl(pixelsUrl: string, color: string, kind: ButtonTexture = "none"): Promise<string> {
+export function tintedUrl(pixelsUrl: string, color: string, kind: ButtonTexture = BUTTON_TEXTURE): Promise<string> {
   const key = `${pixelsUrl}|${color}|${kind}`;
   let p = tintCache.get(key);
   if (!p) {
