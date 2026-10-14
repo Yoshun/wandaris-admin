@@ -107,8 +107,8 @@ export function tint(src: ImageData, color: string): ImageData {
 }
 
 // ---------------------------------------------------------------------------------------
-// Texture du centre, en code (14 octobre 2026) : la règle est « bombé + veinure »
-// (`BUTTON_TEXTURE`), les autres restent pour comparer, dans un sélecteur réservé aux admins.
+// Texture du centre, en code (14 octobre 2026) : « bombé + veinure », retenue parmi quatre
+// essais (bombé seul, veinure seule, grain).
 //
 // La texture module les pixels #808080 AVANT la recoloration : elle est faite de gris, elle
 // prend donc la couleur de chaque bouton, comme les reflets et les ombres de la graphiste
@@ -117,18 +117,6 @@ export function tint(src: ImageData, color: string): ImageData {
 // (même hachage) avant de découper les calques. Limite de la rampe : sur une couleur très
 // sombre (le secondaire du thème sombre), un gris plus foncé ne se voit presque plus.
 // ---------------------------------------------------------------------------------------
-
-export const BUTTON_TEXTURES = [
-  { id: "none", label: "Aucune" },
-  { id: "bombe", label: "Bombé" },
-  { id: "veinure", label: "Veinure" },
-  { id: "bombe-veinure", label: "Bombé + veinure" },
-  { id: "grain", label: "Grain" },
-] as const;
-export type ButtonTexture = (typeof BUTTON_TEXTURES)[number]["id"];
-
-/** La texture des boutons de l'app. */
-export const BUTTON_TEXTURE: ButtonTexture = "bombe-veinure";
 
 /** Hachage entier déterministe d'un pixel, dans [0, 1[. */
 function noise(x: number, y: number, seed: number): number {
@@ -154,14 +142,8 @@ function veinure(x: number, y: number, amp: number): number {
   return r < 0.22 ? -amp : r > 0.9 ? Math.round(amp * 0.7) : 0;
 }
 
-function grain(x: number, y: number): number {
-  const r = noise(x, y, 1);
-  return r < 0.18 ? -12 : r > 0.92 ? 10 : 0;
-}
-
 /** Le dessin avec ses pixels #808080 modulés par la texture (toujours des gris parfaits). */
-export function texture(src: ImageData, kind: ButtonTexture): ImageData {
-  if (kind === "none") return src;
+export function texture(src: ImageData): ImageData {
   const { width: w, height: h } = src;
   const d = new Uint8ClampedArray(src.data);
   const isRef = (i: number) => d[i + 3]! > 0 && d[i] === REFERENCE_GRAY && d[i + 1] === REFERENCE_GRAY && d[i + 2] === REFERENCE_GRAY;
@@ -181,12 +163,7 @@ export function texture(src: ImageData, kind: ButtonTexture): ImageData {
     for (let x = 0; x < w; x++) {
       const i = (y * w + x) * 4;
       if (!isRef(i)) continue;
-      const t = (y - y0) / span;
-      const delta =
-        kind === "bombe" ? bombe(x, y, t)
-        : kind === "veinure" ? veinure(x, y, 12)
-        : kind === "bombe-veinure" ? bombe(x, y, t) + veinure(x, y, 8)
-        : grain(x, y);
+      const delta = bombe(x, y, (y - y0) / span) + veinure(x, y, 8);
       const v = Math.max(1, Math.min(254, REFERENCE_GRAY + delta));
       d[i] = d[i + 1] = d[i + 2] = v;
     }
@@ -237,15 +214,15 @@ export function loadPixels(url: string): Promise<ImageData> {
 const tintCache = new Map<string, Promise<string>>();
 
 /** Le dessin recoloré (et texturé), en data URL. */
-export function tintedUrl(pixelsUrl: string, color: string, kind: ButtonTexture = BUTTON_TEXTURE): Promise<string> {
-  const key = `${pixelsUrl}|${color}|${kind}`;
+export function tintedUrl(pixelsUrl: string, color: string): Promise<string> {
+  const key = `${pixelsUrl}|${color}`;
   let p = tintCache.get(key);
   if (!p) {
     p = loadPixels(pixelsUrl).then((px) => {
       const canvas = document.createElement("canvas");
       canvas.width = px.width;
       canvas.height = px.height;
-      canvas.getContext("2d")!.putImageData(tint(texture(px, kind), color), 0, 0);
+      canvas.getContext("2d")!.putImageData(tint(texture(px), color), 0, 0);
       return canvas.toDataURL("image/png");
     });
     p.catch(() => tintCache.delete(key));

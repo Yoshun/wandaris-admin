@@ -90,7 +90,6 @@
               :category="cat"
               :api-base="apiBase"
               :can-integrate="data.viewer.canIntegrate"
-              :is-admin="data.viewer.kind === 'admin'"
               @updated="replaceItem"
             />
             <div v-else class="grid gap-3 mt-4" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr))">

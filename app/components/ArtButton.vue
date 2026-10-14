@@ -9,15 +9,13 @@
 </template>
 
 <script setup lang="ts">
-import type { ButtonArt, ButtonSize, ButtonTexture, ButtonVariant } from "~/utils/buttonArt";
-// Import explicite : la valeur par défaut d'une prop est hissée hors de `setup`
-import { BUTTON_TEXTURE } from "~/utils/buttonArt";
+import type { ButtonArt, ButtonSize, ButtonVariant } from "~/utils/buttonArt";
 import type { MockTheme } from "~/utils/mockIcons";
 
 /**
- * Un bouton de la graphiste, à la taille de son dessin : le gris du centre remplacé par la
- * couleur du bouton (règle dans `utils/buttonArt.ts`), le libellé centré par-dessus, sur une
- * ligne. Un libellé trop long déborde : c'est voulu, l'aperçu doit le montrer.
+ * Un bouton de la graphiste, à la taille de son dessin : le gris du centre texturé puis
+ * remplacé par la couleur du bouton (règle dans `utils/buttonArt.ts`), le libellé centré
+ * par-dessus, sur une ligne. Un libellé trop long déborde : c'est voulu, l'aperçu doit le montrer.
  *
  * En attendant la lecture des pixels (ou si elle échoue), le dessin s'affiche tel quel, gris.
  * Grisé : tout le dessin estompé, libellé opaque (voir `utils/buttonArt.ts`).
@@ -33,22 +31,20 @@ const props = withDefaults(
     icon?: string | null;
     /** Pixels CSS par pixel de l'art (et par DP pour le libellé). */
     scale?: number;
-    /** Texture du centre en code : celle de l'app par défaut, une autre pour comparer. */
-    texture?: ButtonTexture;
   }>(),
-  { variant: "primary", disabled: false, icon: null, scale: 1, texture: BUTTON_TEXTURE },
+  { variant: "primary", disabled: false, icon: null, scale: 1 },
 );
 
 const colors = computed(() => buttonColors(MOCK_PALETTES[props.theme], props.variant, props.disabled));
 
 const src = ref(props.art.url);
 watch(
-  () => [props.art.pixelsUrl, colors.value.fill, props.texture] as const,
-  ([pixelsUrl, fill, kind]) => {
-    tintedUrl(pixelsUrl, fill, kind)
+  () => [props.art.pixelsUrl, colors.value.fill] as const,
+  ([pixelsUrl, fill]) => {
+    tintedUrl(pixelsUrl, fill)
       .then((url) => {
-        // Une réponse arrivée après un changement de thème, de texture ou de dépôt ne doit pas écraser la bonne
-        if (pixelsUrl === props.art.pixelsUrl && fill === colors.value.fill && kind === props.texture) src.value = url;
+        // Une réponse arrivée après un changement de thème ou de dépôt ne doit pas écraser la bonne
+        if (pixelsUrl === props.art.pixelsUrl && fill === colors.value.fill) src.value = url;
       })
       .catch((err) => {
         src.value = props.art.url;

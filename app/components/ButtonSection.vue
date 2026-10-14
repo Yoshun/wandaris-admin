@@ -27,20 +27,6 @@
           {{ t.label }}
         </UButton>
       </div>
-      <!-- Comparer avec une autre texture que celle de l'app : admins seulement -->
-      <div v-if="isAdmin" class="flex items-center gap-2 flex-wrap">
-        <span class="text-sm text-muted">Texture du centre — comparer (visible des admins seulement)</span>
-        <UButton
-          v-for="t in BUTTON_TEXTURES"
-          :key="t.id"
-          size="xs"
-          :variant="tex === t.id ? 'solid' : 'outline'"
-          :color="tex === t.id ? 'primary' : 'neutral'"
-          @click="() => { tex = t.id }"
-        >
-          {{ t.label }}
-        </UButton>
-      </div>
 
       <!-- Sur le fond d'une fenêtre de l'app, dans le thème choisi -->
       <div class="rounded-lg p-4 space-y-8" :style="{ background: palette.panelBg, color: palette.text }">
@@ -90,7 +76,6 @@
                 :variant="v.variant"
                 :disabled="v.disabled"
                 :theme="theme"
-                :texture="tex"
                 :scale="2"
               />
               <figcaption class="text-xs" :style="{ color: palette.subtitleText }">{{ v.caption }}</figcaption>
@@ -109,7 +94,7 @@
 
 <script setup lang="ts">
 import type { IconCategory, IconItem } from "~~/types/poi";
-import type { ButtonArt, ButtonSize, ButtonTexture, ButtonVariant } from "~/utils/buttonArt";
+import type { ButtonArt, ButtonSize, ButtonVariant } from "~/utils/buttonArt";
 import type { MockTheme } from "~/utils/mockIcons";
 
 /**
@@ -118,7 +103,7 @@ import type { MockTheme } from "~/utils/mockIcons";
  * grisé — sur le fond d'une fenêtre, dans les deux thèmes de l'app. Avant les aperçus, le
  * nuancier : ce que devient chaque gris sur chaque couleur.
  */
-const props = defineProps<{ category: IconCategory; apiBase: string; canIntegrate: boolean; isAdmin: boolean }>();
+const props = defineProps<{ category: IconCategory; apiBase: string; canIntegrate: boolean }>();
 const emit = defineEmits<{ updated: [item: IconItem] }>();
 
 const THEMES = [
@@ -127,7 +112,6 @@ const THEMES = [
 ] as const;
 const theme = ref<MockTheme>("light");
 const palette = computed(() => MOCK_PALETTES[theme.value]);
-const tex = ref<ButtonTexture>(BUTTON_TEXTURE);
 
 /** Du plus foncé au plus clair, le gris de référence au milieu. */
 const GRAYS = [32, 64, 96, REFERENCE_GRAY, 160, 192, 224];
