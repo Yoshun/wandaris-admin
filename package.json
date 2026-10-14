@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@nuxt/ui": "^4.5.0",
+    "fast-png": "8.0.0",
     "leaflet": "^1.9.4",
     "maplibre-gl": "^5.24.0",
     "nuxt": "^4.4.8",

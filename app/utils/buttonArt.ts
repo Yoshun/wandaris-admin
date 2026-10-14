@@ -1,4 +1,5 @@
 import type { InjectionKey, Ref } from "vue";
+import { convertIndexedToRgb, decode as decodePng, encode as encodePng, type DecodedPng } from "fast-png";
 import type { IconCategory } from "~~/types/poi";
 import type { MockPalette } from "~/utils/mockIcons";
 
@@ -184,12 +185,62 @@ export function analyzeButton(px: ImageData): { fill: number; reference: number 
   return { fill, reference };
 }
 
+// ---------------------------------------------------------------------------------------
+// Lecture et écriture des pixels SANS canvas
+//
+// Firefox, Brave et Safari brouillent ce qu'une page relit d'un canvas (`getImageData`,
+// `toDataURL`) : une protection anti-pistage qui décale d'une unité quelques pixels au hasard.
+// Un #808080 relu (128, 129, 128) n'est plus un gris parfait, il n'est pas recoloré : le
+// bouton se couvre de points gris (constaté chez la graphiste le 14 octobre 2026). Le PNG est
+// donc décodé et réencodé en JavaScript (`fast-png`) : les valeurs du fichier, exactement, et
+// aucune lecture de canvas. Les profils de couleur (sRGB, gAMA) sont ignorés, comme dans l'app.
+// ---------------------------------------------------------------------------------------
+
+/** Un PNG décodé, ramené en RGBA 8 bits. */
+function toRgba(png: DecodedPng): Uint8ClampedArray<ArrayBuffer> {
+  const { width, height, depth } = png;
+  const n = width * height;
+  const out = new Uint8ClampedArray(n * 4);
+  if (png.palette) {
+    const rgb = convertIndexedToRgb(png);
+    const ch = png.palette[0]!.length; // 4 si la palette porte un tRNS
+    for (let i = 0; i < n; i++) {
+      out[i * 4] = rgb[i * ch]!;
+      out[i * 4 + 1] = rgb[i * ch + 1]!;
+      out[i * 4 + 2] = rgb[i * ch + 2]!;
+      out[i * 4 + 3] = ch === 4 ? rgb[i * ch + 3]! : 255;
+    }
+    return out;
+  }
+  if (depth !== 8 && depth !== 16) throw new Error(`PNG en ${depth} bits par canal non pris en charge`);
+  const ch = png.channels;
+  const v = (k: number) => (depth === 16 ? png.data[k]! >> 8 : png.data[k]!);
+  // tRNS sans palette : une couleur exacte (gris ou RGB) rendue transparente
+  const key = png.transparency;
+  for (let i = 0; i < n; i++) {
+    const b = i * ch;
+    const gray = ch <= 2;
+    const r = v(b);
+    const g = gray ? r : v(b + 1);
+    const bl = gray ? r : v(b + 2);
+    let a = ch === 2 ? v(b + 1) : ch === 4 ? v(b + 3) : 255;
+    if (key && (ch === 1 || ch === 3)) {
+      const same = ch === 1 ? png.data[b] === key[0] : png.data[b] === key[0] && png.data[b + 1] === key[1] && png.data[b + 2] === key[2];
+      if (same) a = 0;
+    }
+    out[i * 4] = r;
+    out[i * 4 + 1] = g;
+    out[i * 4 + 2] = bl;
+    out[i * 4 + 3] = a;
+  }
+  return out;
+}
+
 const pixelCache = new Map<string, Promise<ImageData>>();
 
 /**
  * Les pixels exacts d'un dépôt. Les fichiers sont nommés par leur hash : une URL ne change
- * jamais de contenu, le cache vaut pour toute la session. Sans conversion de couleur ni
- * prémultiplication, pour lire les valeurs du fichier telles quelles.
+ * jamais de contenu, le cache vaut pour toute la session.
  */
 export function loadPixels(url: string): Promise<ImageData> {
   let p = pixelCache.get(url);
@@ -197,13 +248,8 @@ export function loadPixels(url: string): Promise<ImageData> {
     p = (async () => {
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error(`Erreur ${res.status}`);
-      const bmp = await createImageBitmap(await res.blob(), { colorSpaceConversion: "none", premultiplyAlpha: "none" });
-      const canvas = document.createElement("canvas");
-      canvas.width = bmp.width;
-      canvas.height = bmp.height;
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(bmp, 0, 0);
-      return ctx.getImageData(0, 0, bmp.width, bmp.height);
+      const png = decodePng(new Uint8Array(await res.arrayBuffer()));
+      return new ImageData(toRgba(png), png.width, png.height);
     })();
     p.catch(() => pixelCache.delete(url));
     pixelCache.set(url, p);
@@ -213,17 +259,16 @@ export function loadPixels(url: string): Promise<ImageData> {
 
 const tintCache = new Map<string, Promise<string>>();
 
-/** Le dessin recoloré (et texturé), en data URL. */
+/** Le dessin texturé et recoloré, en URL d'objet (PNG encodé en JavaScript, pas par un canvas). */
 export function tintedUrl(pixelsUrl: string, color: string): Promise<string> {
   const key = `${pixelsUrl}|${color}`;
   let p = tintCache.get(key);
   if (!p) {
     p = loadPixels(pixelsUrl).then((px) => {
-      const canvas = document.createElement("canvas");
-      canvas.width = px.width;
-      canvas.height = px.height;
-      canvas.getContext("2d")!.putImageData(tint(texture(px), color), 0, 0);
-      return canvas.toDataURL("image/png");
+      const out = tint(texture(px), color);
+      const bytes = encodePng({ width: out.width, height: out.height, data: out.data, channels: 4, depth: 8 });
+      // Copie dans un ArrayBuffer ordinaire : un Blob refuse un tampon potentiellement partagé
+      return URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: "image/png" }));
     });
     p.catch(() => tintCache.delete(key));
     tintCache.set(key, p);
