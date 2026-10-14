@@ -40,11 +40,8 @@ const icons = computed(() => buildMockIcons(props.data, props.apiBase));
 const byId = (id: string) => props.data.categories.find((c) => c.id === id);
 const frame = computed(() => framePieces(byId("frame"), props.apiBase));
 provide(MOCK_FRAME_KEY, frame);
-// Idem pour les boutons, chaque taille indépendamment de l'autre
-const buttons = computed(() => ({
-  big: framePieces(byId("button"), props.apiBase),
-  small: framePieces(byId("button-small"), props.apiBase),
-}));
+// Idem pour les boutons, chaque taille dès qu'elle est déposée
+const buttons = computed(() => buttonArts(byId("button"), props.apiBase));
 provide(MOCK_BUTTON_KEY, buttons);
 
 const THEMES = [

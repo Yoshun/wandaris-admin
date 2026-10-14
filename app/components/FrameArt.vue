@@ -2,14 +2,14 @@
   <!-- Remplit son parent (position: relative attendue) ; aucun événement : le contenu reste cliquable. -->
   <div class="fa" aria-hidden="true">
     <div v-if="fill" class="fa-fill" :style="fillStyle" />
-    <div v-for="e in edges" :key="e.slot" class="fa-piece" :style="[e.style, pieceStyle]" />
+    <div v-for="e in edges" :key="e.slot" class="fa-piece" :style="e.style" />
     <img
       v-for="c in corners"
       :key="c.slot"
       :src="c.url"
       alt=""
       class="fa-piece fa-corner"
-      :style="[c.style, pieceStyle]"
+      :style="c.style"
     />
   </div>
 </template>
@@ -29,14 +29,11 @@ const props = withDefaults(
     pieces: FramePieces;
     scale?: number;
     fill?: string;
-    /** Filtre CSS des morceaux seuls, pas du fond — le bouton grisé, en attendant que l'app le dérive. */
-    pieceFilter?: string;
   }>(),
   { scale: 1 },
 );
 
 const px = (n: number) => `${n * props.scale}px`;
-const pieceStyle = computed(() => (props.pieceFilter ? { filter: props.pieceFilter } : {}));
 
 /** Taille d'un morceau à l'écran, 0 s'il manque. */
 function size(slot: FrameSlot) {

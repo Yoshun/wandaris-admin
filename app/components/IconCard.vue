@@ -7,12 +7,15 @@
     @drop.prevent="onDrop"
   >
     <div class="h-24 flex items-center justify-center rounded checker">
+      <!-- Un bouton est large et bas : à sa taille réelle, pas réduit dans un carré -->
       <img
         v-if="item.url"
         :src="`${apiBase}${item.url}`"
         :alt="item.label"
-        class="w-16 h-16 object-contain"
-        :class="{ pixelated: item.status !== 'placeholder' }"
+        :class="[
+          item.format === 'button' ? 'max-w-full max-h-full' : 'w-16 h-16 object-contain',
+          { pixelated: item.status !== 'placeholder' },
+        ]"
       />
       <span v-else class="text-dimmed text-xs">Aucun visuel</span>
     </div>

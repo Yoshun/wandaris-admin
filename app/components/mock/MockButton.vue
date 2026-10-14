@@ -1,15 +1,17 @@
 <template>
-  <!-- Le bouton de la graphiste dès que l'ensemble de sa taille est complet, à 1 DP par pixel de l'art -->
-  <ArtButton
-    v-if="art"
-    :pieces="pieces"
-    :label="label"
-    :variant="variant"
-    :small="small"
-    :disabled="disabled"
-    :full-width="fullWidth"
-    :icon="icon"
-  />
+  <!-- Le bouton de la graphiste dès que sa taille est déposée, à 1 DP par pixel de l'art.
+       Il a une largeur fixe : en pleine largeur, il est centré. -->
+  <div v-if="art" class="mb" :class="{ 'mb-full': fullWidth }">
+    <ArtButton
+      :art="art"
+      :size="resolvedSize"
+      :label="label"
+      :variant="variant"
+      :disabled="disabled"
+      :icon="icon"
+      :theme="theme"
+    />
+  </div>
   <div v-else class="cb" :class="[`cb-${variant}`, { 'cb-small': small, 'cb-full': fullWidth, 'cb-disabled': disabled }]">
     <img v-if="icon" :src="icon" alt="" class="cb-icon" />
     <span class="cb-label">{{ label }}</span>
@@ -17,15 +19,17 @@
 </template>
 
 <script setup lang="ts">
-import type { FramePieces } from "~/utils/frameArt";
+import type { ButtonArts, ButtonSize } from "~/utils/buttonArt";
+import type { MockTheme } from "~/utils/mockIcons";
 
 /**
  * Portage CSS de `CandyButton` : fond plein + bordure épaisse en bas et à droite qui fait
  * le relief, carré, sans asset. Même gabarit que l'app (20 DP de chrome vertical, 18 en
  * `small`). Le placeholder, en attendant l'art du bouton.
  *
- * Dès que les 8 morceaux du bouton de sa taille sont déposés (catégories « Gros bouton » /
- * « Petit bouton » de la page graphiste), `ArtButton` les assemble à la place.
+ * Dès que le bouton de sa taille est déposé (section « Boutons » de la page graphiste),
+ * `ArtButton` l'affiche à la place, recoloré. La taille : `size` si elle est donnée, sinon
+ * petit pour `small`, grand pour une pleine largeur, moyen pour le reste.
  */
 const props = withDefaults(
   defineProps<{
@@ -35,16 +39,20 @@ const props = withDefaults(
     fullWidth?: boolean;
     disabled?: boolean;
     icon?: string | null;
+    size?: ButtonSize;
   }>(),
-  { variant: "primary", small: false, fullWidth: false, disabled: false, icon: null },
+  { variant: "primary", small: false, fullWidth: false, disabled: false, icon: null, size: undefined },
 );
 
-const sets = inject(MOCK_BUTTON_KEY, ref({ big: {} as FramePieces, small: {} as FramePieces }));
-const pieces = computed(() => (props.small ? sets.value.small : sets.value.big));
-const art = computed(() => isFrameComplete(pieces.value));
+const arts = inject(MOCK_BUTTON_KEY, ref<ButtonArts>({}));
+const theme = inject(MOCK_THEME_KEY, ref<MockTheme>("light"));
+const resolvedSize = computed<ButtonSize>(() => props.size ?? (props.small ? "small" : props.fullWidth ? "large" : "medium"));
+const art = computed(() => arts.value[resolvedSize.value] ?? null);
 </script>
 
 <style scoped>
+.mb { display: inline-flex; }
+.mb-full { display: flex; justify-content: center; width: 100%; }
 .cb {
   box-sizing: border-box;
   display: inline-flex;

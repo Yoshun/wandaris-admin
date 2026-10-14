@@ -8,12 +8,14 @@
         <div class="sp-thumbs">
           <div class="sp-thumb"><span class="sp-thumb-x">X</span></div>
         </div>
+        <!-- Libellés courts : « Depuis la galerie » et « Prendre une photo » débordent d'un bouton
+             moyen (15 caractères au plus), voir .claude/rules/app.md -->
         <div class="sp-photo-btns">
-          <div class="sp-half"><MockButton label="Depuis la galerie" variant="secondary" small full-width /></div>
-          <div class="sp-half"><MockButton label="Prendre une photo" variant="secondary" small full-width /></div>
+          <div class="sp-half"><MockButton label="Galerie" variant="secondary" small full-width size="medium" /></div>
+          <div class="sp-half"><MockButton label="Appareil photo" variant="secondary" small full-width size="medium" /></div>
         </div>
         <div class="sp-submit"><MockButton label="Soumettre" full-width /></div>
-        <MockButton label="Voir mon historique" variant="secondary" small full-width />
+        <MockButton label="Voir mon historique" variant="secondary" small full-width size="large" />
       </div>
     </MockOverlay>
   </MockPhone>

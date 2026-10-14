@@ -74,9 +74,18 @@
               <span class="text-sm text-muted tabular-nums">{{ cat.done }} / {{ cat.items.length }}</span>
             </div>
             <p v-if="cat.note" class="text-muted text-sm max-w-3xl mt-1">{{ cat.note }}</p>
-            <!-- Cadre et boutons se jugent assemblés : leurs morceaux à leur place autour de l'aperçu -->
+            <!-- Le cadre se juge assemblé : ses morceaux à leur place autour de l'aperçu -->
             <FrameSection
-              v-if="ASSEMBLED.includes(cat.id)"
+              v-if="cat.id === 'frame'"
+              class="mt-4"
+              :category="cat"
+              :api-base="apiBase"
+              :can-integrate="data.viewer.canIntegrate"
+              @updated="replaceItem"
+            />
+            <!-- Les boutons se jugent recolorés : chaque taille dans toutes ses couleurs -->
+            <ButtonSection
+              v-else-if="cat.id === 'button'"
               class="mt-4"
               :category="cat"
               :api-base="apiBase"
@@ -111,9 +120,6 @@ useHead({
 });
 
 const { apiBase, locked, login, logout, list } = useIconsApi();
-
-/** Catégories en 8 morceaux, affichées avec leur assemblage (`FrameSection`). */
-const ASSEMBLED = ["frame", "button", "button-small"];
 
 const TABS = [
   { id: "icons", label: "Icônes", icon: "i-lucide-layout-grid" },

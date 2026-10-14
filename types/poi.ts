@@ -201,6 +201,8 @@ export interface IconItem {
   file: string;
   format: string;
   note?: string;
+  /** Taille attendue du fichier quand l'app la fixe (les boutons). */
+  size?: { width: number; height: number };
   status: IconStatus;
   url: string | null;
   sha256: string | null;
