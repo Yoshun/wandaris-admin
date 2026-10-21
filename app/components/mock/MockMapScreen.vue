@@ -47,8 +47,11 @@
 </template>
 
 <script setup lang="ts">
-import maplibregl, { Marker, type Map as MlMap } from "maplibre-gl";
+import { Map as MlMap, Marker, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+// MapLibre 6 est ESM seul : sous un bundler, le worker se déclare à la main (doc MapLibre, section Vite).
+// `?worker&url` et pas `?url` : ce dernier copie le worker sans son chunk partagé et la carte reste vide en prod.
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { MockIcons, MockTheme } from "~/utils/mockIcons";
 
 /**
@@ -110,8 +113,9 @@ function circlePolygon(center: [number, number], radiusM: number, steps = 48): G
 
 onMounted(async () => {
   try {
+    setWorkerUrl(maplibreWorkerUrl);
     const style = await loadThemedMapStyle(maptilerKey, theme.value === "dark" ? DARK_MAP : LIGHT_MAP);
-    map = new maplibregl.Map({
+    map = new MlMap({
       container: mapEl.value!,
       style,
       center: CENTER,
